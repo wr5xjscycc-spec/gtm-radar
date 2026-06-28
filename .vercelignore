@@ -1,0 +1,14 @@
+# Not needed by the frontend build (Vite only bundles platform/src + the
+# committed convex/_generated proxy + convex/lib). Exclude the heavy/irrelevant
+# parts to keep the upload small.
+analysis
+docs
+phase-cards
+prompts
+scripts
+tests
+measurement/tests
+sourcing/tests
+platform/tests
+*.md
+!package.json
