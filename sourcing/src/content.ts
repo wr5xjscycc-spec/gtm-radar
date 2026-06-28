@@ -24,7 +24,19 @@ export interface PageRecord {
   cache_key: string;
 }
 
-const EXTRACTOR_VERSION = "extractor-2026.06-v1";
+const EXTRACTOR_VERSION = "extractor-2026.06-v2";
+
+export interface AgreementResult {
+  overall_agreement: number;
+  per_field: {
+    direct_answer_first: number;
+    stats_density: number;
+    citation_density: number;
+    quote_density: number;
+  };
+  n_samples: number;
+  agreement_version: string;
+}
 
 function visibleText(html: string): string {
   return html
@@ -198,6 +210,64 @@ export function mergeFeatures(
   subj: SubjectiveFeatures
 ): ContentFeatures {
   return { ...det, ...subj };
+}
+
+export async function runAgreementCheck(
+  htmlSamples: string[],
+  apiKey: string
+): Promise<AgreementResult> {
+  if (htmlSamples.length === 0) {
+    return {
+      overall_agreement: 1,
+      per_field: {
+        direct_answer_first: 1,
+        stats_density: 1,
+        citation_density: 1,
+        quote_density: 1,
+      },
+      n_samples: 0,
+      agreement_version: EXTRACTOR_VERSION,
+    };
+  }
+
+  let directMatch = 0;
+  let statsMatch = 0;
+  let citationMatch = 0;
+  let quoteMatch = 0;
+  let total = 0;
+
+  for (const html of htmlSamples) {
+    const run1 = await extractSubjectiveFeatures(html, apiKey);
+    const run2 = await extractSubjectiveFeatures(html, apiKey);
+
+    if (run1.direct_answer_first === run2.direct_answer_first) directMatch++;
+    if (run1.stats_density === run2.stats_density) statsMatch++;
+    if (run1.citation_density === run2.citation_density) citationMatch++;
+    if (run1.quote_density === run2.quote_density) quoteMatch++;
+    total++;
+  }
+
+  const n = total;
+  const perField = {
+    direct_answer_first: n > 0 ? directMatch / n : 1,
+    stats_density: n > 0 ? statsMatch / n : 1,
+    citation_density: n > 0 ? citationMatch / n : 1,
+    quote_density: n > 0 ? quoteMatch / n : 1,
+  };
+
+  const overall =
+    (perField.direct_answer_first +
+      perField.stats_density +
+      perField.citation_density +
+      perField.quote_density) /
+    4;
+
+  return {
+    overall_agreement: overall,
+    per_field: perField,
+    n_samples: n,
+    agreement_version: EXTRACTOR_VERSION,
+  };
 }
 
 export function buildCacheKey(url: string, extractorVer: string): string {

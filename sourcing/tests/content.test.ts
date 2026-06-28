@@ -5,6 +5,7 @@ import {
   mergeFeatures,
   enrichPage,
   buildCacheKey,
+  runAgreementCheck,
   type ContentFeatures,
   type SubjectiveFeatures,
 } from "../src/content";
@@ -375,5 +376,125 @@ describe("enrichPage", () => {
     await expect(
       enrichPage("acme.com", "https://acme.com/404", "candidate", "sk-test")
     ).rejects.toThrow("Failed to fetch");
+  });
+});
+
+describe("runAgreementCheck", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("returns 1.0 agreement when responses are identical", async () => {
+    vi.spyOn(global, "fetch").mockImplementation(async () => {
+      return new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                role: "assistant",
+                content: JSON.stringify({
+                  direct_answer_first: true,
+                  stats_density: "medium",
+                  citation_density: "low",
+                  quote_density: "high",
+                }),
+              },
+            },
+          ],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    });
+
+    const result = await runAgreementCheck(
+      ["<html><body><p>Test page</p></body></html>"],
+      "sk-test"
+    );
+    expect(result.overall_agreement).toBe(1);
+    expect(result.n_samples).toBe(1);
+    expect(result.agreement_version).toBeTruthy();
+  });
+
+  it("computes agreement when responses differ", async () => {
+    let callIdx = 0;
+    vi.spyOn(global, "fetch").mockImplementation(async () => {
+      const data = callIdx % 2 === 0
+        ? { direct_answer_first: true, stats_density: "high", citation_density: "medium", quote_density: "low" }
+        : { direct_answer_first: true, stats_density: "low", citation_density: "medium", quote_density: "medium" };
+      callIdx++;
+      return new Response(
+        JSON.stringify({
+          choices: [{ message: { role: "assistant", content: JSON.stringify(data) } }],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    });
+
+    const result = await runAgreementCheck(
+      ["<html><body><p>Test A</p></body></html>"],
+      "sk-test"
+    );
+    expect(result.overall_agreement).toBeGreaterThan(0);
+    expect(result.overall_agreement).toBeLessThan(1);
+    expect(result.per_field.direct_answer_first).toBe(1);
+    expect(result.per_field.stats_density).toBe(0);
+    expect(result.per_field.citation_density).toBe(1);
+    expect(result.n_samples).toBe(1);
+  });
+
+  it("averages agreement across multiple samples", async () => {
+    let callIdx = 0;
+    vi.spyOn(global, "fetch").mockImplementation(async () => {
+      const responses = [
+        { direct_answer_first: true, stats_density: "high", citation_density: "medium", quote_density: "low" },
+        { direct_answer_first: true, stats_density: "low", citation_density: "medium", quote_density: "medium" },
+        { direct_answer_first: false, stats_density: "high", citation_density: "low", quote_density: "low" },
+        { direct_answer_first: false, stats_density: "high", citation_density: "low", quote_density: "low" },
+      ];
+      const data = responses[callIdx % responses.length];
+      callIdx++;
+      return new Response(
+        JSON.stringify({
+          choices: [{ message: { role: "assistant", content: JSON.stringify(data) } }],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    });
+
+    const result = await runAgreementCheck(
+      [
+        "<html><body><p>Page 1</p></body></html>",
+        "<html><body><p>Page 2</p></body></html>",
+      ],
+      "sk-test"
+    );
+    expect(result.n_samples).toBe(2);
+    expect(result.per_field.direct_answer_first).toBe(1);
+    expect(result.per_field.stats_density).toBe(0.5);
+    expect(result.overall_agreement).toBeGreaterThan(0);
+    expect(result.overall_agreement).toBeLessThan(1);
+  });
+
+  it("handles empty sample array", async () => {
+    const result = await runAgreementCheck([], "sk-test");
+    expect(result.overall_agreement).toBe(1);
+    expect(result.n_samples).toBe(0);
+  });
+
+  it("stamps agreement_version with current extractor_version", async () => {
+    vi.spyOn(global, "fetch").mockImplementation(async () => {
+      return new Response(
+        JSON.stringify({
+          choices: [{ message: { role: "assistant", content: JSON.stringify({ direct_answer_first: true, stats_density: "none", citation_density: "none", quote_density: "none" }) } }],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    });
+
+    const result = await runAgreementCheck(
+      ["<html><body><p>Test</p></body></html>"],
+      "sk-test"
+    );
+    expect(result.agreement_version).toContain("extractor-");
   });
 });

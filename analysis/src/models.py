@@ -58,6 +58,27 @@ class MatchPair(BaseModel):
     match_covars: dict[str, float]
 
 
+class WeightedFitRow(BaseModel):
+    page_url: str
+    cluster_id: str
+    is_winner: bool
+    P_cited: float
+    ci_low: float
+    ci_high: float
+    weight: float
+    page_features: dict[str, float]
+    company_features: dict[str, float]
+
+
+class CategoryEngineTable(BaseModel):
+    customer_id: str
+    category: str
+    engine: str
+    rows: list[WeightedFitRow]
+    n_companies: int
+    n_rows: int
+
+
 class BaselineMetrics(BaseModel):
     accuracy: float
     n_features: int
