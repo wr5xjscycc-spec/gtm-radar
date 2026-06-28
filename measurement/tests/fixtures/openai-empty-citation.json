@@ -1,0 +1,24 @@
+{
+  "id": "resp_67b5a7e7b6a48190a4c3f5c8e7d9a0b3",
+  "object": "response",
+  "created": 1740000001,
+  "model": "gpt-4o-2024-08-06",
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_67b5a7e7b6a48190a4c3f5c8e7d9a0b4",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "I don't have specific information about that topic in my knowledge base.",
+          "annotations": []
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 20,
+    "output_tokens": 15
+  }
+}

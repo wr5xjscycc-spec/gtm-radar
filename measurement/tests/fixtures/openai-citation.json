@@ -1,0 +1,53 @@
+{
+  "id": "resp_67b5a7e7b6a48190a4c3f5c8e7d9a0b1",
+  "object": "response",
+  "created": 1740000000,
+  "model": "gpt-4o-2024-08-06",
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_67b5a7e7b6a48190a4c3f5c8e7d9a0b2",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "For startups looking for a CRM in 2026, HubSpot offers a free tier with robust features including contact management and deal tracking (https://www.hubspot.com/products/crm). Pipedrive is excellent for sales pipeline visualization (https://www.pipedrive.com/en/features), while Salesforce Starter provides enterprise-grade power at a lower entry point (https://www.salesforce.com/products/starter). For lean teams, Close.com offers built-in calling and email sequencing (https://close.com/features).",
+          "annotations": [
+            {
+              "type": "url_citation",
+              "start_index": 87,
+              "end_index": 130,
+              "url": "https://www.hubspot.com/products/crm",
+              "title": "HubSpot CRM: Free CRM for Startups"
+            },
+            {
+              "type": "url_citation",
+              "start_index": 200,
+              "end_index": 245,
+              "url": "https://www.pipedrive.com/en/features",
+              "title": "Pipedrive Features"
+            },
+            {
+              "type": "url_citation",
+              "start_index": 330,
+              "end_index": 375,
+              "url": "https://www.salesforce.com/products/starter",
+              "title": "Salesforce Starter"
+            },
+            {
+              "type": "url_citation",
+              "start_index": 420,
+              "end_index": 460,
+              "url": "https://close.com/features",
+              "title": "Close CRM Features"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 45,
+    "output_tokens": 340
+  }
+}
