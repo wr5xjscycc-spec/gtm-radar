@@ -104,6 +104,86 @@ describe("labelMeasurements", () => {
     expect(domains).not.toContain("g2.com");
     expect(domains).not.toContain("hubspot.com");
   });
+
+  it("assigns correct position for non-first-position citations", () => {
+    // Source URLs: competitor at 0, g2 at 1, acme at 2
+    const engineResult: EngineResult = {
+      engine: "openai",
+      appeared: true,
+      cited: true,
+      position: 0,
+      source_urls: [
+        "https://competitor.com/products",
+        "https://g2.com/products",
+        "https://acme.com/pricing",
+      ],
+      model_version: "gpt-4o-2024-08-06",
+    };
+
+    const candidates = [
+      { company_domain: "acme.com", page_url: "https://acme.com/pricing" },
+    ];
+
+    const result = labelMeasurements("qry_test", engineResult, candidates);
+
+    const acme = result.rows.find((r) => r.company_domain === "acme.com");
+    expect(acme).toBeDefined();
+    expect(acme!.label).toBe("winner");
+    expect(acme!.position).toBe(2);
+  });
+
+  it("assigns position=0 to first-position citation", () => {
+    const engineResult: EngineResult = {
+      engine: "openai",
+      appeared: true,
+      cited: true,
+      position: 0,
+      source_urls: [
+        "https://acme.com/pricing",
+        "https://competitor.com/products",
+      ],
+      model_version: "gpt-4o-2024-08-06",
+    };
+
+    const candidates = [
+      { company_domain: "acme.com", page_url: "https://acme.com/pricing" },
+    ];
+
+    const result = labelMeasurements("qry_test", engineResult, candidates);
+
+    const acme = result.rows.find((r) => r.company_domain === "acme.com");
+    expect(acme).toBeDefined();
+    expect(acme!.position).toBe(0);
+  });
+
+  it("assigns correct positions to multiple cited candidates", () => {
+    const engineResult: EngineResult = {
+      engine: "openai",
+      appeared: true,
+      cited: true,
+      position: 0,
+      source_urls: [
+        "https://competitor.com/products",
+        "https://acme.com/pricing",
+        "https://rival.io/product",
+      ],
+      model_version: "gpt-4o-2024-08-06",
+    };
+
+    const result = labelMeasurements(
+      "qry_test",
+      engineResult,
+      candidatePagesFixture,
+    );
+
+    const comp = result.rows.find((r) => r.company_domain === "competitor.com");
+    const acme = result.rows.find((r) => r.company_domain === "acme.com");
+    const rival = result.rows.find((r) => r.company_domain === "rival.io");
+    // competitor at position 0, acme at 1, rival at 2
+    expect(comp!.position).toBe(0);
+    expect(acme!.position).toBe(1);
+    expect(rival!.position).toBe(2);
+  });
 });
 
 describe("labelFromTargetDomain", () => {

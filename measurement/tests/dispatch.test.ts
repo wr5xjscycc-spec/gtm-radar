@@ -187,4 +187,69 @@ describe("dispatch", () => {
     expect(result.coverage.failed).toBe(1);
     expect(result.coverage.partial).toBe(true);
   });
+
+  it("handles empty candidate pool gracefully", async () => {
+    process.env.OPENAI_API_KEY = "sk-test";
+
+    const emptyContext: DispatchContext = {
+      knownPages: [],
+      knownCompanies: [],
+      candidatePool: [],
+    };
+
+    const mockResult: EngineResult = {
+      engine: "openai",
+      appeared: true,
+      cited: true,
+      position: 0,
+      source_urls: ["https://acme.com/pricing"],
+      model_version: "gpt-4o-2024-08-06",
+    };
+
+    const result = await dispatch(
+      query,
+      { openai: makeAdapter(mockResult) },
+      { openai: "OPENAI_API_KEY" },
+      emptyContext,
+    );
+
+    expect(result.rows).toHaveLength(0);
+    expect(result.coverage.succeeded).toBe(0);
+    expect(result.coverage.failed).toBe(1);
+    expect(result.coverage.partial).toBe(false);
+  });
+
+  it("reports partial coverage when some engines fail and some succeed", async () => {
+    process.env.OPENAI_API_KEY = "sk-test";
+    process.env.PERPLEXITY_API_KEY = "pplx-test";
+
+    const q: QueryRecord = {
+      ...query,
+      target_engines: ["openai", "perplexity", "gemini"],
+    };
+
+    const mockResult: EngineResult = {
+      engine: "openai",
+      appeared: true,
+      cited: true,
+      position: 0,
+      source_urls: ["https://acme.com/pricing"],
+      model_version: "gpt-4o-2024-08-06",
+    };
+
+    const result = await dispatch(
+      q,
+      {
+        openai: makeAdapter(mockResult),
+        perplexity: errorAdapter,
+        gemini: errorAdapter,
+      },
+      { openai: "OPENAI_API_KEY", perplexity: "PERPLEXITY_API_KEY", gemini: "GEMINI_API_KEY" },
+      context,
+    );
+
+    expect(result.coverage.succeeded).toBe(1);
+    expect(result.coverage.failed).toBe(2);
+    expect(result.coverage.partial).toBe(true);
+  });
 });

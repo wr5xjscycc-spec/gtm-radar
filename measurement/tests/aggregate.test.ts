@@ -59,20 +59,41 @@ describe("wilsonCI", () => {
   });
 
   it("holds known reference values", () => {
-    // 3 out of 3 → P=1.0, Wilson CI (z=1.96) ≈ [0.434, 1.0]
+    // 3 out of 3 → P=1.0, Wilson CI (z=1.96) ≈ [0.439, 1.0]
     const ci = wilsonCI(3, 3);
-    expect(ci.low).toBeCloseTo(0.434, 2);
+    expect(ci.low).toBeCloseTo(0.439, 2);
     expect(ci.high).toBeCloseTo(1.0, 2);
 
-    // 2 out of 3 → P≈0.667, Wilson CI ≈ [0.208, 0.957]
+    // 2 out of 3 → P≈0.667, Wilson CI ≈ [0.208, 0.939]
     const ci2 = wilsonCI(2, 3);
-    expect(ci2.low).toBeCloseTo(0.208, 1);
-    expect(ci2.high).toBeCloseTo(0.957, 1);
+    expect(ci2.low).toBeCloseTo(0.208, 2);
+    expect(ci2.high).toBeCloseTo(0.939, 2);
 
-    // 1 out of 3 → P≈0.333, Wilson CI ≈ [0.044, 0.792]
+    // 1 out of 3 → P≈0.333, Wilson CI ≈ [0.062, 0.792]
     const ci3 = wilsonCI(1, 3);
-    expect(ci3.low).toBeCloseTo(0.044, 1);
-    expect(ci3.high).toBeCloseTo(0.792, 1);
+    expect(ci3.low).toBeCloseTo(0.062, 2);
+    expect(ci3.high).toBeCloseTo(0.792, 2);
+  });
+
+  it("returns [0, 0.562] for 0/3", () => {
+    const ci = wilsonCI(0, 3);
+    expect(ci.low).toBe(0);
+    expect(ci.high).toBeCloseTo(0.562, 2);
+  });
+
+  it("is symmetric for 4/8 around 0.5", () => {
+    const ci = wilsonCI(4, 8);
+    expect(ci.low).toBeCloseTo(0.215, 2);
+    expect(ci.high).toBeCloseTo(0.785, 2);
+    expect(ci.high - 0.5).toBeCloseTo(0.5 - ci.low, 2);
+  });
+
+  it("tighter CI for 8/8 than 3/3", () => {
+    const ci3 = wilsonCI(3, 3);
+    const ci8 = wilsonCI(8, 8);
+    expect(ci8.high - ci8.low).toBeLessThan(ci3.high - ci3.low);
+    expect(ci8.low).toBeCloseTo(0.676, 2);
+    expect(ci8.high).toBe(1.0);
   });
 });
 
@@ -220,6 +241,47 @@ describe("needsMoreSamples", () => {
       runs: [],
     };
 
+    expect(needsMoreSamples(agg)).toBe(false);
+  });
+
+  it("stops when P_cited is exactly 0.15 (low extreme)", () => {
+    const agg: AggregateResult = {
+      query_id: "qry_test", page_url: "https://x.com/p",
+      company_domain: "x.com", engine: "openai", model_version: "gpt-4o",
+      K: 20, P_cited: 0.15, ci_low: 0.0, ci_high: 0.4,
+      position_weight: 0.15, runs: [],
+    };
+    expect(needsMoreSamples(agg)).toBe(false);
+  });
+
+  it("stops when P_cited is exactly 0.85 (high extreme)", () => {
+    const agg: AggregateResult = {
+      query_id: "qry_test", page_url: "https://x.com/p",
+      company_domain: "x.com", engine: "openai", model_version: "gpt-4o",
+      K: 20, P_cited: 0.85, ci_low: 0.6, ci_high: 1.0,
+      position_weight: 0.85, runs: [],
+    };
+    expect(needsMoreSamples(agg)).toBe(false);
+  });
+
+  it("stops when CI span is at threshold (0.3 from 0.0 to 0.3)", () => {
+    const agg: AggregateResult = {
+      query_id: "qry_test", page_url: "https://x.com/p",
+      company_domain: "x.com", engine: "openai", model_version: "gpt-4o",
+      K: 8, P_cited: 0.15, ci_low: 0.0, ci_high: 0.3,
+      position_weight: 0.15, runs: [],
+    };
+    expect(needsMoreSamples(agg, 0.3)).toBe(false);
+  });
+
+  it("stops when P_cited < 0.15 (extreme low does not straddle)", () => {
+    // 1 cited out of 12 → P=0.083, CI narrow enough
+    const agg: AggregateResult = {
+      query_id: "qry_test", page_url: "https://x.com/p",
+      company_domain: "x.com", engine: "openai", model_version: "gpt-4o",
+      K: 12, P_cited: 0.083, ci_low: 0.0, ci_high: 0.35,
+      position_weight: 0.083, runs: [],
+    };
     expect(needsMoreSamples(agg)).toBe(false);
   });
 });

@@ -75,4 +75,55 @@ describe("parseCitations", () => {
     expect(result.citations[0].normalized_domain).toBe("acme.com");
     expect(result.citations[0].matched_company_domain).toBe("acme.com");
   });
+
+  it("normalizes uppercase URLs", () => {
+    const result = parseCitations(
+      ["HTTPS://ACME.COM/Pricing"],
+      knownPages,
+      knownCompanies,
+    );
+    expect(result.citations[0].normalized_domain).toBe("acme.com");
+    expect(result.citations[0].matched_company_domain).toBe("acme.com");
+  });
+
+  it("strips port from URL", () => {
+    const result = parseCitations(
+      ["https://acme.com:8080/pricing"],
+      knownPages,
+      knownCompanies,
+    );
+    expect(result.citations[0].normalized_domain).toBe("acme.com");
+    expect(result.citations[0].matched_company_domain).toBe("acme.com");
+  });
+
+  it("strips trailing dot from URL", () => {
+    const result = parseCitations(
+      ["https://acme.com./pricing"],
+      knownPages,
+      knownCompanies,
+    );
+    expect(result.citations[0].normalized_domain).toBe("acme.com");
+    expect(result.citations[0].matched_company_domain).toBe("acme.com");
+  });
+
+  it("normalizes bare host (no scheme)", () => {
+    const result = parseCitations(
+      ["acme.com/pricing"],
+      knownPages,
+      knownCompanies,
+    );
+    expect(result.citations[0].normalized_domain).toBe("acme.com");
+    expect(result.citations[0].matched_company_domain).toBe("acme.com");
+  });
+
+  it("strips tracking params from URL before domain normalization", () => {
+    // normalizeDomain strips path/query so tracking params are irrelevant
+    const result = parseCitations(
+      ["https://acme.com/pricing?utm_source=twitter&gclid=abc123"],
+      knownPages,
+      knownCompanies,
+    );
+    expect(result.citations[0].normalized_domain).toBe("acme.com");
+    expect(result.citations[0].matched_company_domain).toBe("acme.com");
+  });
 });

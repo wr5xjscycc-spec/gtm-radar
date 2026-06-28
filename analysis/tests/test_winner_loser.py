@@ -48,6 +48,19 @@ class TestCiWeight:
         w = _ci_weight(0.8, 0.2)
         assert w > 0
 
+    def test_nan_ci_produces_finite_weight(self):
+        import math
+        w = _ci_weight(math.nan, 0.5)
+        assert w == pytest.approx(1000.0)
+        assert not math.isnan(w)
+        assert math.isfinite(w)
+
+    def test_inf_ci_produces_finite_weight(self):
+        import math
+        w = _ci_weight(0.0, math.inf)
+        assert not math.isnan(w)
+        assert math.isfinite(w)
+
 
 class TestExtractPageFeatures:
     def test_extracts_all_content_keys(self):
@@ -341,6 +354,52 @@ class TestBuildModelingTables:
         engines = {(t.customer_id, t.category, t.engine) for t in tables}
         assert ("ws_acme", "GTM analytics", "openai") in engines
         assert ("ws_acme", "GTM analytics", "claude") in engines
+
+    def test_nan_ci_does_not_crash_pipeline(self):
+        tables = build_modeling_tables(
+            measurements=[{
+                "workspaceId": "ws_test",
+                "page_url": "https://test.com/p",
+                "engine": "openai",
+                "P_cited": 0.5,
+                "ci_low": float("nan"),
+                "ci_high": 0.75,
+            }],
+            pages=[{
+                "url": "https://test.com/p",
+                "company_domain": "test.com",
+                "content_features": {"word_count": 100},
+            }],
+            companies=[{
+                "domain": "test.com",
+                "understanding": {"category": "test"},
+                "offpage": {"thirdparty_mentions": 5},
+            }],
+        )
+        assert len(tables) == 1
+        r = tables[0].rows[0]
+        import math
+        assert math.isfinite(r.weight)
+        assert r.weight == 1000.0
+
+    def test_content_feature_keys_match_contract(self):
+        from src.rows import CONTENT_FEATURE_KEYS
+        contract_keys = {
+            "schema_markup", "comparison_table", "word_count",
+            "heading_structure", "freshness_days", "query_term_coverage",
+            "direct_answer_first", "stats_density", "citation_density",
+            "quote_density", "listicle_vs_prose",
+        }
+        assert set(CONTENT_FEATURE_KEYS) == contract_keys
+
+    def test_offpage_feature_keys_match_contract(self):
+        from src.rows import OFFPAGE_FEATURE_KEYS
+        contract_keys = {
+            "thirdparty_mentions", "reddit_presence", "g2_presence",
+            "brand_search_volume", "wikipedia_presence", "review_site_presence",
+            "backlink_density", "entity_cooccurrence",
+        }
+        assert set(OFFPAGE_FEATURE_KEYS) == contract_keys
 
     def test_none_p_cited_ci_treated_as_zero(self):
         tables = build_modeling_tables(

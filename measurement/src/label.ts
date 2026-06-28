@@ -41,9 +41,7 @@ export function labelMeasurements(
   candidatePages: CandidatePoolItem[],
 ): LabelResult {
   const rows: LabeledRow[] = [];
-  const citedDomains = new Set(
-    engineResult.source_urls.map((u) => normalizeDomain(u)),
-  );
+  const citedDomains = engineResult.source_urls.map((u) => normalizeDomain(u));
 
   // Published URL for the target page (the one the query was run for)
   const targetDomain = normalizeDomain(
@@ -52,9 +50,10 @@ export function labelMeasurements(
 
   for (const page of candidatePages) {
     const nd = normalizeDomain(page.company_domain);
-    const wasCited = citedDomains.has(nd);
+    const wasCited = citedDomains.includes(nd);
 
     const label: Label = wasCited ? "winner" : "loser";
+    const citedIdx = wasCited ? citedDomains.indexOf(nd) : -1;
 
     rows.push({
       query_id: queryId,
@@ -65,7 +64,7 @@ export function labelMeasurements(
       run_idx: 0,
       appeared: engineResult.appeared,
       cited: wasCited,
-      position: nd === normalizeDomain(engineResult.source_urls[0] ?? "") ? 0 : null,
+      position: citedIdx >= 0 ? citedIdx : null,
       source_urls: engineResult.source_urls,
       label,
     });

@@ -7,12 +7,13 @@ CONTENT_FEATURE_KEYS = [
     "schema_markup", "comparison_table", "word_count",
     "heading_structure", "freshness_days", "query_term_coverage",
     "direct_answer_first", "stats_density", "citation_density",
-    "listicle_vs_prose",
+    "quote_density", "listicle_vs_prose",
 ]
 
 OFFPAGE_FEATURE_KEYS = [
     "thirdparty_mentions", "reddit_presence", "g2_presence",
     "brand_search_volume", "wikipedia_presence", "review_site_presence",
+    "backlink_density", "entity_cooccurrence",
 ]
 
 

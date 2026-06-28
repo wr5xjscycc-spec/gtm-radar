@@ -12,6 +12,7 @@ Key design decisions:
 - n_companies (distinct cluster_ids) is recorded per group as effective N.
 """
 
+import math
 from typing import Optional
 from src.models import WeightedFitRow, CategoryEngineTable
 from src.rows import CONTENT_FEATURE_KEYS, OFFPAGE_FEATURE_KEYS
@@ -27,7 +28,7 @@ def _ci_weight(ci_low: float, ci_high: float) -> float:
     finite value to avoid infinities.
     """
     width = ci_high - ci_low
-    if width <= 0:
+    if width <= 0 or math.isnan(width):
         return 1000.0
     return 1.0 / width
 
