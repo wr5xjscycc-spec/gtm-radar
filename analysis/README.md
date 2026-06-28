@@ -35,3 +35,23 @@ on `complete`, write `result` back as the `model_fit` record. Typed shapes
 (`FitRequest`/`FitRow`/`ModelFit`/`Coefficient`/`FitJob`) live in `src/contract.py`;
 a seed request fixture is at `tests/fixtures/fit_request.json`. The mocked
 round-trip lives in `tests/test_roundtrip.py`.
+
+## The pipeline (Phases 1–5)
+
+`measurement`+`page`+`company` → `assembly` (per-engine page rows, effective N) →
+`features` (content+off-page, inheritance check) → `matching` (cross-cluster pairs)
+→ `labeling`/`rows` (case-control, per-category/engine tables) → `bayes` (honest
+hypothesis generator) → `hypotheses` (Rung-1) → `experiment` (randomized design) →
+`did` (causal lift + CI) → `delivery` (3-tier) → `moat` (interventional dataset).
+
+## Open source & honesty (Phase 6)
+
+- **OSS methodology core** — `PACKAGING.md`. The algorithm is open; the
+  interventional dataset, vertical packs, and orchestration are not shipped (the
+  moat is the data + loop). Build: `python -m build`.
+- **Honesty audit** — `src/honesty.py` enforces the epistemic ladder:
+  `measurement` (descriptive) ≠ `model_fit` (hypothesis, Rung 1) ≠ `lift_result`
+  (causal, Rung 2). `assert_no_causation_without_experiment` is the load-bearing
+  guard — a causal claim requires a `lift_result` from the randomized DiD path.
+- **Scale path** — `SCALE.md`: hierarchical graduation (≥15 categories / ≥300
+  companies) and the deferred AI-Overviews capture (ToS risk, out of v1).

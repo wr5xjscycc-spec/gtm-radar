@@ -1,0 +1,6 @@
+# Keep the OSS sdist to the methodology core only. The interventional dataset,
+# seed fixtures, and tests are NOT part of the published package (the moat is the
+# data + loop, not the algorithm).
+prune tests
+global-exclude *.db
+global-exclude __pycache__

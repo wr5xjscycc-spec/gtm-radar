@@ -1,8 +1,68 @@
+# P4 analysis — packaging config for the OPEN-SOURCE methodology core.
+#
+# What ships (open): the measurement + experiment *algorithm* — assembly,
+# matching, features, labeling, rows, bayes, hypotheses, did, delivery routing,
+# moat writer (the `src` package).
+# What does NOT ship (the moat): the live interventional dataset, the vertical
+# packs, and the orchestration loop. Those live outside this repo and are
+# intentionally excluded — see PACKAGING.md. The seed/interventional-style data
+# under tests/fixtures is also excluded from the distribution.
+
+[build-system]
+# setuptools>=77 is required for the SPDX-string `license = "MIT"` form (PEP 639).
+requires = ["setuptools>=77.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "gtm-radar-analysis"
-version = "0.0.0"
-description = "P4 — Bayesian hypothesis generator + randomized-DiD experiment engine (the moat)."
+version = "0.1.0"
+description = "Open methodology core: Bayesian hypothesis generator + randomized-DiD causal-lift experiment engine. The algorithm is open; the interventional dataset, vertical packs, and orchestration loop are proprietary and not shipped."
 requires-python = ">=3.11"
+readme = "README.md"
+license = "MIT"
+keywords = ["causal-inference", "bayesian", "difference-in-differences", "experiment", "gtm"]
+
+# RUNTIME deps the methodology core actually needs to import + run:
+#   numpy/pandas      — row assembly, features, experiment math
+#   statsmodels       — the randomized-DiD OLS fit (src.did)
+#   pymc              — the Bayesian hypothesis model (src.bayes); pulls pytensor
+#   pydantic          — the typed I/O contract (src.contract)
+# fastapi/uvicorn/httpx/pytest are intentionally NOT here — they are only needed
+# for the HTTP service wrapper and the test suite; see optional-dependencies.
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "statsmodels>=0.14",
+    "pymc>=5.10",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+# `pip install gtm-radar-analysis[service]` — run the FastAPI HTTP wrapper
+# (src.service) that a Convex action calls over HTTP. Not part of the OSS core.
+service = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "httpx>=0.27",
+]
+# `pip install gtm-radar-analysis[test]` — run the test suite. Includes the
+# service deps (conftest spins up a fastapi TestClient) plus scikit-learn, which
+# only the optional baseline *yardstick* (src.baseline) imports — it is an eval
+# soft-dependency, not part of the shipped methodology core.
+test = [
+    "pytest>=8.0",
+    "scikit-learn>=1.4",
+    "fastapi>=0.115",
+    "httpx>=0.27",
+]
+
+[tool.setuptools.packages.find]
+# Ship only the `src` methodology package. Explicitly EXCLUDE the test suite and
+# the seed/interventional-style fixtures so the data moat never lands in the
+# wheel/sdist.
+where = ["."]
+include = ["src*"]
+exclude = ["tests*", "tests.fixtures*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
