@@ -1,0 +1,197 @@
+{
+  "id": "resp_060f0aa12efb3b37006a40a164bf28819b8ed8863e1f4190aa",
+  "object": "response",
+  "created_at": 1782620516,
+  "status": "completed",
+  "background": false,
+  "billing": {
+    "payer": "developer"
+  },
+  "completed_at": 1782620530,
+  "error": null,
+  "frequency_penalty": 0,
+  "incomplete_details": null,
+  "instructions": null,
+  "max_output_tokens": null,
+  "max_tool_calls": null,
+  "model": "gpt-4o-2024-08-06",
+  "moderation": null,
+  "output": [
+    {
+      "id": "ws_060f0aa12efb3b37006a40a166bbf8819baa8d88d19e128d96",
+      "type": "web_search_call",
+      "status": "completed",
+      "action": {
+        "type": "search",
+        "queries": [
+          "best AI SDR tools for B2B outbound sales 2026"
+        ],
+        "query": "best AI SDR tools for B2B outbound sales 2026"
+      }
+    },
+    {
+      "id": "msg_060f0aa12efb3b37006a40a16982f4819baf285886cbf9787a",
+      "type": "message",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "annotations": [
+            {
+              "type": "url_citation",
+              "end_index": 609,
+              "start_index": 518,
+              "title": "13 Best AI SDR Tools for B2B Sales in 2026 (Compared by Price, Channels & Multilingual Support) - Sera AI",
+              "url": "https://www.seraleads.com/blogs/best-ai-sdr-tools-2026?utm_source=openai"
+            },
+            {
+              "type": "url_citation",
+              "end_index": 822,
+              "start_index": 739,
+              "title": "10 Best AI Sales Tools in 2026 | PikaSEO",
+              "url": "https://pikaseo.com/articles/best-ai-sales-tools?utm_source=openai"
+            },
+            {
+              "type": "url_citation",
+              "end_index": 1418,
+              "start_index": 1327,
+              "title": "13 Best AI SDR Tools for B2B Sales in 2026 (Compared by Price, Channels & Multilingual Support) - Sera AI",
+              "url": "https://www.seraleads.com/blogs/best-ai-sdr-tools-2026?utm_source=openai"
+            },
+            {
+              "type": "url_citation",
+              "end_index": 1724,
+              "start_index": 1629,
+              "title": "10 Best AI SDR Tools in 2026 (Honest Comparison)",
+              "url": "https://techstackreviews.net/best/best-ai-sdr-tools?utm_source=openai"
+            },
+            {
+              "type": "url_citation",
+              "end_index": 2064,
+              "start_index": 1991,
+              "title": "Best AI SDR Tools for B2B Outbound Sales (Ranked)",
+              "url": "https://alexberman.com/ai-sdr-tools?utm_source=openai"
+            },
+            {
+              "type": "url_citation",
+              "end_index": 2358,
+              "start_index": 2285,
+              "title": "Best AI SDR Tools for B2B Outbound Sales (Ranked)",
+              "url": "https://alexberman.com/ai-sdr-tools?utm_source=openai"
+            },
+            {
+              "type": "url_citation",
+              "end_index": 2649,
+              "start_index": 2576,
+              "title": "Best AI SDR Tools for B2B Outbound Sales (Ranked)",
+              "url": "https://alexberman.com/ai-sdr-tools?utm_source=openai"
+            },
+            {
+              "type": "url_citation",
+              "end_index": 2954,
+              "start_index": 2871,
+              "title": "10 Best AI Sales Tools in 2026 | PikaSEO",
+              "url": "https://pikaseo.com/articles/best-ai-sales-tools?utm_source=openai"
+            },
+            {
+              "type": "url_citation",
+              "end_index": 3225,
+              "start_index": 3142,
+              "title": "10 Best AI Sales Tools in 2026 | PikaSEO",
+              "url": "https://pikaseo.com/articles/best-ai-sales-tools?utm_source=openai"
+            },
+            {
+              "type": "url_citation",
+              "end_index": 3565,
+              "start_index": 3480,
+              "title": "Top 10 AI SDR tools for B2B sales teams in 2026 - Guideflow Blog",
+              "url": "https://www.guideflow.com/blog/best-ai-sdr-tools?utm_source=openai"
+            },
+            {
+              "type": "url_citation",
+              "end_index": 3824,
+              "start_index": 3741,
+              "title": "9 Best AI SDR Tools in 2026: Updated Roundup For B2B GTM teams",
+              "url": "https://www.storylane.io/blog/best-ai-sdr-tools?utm_source=openai"
+            }
+          ],
+          "logprobs": [],
+          "text": "Here’s a thorough breakdown of the **best AI SDR tools for B2B outbound sales in 2026**, organized by use case, pricing tier, and deployment approach.\n\n---\n\n##  Key Considerations & Market Trends\n\n- **Diverging AI SDR approaches**:\n  - Fully **autonomous** tools (e.g., 11x.ai, Artisan, AiSDR) handle prospecting, personalization, and outreach end-to-end.\n  - **Human-in-the-loop** platforms (e.g., Sera, Salesmotion) generate signal-anchored drafts while a human rep reviews before sending for better quality control.([seraleads.com](https://www.seraleads.com/blogs/best-ai-sdr-tools-2026?utm_source=openai))\n  - **DIY stacks** (e.g., combining Clay, Apollo, Smartlead) give highly customizable workflows but demand more technical effort.([pikaseo.com](https://pikaseo.com/articles/best-ai-sales-tools?utm_source=openai))\n\n- **Factors driving selection** include:\n  - Multi‑channel support (email, LinkedIn, voice, video)\n  - Data quality and enrichment capability\n  - Deliverability and personalization strength\n  - Pricing transparency and flexibility\n  - Integration with existing CRMs\n\n---\n\n##  Top AI SDR Tools in 2026\n\n### Best Overall / All-Rounders\n1. **Sera**\n   - Considered the *best overall*: multilingual, multi‑channel, and avoids annual lock-ins. Ideal for teams needing flexibility without long-term contracts.([seraleads.com](https://www.seraleads.com/blogs/best-ai-sdr-tools-2026?utm_source=openai))  \n\n2. **Artisan (Ava)**\n   - Frequently ranked highest among autonomous agents.\n   - Offers built-in B2B data, both autopilot and human‑review modes, strong for mid-market teams looking for stack consolidation.([techstackreviews.net](https://techstackreviews.net/best/best-ai-sdr-tools?utm_source=openai))  \n\n### Best for Enterprise-Scale or High Volume\n3. **11x.ai (Alice)**\n   - A fully autonomous platform with email, LinkedIn, and voice (via Julian).\n   - Best suited for enterprise teams, but requires thorough piloting before committing due to mixed outcomes in ROI.([alexberman.com](https://alexberman.com/ai-sdr-tools?utm_source=openai))  \n\n### Best for Transparency & Mid-Market Fit\n4. **AiSDR**\n   - Strong multichannel offering (email, LinkedIn, SMS), with clear pricing (about $900/mo).\n   - Rated highly for growth-stage teams wanting predictable costs.([alexberman.com](https://alexberman.com/ai-sdr-tools?utm_source=openai))  \n\n5. **Salesforge (Agent Frank)**\n   - Focused on **email deliverability** with both autonomous and co-pilot modes.\n   - Pricing starts around $499–$599/mo—good for email-first operations concerned about spam issues.([alexberman.com](https://alexberman.com/ai-sdr-tools?utm_source=openai))  \n\n### Best for Data Enrichment & DIY Flexibility\n6. **Clay**\n   - AI-powered enrichment across dozens of data sources.\n   - Ideal for teams building their own outbound stack or adding high‑quality context into messaging.([pikaseo.com](https://pikaseo.com/articles/best-ai-sales-tools?utm_source=openai))  \n\n7. **Apollo.io**\n   - Combines a large B2B contact database, outreach, and sequencing.\n   - Great entry point for SMB and mid-market teams looking for all-in-one, cost-effective tools.([pikaseo.com](https://pikaseo.com/articles/best-ai-sales-tools?utm_source=openai))  \n\n### Best for Inbound-to-Outbound Transition or Support-Led Workflows\n8. **Guideflow** (outbound-focused demo personalization)\n   - Creates personalized, interactive demos embedded in outreach, aiding progression from SDR engagement to deeper interest.([guideflow.com](https://www.guideflow.com/blog/best-ai-sdr-tools?utm_source=openai))  \n\n9. **Qualified (Piper)**\n   - An inbound AI SDR intended for Salesforce-native enterprises.\n   - Powers real-time website engagement and scheduling via an AI agent (Piper).([storylane.io](https://www.storylane.io/blog/best-ai-sdr-tools?utm_source=openai))  \n\n---\n\n##  Summary Table (By Use Case)\n\n| Use Case                              | Recommended Tool(s)                    | Why It’s Best                                                                 |\n|---------------------------------------|----------------------------------------|--------------------------------------------------------------------------------|\n| All-around autonomous outbound        | Sera, Artisan                          | Multi-channel, built-in data, flexible contracts                              |\n| Enterprise-scale autonomous           | 11x.ai                                 | Covers email, LinkedIn, voice, high-volume intent, but needs careful vetting  |\n| Transparent pricing & SMB fit         | AiSDR                                  | Multi-channel, intent-driven, clear $900/mo pricing                           |\n| Email deliverability emphasis         | Salesforge (Agent Frank)               | Email-first mode, co-pilot/autopilot delivery, $499–$599/mo                   |\n| Data enrichment + DIY workflow        | Clay, Apollo.io                        | Deep data handling (Clay); outreach + data in one (Apollo)                    |\n| Demo personalization / outbound       | Guideflow                              | Embeds personalized demos in outreach to drive engagement                     |\n| Inbound qualification (web traffic)   | Qualified (Piper)                      | Real-time visitor qualification and scheduling with Salesforce                |\n\n---\n\n##  Choosing the Right Tool for Your Team\n\n1. Define your core need: **outbound prospecting vs. inbound qualification**.\n2. Determine preferred **levels of autonomy vs. human oversight**.\n3. Confirm **channel needs** (email, LinkedIn, voice, chat, etc.).\n4. Evaluate **pricing model and transparency**—budget predictability matters.\n5. Assess your stack: do you already have CRM, data providers, or deliverability tools?\n6. Conduct a **pilot phase**, especially with large investments like 11x.ai.\n\n---\n\n###  Final Thoughts\n\nThe AI SDR landscape in **2026** is robust and segmented largely by autonomy and flexibility. If you're looking for streamlined, autonomous outreach—with multilingual and multi-channel capabilities—**Sera** and **Artisan (Ava)** stand out. For cost-conscious mid-market teams, **AiSDR** offers reliable multichannel outreach with budget clarity. **Salesforge** addresses a critical issue—deliverability. If you want to build custom workflows grounded in rich data, **Clay** and **Apollo.io** remain foundational. And for seamless inbound qualification, **Qualified (Piper)** and **Guideflow** offer smart, demo-centric pathways.\n\nLet me know if you'd like a deeper dive or help comparing two specific platforms!"
+        }
+      ],
+      "role": "assistant"
+    }
+  ],
+  "parallel_tool_calls": true,
+  "presence_penalty": 0,
+  "previous_response_id": null,
+  "prompt_cache_key": null,
+  "prompt_cache_retention": "in_memory",
+  "reasoning": {
+    "context": null,
+    "effort": null,
+    "summary": null
+  },
+  "safety_identifier": null,
+  "service_tier": "default",
+  "store": true,
+  "temperature": 1,
+  "text": {
+    "format": {
+      "type": "text"
+    },
+    "verbosity": "medium"
+  },
+  "tool_choice": "auto",
+  "tool_usage": {
+    "image_gen": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 0
+    },
+    "web_search": {
+      "num_requests": 1
+    }
+  },
+  "tools": [
+    {
+      "type": "web_search",
+      "return_token_budget": "default",
+      "search_content_types": [
+        "text"
+      ],
+      "search_context_size": "medium",
+      "user_location": {
+        "type": "approximate",
+        "city": null,
+        "country": "US",
+        "region": null,
+        "timezone": null
+      }
+    }
+  ],
+  "top_logprobs": 0,
+  "top_p": 1,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 17339,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens": 1517,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "total_tokens": 18856
+  },
+  "user": null,
+  "metadata": {}
+}
