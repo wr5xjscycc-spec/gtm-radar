@@ -6,3 +6,7 @@ requires-python = ">=3.11"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Make the `src` package importable as `import src...` whether pytest is run from
+# this dir (`pytest`) or the repo root (`pytest analysis`). Resolved relative to
+# the rootdir (this pyproject's directory).
+pythonpath = ["."]
