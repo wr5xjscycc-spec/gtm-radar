@@ -14,6 +14,7 @@ const makeRun = (overrides: Partial<RunRecord> = {}): RunRecord => ({
   position: 0,
   source_urls: ["https://acme.com/pricing"],
   ts: Date.now(),
+  window_tag: "adhoc",
   ...overrides,
 });
 

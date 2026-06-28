@@ -33,25 +33,25 @@ describe("buildLabelTables", () => {
     expect(row.ci_high).toBeDefined();
   });
 
-  it("labels P_cited >= 0.5 as winner", () => {
+  it("labels P_cited > 0 as winner (was cited at least once)", () => {
     const result = buildLabelTables([makeAgg({ P_cited: 0.8 })]);
     expect(result.rows[0].label).toBe("winner");
   });
 
-  it("labels P_cited < 0.5 as loser", () => {
+  it("labels P_cited > 0 even when below 0.5 (any citation = winner)", () => {
     const result = buildLabelTables([makeAgg({ P_cited: 0.2 })]);
-    expect(result.rows[0].label).toBe("loser");
+    expect(result.rows[0].label).toBe("winner");
   });
 
-  it("handles P_cited === 0.5 as winner (tie)", () => {
-    const result = buildLabelTables([makeAgg({ P_cited: 0.5 })]);
-    expect(result.rows[0].label).toBe("winner");
+  it("labels P_cited === 0 as loser (never cited)", () => {
+    const result = buildLabelTables([makeAgg({ P_cited: 0.0 })]);
+    expect(result.rows[0].label).toBe("loser");
   });
 
   it("never pools engines — each engine is separate", () => {
     const aggs = [
       makeAgg({ engine: "openai", P_cited: 0.9 }),
-      makeAgg({ engine: "perplexity", P_cited: 0.3 }),
+      makeAgg({ engine: "perplexity", P_cited: 0.0 }),
     ];
     const result = buildLabelTables(aggs);
     expect(result.rows).toHaveLength(2);

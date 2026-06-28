@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
+from datetime import datetime
 
 
 class FitRow(BaseModel):
@@ -84,3 +85,58 @@ class BaselineMetrics(BaseModel):
     n_features: int
     n_rows: int
     n_companies: int
+
+
+class ExperimentPair(BaseModel):
+    treatment_page: str
+    control_page: str
+    match_covars: dict[str, float]
+
+
+class Experiment(BaseModel):
+    customer_id: str
+    category: str
+    engine: str
+    hypothesis: str
+    pairs: list[ExperimentPair]
+    status: str  # designing | awaiting_publish | running | complete | expired
+
+
+class LiftResult(BaseModel):
+    experiment_id: str
+    estimate: float
+    ci_low: float
+    ci_high: float
+    p_value: float
+    verdict: str  # worked | no_effect | inconclusive
+    claim_rung: int = 2
+    computed_at: str = ""
+
+
+class Intervention(BaseModel):
+    feature_changed: str
+    category: str
+    engine: str
+    measured_lift: float
+    ci_low: float
+    ci_high: float
+    experiment_id: str
+
+
+class DeliverableAsset(BaseModel):
+    page_url: str
+    content_md: str
+    tier: int  # 1 | 2 | 3
+
+
+class CmsPublishPayload(BaseModel):
+    page_url: str
+    title: str
+    body_html: str
+    meta: dict[str, str]
+
+
+class PlaybookStep(BaseModel):
+    channel: str  # g2 | reddit | wikipedia | review_site
+    action: str
+    rationale: str

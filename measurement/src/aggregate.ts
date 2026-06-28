@@ -12,6 +12,8 @@ export interface RunRecord {
   position: number | null;
   source_urls: string[];
   ts: number;
+  window_tag: "baseline" | "post" | "adhoc";
+  experiment_id?: string;
 }
 
 export interface AggregateResult {

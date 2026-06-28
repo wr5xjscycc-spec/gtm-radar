@@ -1,5 +1,10 @@
 import { normalizeUrl } from "../../convex/lib/domain";
 
+interface PageCacheLike {
+  get(url: string, extractorVersion: string): Promise<PageRecord | null>;
+  set(url: string, extractorVersion: string, html: string, page: PageRecord): Promise<void>;
+}
+
 export interface ContentFeatures {
   schema_markup: boolean;
   comparison_table: boolean;
@@ -312,6 +317,22 @@ export async function enrichPage(
     scraped_at: scrapedAt,
     cache_key: buildCacheKey(normalizedUrl, EXTRACTOR_VERSION),
   };
+}
+
+export async function enrichPageWithCache(
+  companyDomain: string,
+  pageUrl: string,
+  role: PageRecord["role"],
+  apiKey: string,
+  cache: PageCacheLike,
+  queryTerms?: string[]
+): Promise<PageRecord> {
+  const cached = await cache.get(pageUrl, EXTRACTOR_VERSION);
+  if (cached) return cached;
+
+  const page = await enrichPage(companyDomain, pageUrl, role, apiKey, queryTerms);
+  await cache.set(pageUrl, EXTRACTOR_VERSION, page.scraped_at, page);
+  return page;
 }
 
 export { EXTRACTOR_VERSION };

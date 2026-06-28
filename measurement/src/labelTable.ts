@@ -27,6 +27,11 @@ export interface LabelTableResult {
  *
  * Each row is keyed on normalized domain/URL for clean P4 joins.
  * Engines are NEVER pooled — output is per-engine.
+ *
+ * Winner/loser label is computed as P_cited > 0 (any citation across K runs).
+ * This is the case-control group label; P4 uses the continuous P_cited rate for
+ * model fitting and the binary for group assignment. Threshold MUST match P4's
+ * winner_loser.py (P_cited > 0, not >= 0.5).
  */
 export function buildLabelTables(
   aggregates: AggregateResult[],
@@ -45,7 +50,7 @@ export function buildLabelTables(
       ci_high: agg.ci_high,
       position_weight: agg.position_weight,
       K: agg.K,
-      label: agg.P_cited >= 0.5 ? "winner" : "loser",
+      label: agg.P_cited > 0 ? "winner" : "loser",
     });
     engineMap.set(agg.engine, rows);
   }

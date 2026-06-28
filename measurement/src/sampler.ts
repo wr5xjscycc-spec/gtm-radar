@@ -75,6 +75,7 @@ export async function adaptiveSample(
       position: cited ? matchedIdx : null,
       source_urls: result.source_urls,
       ts: Date.now(),
+      window_tag: "adhoc",
     });
 
     // Check after baseK runs whether we need to continue

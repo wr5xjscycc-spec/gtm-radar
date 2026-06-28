@@ -82,3 +82,14 @@ These are stored alongside the per-run rows, keyed on `query_id + page_url + eng
    model update is detectable.
 4. **Run-level rows + aggregates**: both are written; P4 can choose its
    preferred granularity.
+5. **Winner/loser threshold**: `winner = P_cited > 0` (any citation across
+   K runs), `loser = P_cited == 0` (never cited). This is the case-control
+   group label for P4's binary classifier. P4 fits the continuous `P_cited`
+   rate and uses the binary for group assignment. Threshold MUST match
+   P4's `winner_loser.py`.
+6. **Window tagging**: experiment runs carry `window_tag = baseline | post`
+   and `experiment_id`. Standard (non-experiment) runs carry
+   `window_tag = "adhoc"` with no `experiment_id`.
+7. **Identical-arm protocol**: treatment AND control pages in an experiment
+   are measured with identical engines, adapter config, query text, and
+   cadence. Asymmetric measurement biases the DiD estimate.
