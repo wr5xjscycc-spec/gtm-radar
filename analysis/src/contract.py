@@ -172,8 +172,8 @@ class Experiment(BaseModel):
     id: str
     customer_id: str
     pairs: list[ExperimentPair]
-    baseline_window: Window
-    post_window: Window
+    baseline_window: str
+    post_window: str
     status: ExperimentStatus = "designing"
     publish_event_ts: Optional[str] = None
 

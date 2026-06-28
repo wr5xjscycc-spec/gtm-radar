@@ -206,11 +206,11 @@ describe("buildCompanyLayer (scale + record shape)", () => {
       } else {
         expect(c.source_versions.battlefield).toBeUndefined();
       }
-      expect(c.coverage_flags).toMatchObject({
-        firmographics_missing: true,
-        offpage_missing: true,
-        understanding_missing: true,
-      });
+      expect(c.coverage_flags).toEqual([
+        "firmographics_missing",
+        "offpage_missing",
+        "understanding_missing",
+      ]);
     }
   });
 

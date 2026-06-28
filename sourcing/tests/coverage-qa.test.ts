@@ -29,11 +29,11 @@ function fullCompany(overrides: Partial<Company> = {}): Company {
     firmographics: { size: "201-500", tech_stack: ["React"] },
     offpage: { thirdparty_mentions: 12, reddit_presence: 0 },
     understanding: { category: "work management", icp: "teams", positioning: "..." },
-    coverage_flags: {
-      firmographics_missing: false,
-      offpage_missing: false,
-      understanding_missing: false,
-    },
+    coverage_flags: [
+      "firmographics_missing",
+      "offpage_missing",
+      "understanding_missing",
+    ],
     source_versions: { battlefield: "fiber/find-similar-companies@v1" },
     ...overrides,
   };
@@ -43,14 +43,14 @@ const fullDeterministic: ContentFeatures = {
   schema_markup: true,
   comparison_table: false,
   word_count: 1200,
-  heading_structure: { h1: 1, h2: 4, h3: 6 },
-  freshness_days: null,
+  heading_structure: 11, // h1=1 + h2=4 + h3=6
+  freshness_days: 0,
   query_term_coverage: 0.8,
   direct_answer_first: true,
   stats_density: 3.1,
   citation_density: 1.2,
   quote_density: 0.4,
-  listicle_vs_prose: "mixed",
+  listicle_vs_prose: 0.5,
 };
 
 function makePage(content: ContentFeatures, overrides: Partial<Page> = {}): Page {
@@ -60,7 +60,7 @@ function makePage(content: ContentFeatures, overrides: Partial<Page> = {}): Page
     role: "candidate",
     content_features: content,
     extractor_version: "extractor@v1",
-    scraped_at: "2026-01-01T00:00:00.000Z",
+    scraped_at: Date.parse("2026-01-01T00:00:00.000Z"),
     cache_key: "asana.com|hash|extractor@v1",
     ...overrides,
   };
@@ -125,15 +125,11 @@ describe("sweepVerticalCoverage — low-coverage surfaced, not dropped", () => {
   });
 
   it("RECONCILES company flags toward reality (stored flag disagrees with data)", () => {
-    // coverage_flags LIE (firmographics_missing:false) but firmographics is empty.
+    // coverage_flags LIE but firmographics is empty.
     const liar = fullCompany({
       domain: "liar.com",
       firmographics: undefined,
-      coverage_flags: {
-        firmographics_missing: false, // stale / wrong
-        offpage_missing: false,
-        understanding_missing: false,
-      },
+      coverage_flags: [],
     });
     const qa = sweepVerticalCoverage({
       vertical: "fintech",
@@ -144,9 +140,9 @@ describe("sweepVerticalCoverage — low-coverage surfaced, not dropped", () => {
     const flags = qa.reconciled_flags.find((f) => f.domain === "liar.com");
     expect(flags).toBeDefined();
     // corrected toward the DATA, not the stale persisted flag.
-    expect(flags!.coverage_flags.firmographics_missing).toBe(true);
-    expect(flags!.coverage_flags.offpage_missing).toBe(false);
-    expect(flags!.coverage_flags.understanding_missing).toBe(false);
+    expect(flags!.coverage_flags).toContain("firmographics_missing");
+    expect(flags!.coverage_flags).not.toContain("offpage_missing");
+    expect(flags!.coverage_flags).not.toContain("understanding_missing");
   });
 
   it("threshold override is honored — a stricter threshold surfaces MORE entities", () => {

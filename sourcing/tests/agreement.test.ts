@@ -31,7 +31,7 @@ function feat(over: Partial<SubjectiveContentFeatures> = {}): SubjectiveContentF
     stats_density: 3,
     citation_density: 1,
     quote_density: 0,
-    listicle_vs_prose: "prose",
+    listicle_vs_prose: 0,
     ...over,
   };
 }
@@ -190,7 +190,7 @@ describe("computeAgreement — n=0 graceful", () => {
 
 describe("evaluateExtractor — runs the real extractor over a labeled subset", () => {
   it("perfect predictions → agreement 1 across features", async () => {
-    const gold = feat({ direct_answer_first: true, stats_density: 2, citation_density: 1, quote_density: 0, listicle_vs_prose: "prose" });
+    const gold = feat({ direct_answer_first: true, stats_density: 2, citation_density: 1, quote_density: 0, listicle_vs_prose: 0 });
     const reply = JSON.stringify(gold);
     const { model } = mockModel([reply, reply]);
     const report = await evaluateExtractor(model, [

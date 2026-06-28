@@ -46,14 +46,14 @@ def _records() -> tuple[list[dict], list[dict], list[dict]]:
     pages = [
         _page("acme.com", "https://acme.com/pricing"),
         _page("acme.com", "https://acme.com/features"),  # 2nd page -> pseudo-replication
-        _page("globex.com", "https://www.globex.com/home/"),
+        _page("globex.com", "HTTP://WWW.Globex.com/Home/"),  # messy -> normalized to https://globex.com/Home
         _page("zorg.com", "https://zorg.com/blog"),
     ]
     measurements = [
         _measurement("openai", "https://acme.com/pricing", 0.7),
         _measurement("openai", "https://acme.com/features", 0.4),
-        # uppercase WWW + trailing slash must still join via normalization
-        _measurement("openai", "https://WWW.Globex.com/Home/", 0.6),
+        # uppercase scheme + www + trailing slash must still join via normalization
+        _measurement("openai", "HTTP://WWW.Globex.com/Home/", 0.6),
         # perplexity-only page: must be excluded when assembling openai
         _measurement("perplexity", "https://zorg.com/blog", 0.9),
     ]
@@ -91,14 +91,14 @@ def test_normalized_domain_join_handles_scheme_www_trailing_slash():
     measurements, pages, companies = _records()
     rows = assemble_rows(measurements, pages, companies, engine="openai")
     by_url = {row.page_url: row for row in rows}
-    assert "globex.com/home" in by_url  # joined despite https://WWW...Home/
-    assert by_url["globex.com/home"].company_domain == "globex.com"
+    assert "https://globex.com/Home" in by_url  # joined despite https://WWW...Home/
+    assert by_url["https://globex.com/Home"].company_domain == "globex.com"
 
 
 def test_features_are_namespaced_page_and_company():
     measurements, pages, companies = _records()
     rows = assemble_rows(measurements, pages, companies, engine="openai")
-    row = next(r for r in rows if r.page_url == "acme.com/pricing")
+    row = next(r for r in rows if r.page_url == "https://acme.com/pricing")
     assert row.features["page__word_count"] == 1200.0
     assert row.features["page__schema_markup"] == 1.0  # bool -> 1.0
     assert row.features["company__headcount_growth"] == 0.2
@@ -111,7 +111,7 @@ def test_features_are_namespaced_page_and_company():
 def test_ci_width_derived_from_bounds():
     measurements, pages, companies = _records()
     rows = assemble_rows(measurements, pages, companies, engine="openai")
-    row = next(r for r in rows if r.page_url == "acme.com/pricing")
+    row = next(r for r in rows if r.page_url == "https://acme.com/pricing")
     assert row.ci_width is not None
     assert abs(row.ci_width - 0.2) < 1e-9
 

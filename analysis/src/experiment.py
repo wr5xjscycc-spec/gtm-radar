@@ -25,19 +25,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from .contract import Experiment, ExperimentPair, ExperimentStatus, Window
+from .contract import Experiment, ExperimentPair, ExperimentStatus
 from .matching import Pair, match_pairs
-
-# Accept a Window or a bare (start, end) pair so callers (and the Convex action)
-# don't have to import the contract just to pass dates.
-WindowLike = Window | tuple[str, str]
-
-
-def _coerce_window(value: WindowLike) -> Window:
-    if isinstance(value, Window):
-        return value
-    start, end = value
-    return Window(start=start, end=end)
 
 
 def randomize_assignment(pair: Pair, rng: np.random.Generator) -> tuple[str, str]:
@@ -98,8 +87,8 @@ def design_experiment(
     *,
     customer_id: str,
     engine: str,
-    baseline_window: WindowLike,
-    post_window: WindowLike,
+    baseline_window: str,
+    post_window: str,
     experiment_id: str,
     target_feature: str | None = None,
     n_pairs: int = 8,
@@ -130,7 +119,7 @@ def design_experiment(
         id=experiment_id,
         customer_id=customer_id,
         pairs=pairs,
-        baseline_window=_coerce_window(baseline_window),
-        post_window=_coerce_window(post_window),
+        baseline_window=baseline_window,
+        post_window=post_window,
         status=status,
     )

@@ -12,7 +12,7 @@
 // deterministic family still stands without it; see types.ts ContentFeatures).
 
 import type { ChatModel } from "./understanding";
-import type { ListicleVsProse, SubjectiveContentFeatures } from "./types";
+import type { SubjectiveContentFeatures } from "./types";
 
 /** Stable version tag stamped into `page.extractor_version`. */
 export const CONTENT_EXTRACTOR_VERSION = "content-features@v1";
@@ -49,11 +49,13 @@ function asFiniteNumber(v: unknown): number | null {
   return null;
 }
 
-const VALID_LISTICLE: ReadonlySet<string> = new Set<ListicleVsProse>([
-  "listicle",
-  "prose",
-  "mixed",
-]);
+/** Map string label or numeric value to scalar: listicle→0, prose→1, mixed→0.5. Throws on invalid. */
+function mapListicleVsProse(value: unknown): number {
+  if (value === "listicle" || value === 0) return 0;
+  if (value === "prose" || value === 1) return 1;
+  if (value === "mixed" || value === 0.5) return 0.5;
+  throw new Error('extractSubjectiveFeatures: listicle_vs_prose must be "listicle" | "prose" | "mixed"');
+}
 
 /**
  * Extract the subjective `content_features` via gpt-4o-mini (through the port).
@@ -100,17 +102,11 @@ export async function extractSubjectiveFeatures(
       "extractSubjectiveFeatures: stats_density/citation_density/quote_density must be finite numbers",
     );
   }
-  if (typeof obj.listicle_vs_prose !== "string" || !VALID_LISTICLE.has(obj.listicle_vs_prose)) {
-    throw new Error(
-      'extractSubjectiveFeatures: listicle_vs_prose must be "listicle" | "prose" | "mixed"',
-    );
-  }
-
   return {
     direct_answer_first: obj.direct_answer_first,
     stats_density: stats,
     citation_density: citation,
     quote_density: quote,
-    listicle_vs_prose: obj.listicle_vs_prose as ListicleVsProse,
+    listicle_vs_prose: mapListicleVsProse(obj.listicle_vs_prose),
   };
 }

@@ -65,7 +65,7 @@ const GOOD_SUBJECTIVE = JSON.stringify({
   stats_density: 4.2,
   citation_density: 1.5,
   quote_density: 0,
-  listicle_vs_prose: "mixed",
+  listicle_vs_prose: 0.5,
 });
 
 function mockModel(reply: string): { model: ChatModel; calls: { system: string; user: string }[] } {
@@ -117,7 +117,7 @@ describe("Orange Slice page-feature mapping (mocked vendors)", () => {
     // deterministic family present and correct
     expect(f.schema_markup).toBe(true);
     expect(f.comparison_table).toBe(true);
-    expect(f.heading_structure).toEqual({ h1: 1, h2: 1, h3: 0 });
+    expect(f.heading_structure).toBe(2); // h1=1 + h2=1 + h3=0
     expect(f.word_count).toBeGreaterThan(0);
     expect(f.freshness_days).toBe(7);
     expect(f.query_term_coverage).toBeCloseTo(2 / 3, 5);
@@ -140,7 +140,7 @@ describe("Orange Slice page-feature mapping (mocked vendors)", () => {
     expect(f.stats_density).toBe(4.2);
     expect(f.citation_density).toBe(1.5);
     expect(f.quote_density).toBe(0);
-    expect(f.listicle_vs_prose).toBe("mixed");
+    expect(f.listicle_vs_prose).toBe(0.5);
   });
 
   it("keeps the deterministic vector when the model reply is unparseable", async () => {
@@ -156,7 +156,7 @@ describe("Orange Slice page-feature mapping (mocked vendors)", () => {
     const { client } = mockOrange([RICH_PAGE]);
     const { model } = mockModel(GOOD_SUBJECTIVE);
     const pages = await enrichPages(client, { companyDomain: "example.com", now: NOW, model });
-    expect(pages[0].scraped_at).toBe(NOW);
+    expect(pages[0].scraped_at).toBe(Date.parse(NOW));
   });
 
   it("encodes the subjective state in extractor_version (honest + cache-safe)", async () => {

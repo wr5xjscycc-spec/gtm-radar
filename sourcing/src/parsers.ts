@@ -166,10 +166,10 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 export function freshnessDays(
   input: string | Date | null | undefined,
   now: string | Date,
-): number | null {
+): number {
   const updated = toDate(input);
   const ref = toDate(now);
-  if (updated === null || ref === null) return null;
+  if (updated === null || ref === null) return 0;
   const days = Math.floor((ref.getTime() - updated.getTime()) / MS_PER_DAY);
   return days < 0 ? 0 : days;
 }
@@ -262,11 +262,12 @@ export function extractDeterministicFeatures(
   const text = input.text ?? htmlToText(input.html);
   const lastModified =
     input.lastModified != null ? input.lastModified : extractLastModified(input.html);
+  const hs = headingStructure(input.html);
   return {
     schema_markup: hasSchemaMarkup(input.html),
     comparison_table: hasComparisonTable(input.html),
     word_count: wordCount(text),
-    heading_structure: headingStructure(input.html),
+    heading_structure: hs.h1 + hs.h2 + hs.h3,
     freshness_days: freshnessDays(lastModified, now),
     query_term_coverage: queryTermCoverage(text, input.queryTerms ?? []),
   };

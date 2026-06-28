@@ -26,11 +26,11 @@ function makeCompany(overrides: Partial<Company> = {}): Company {
     firmographics: { size: "201-500", funding_stage: "Series B" },
     offpage: { thirdparty_mentions: 42, g2_presence: 1, brand_search_volume: 9000 },
     understanding: { category: "PM tool", icp: "mid-market", positioning: "fast" },
-    coverage_flags: {
-      firmographics_missing: false,
-      offpage_missing: false,
-      understanding_missing: false,
-    },
+    coverage_flags: [
+      "firmographics_missing",
+      "offpage_missing",
+      "understanding_missing",
+    ],
     source_versions: { battlefield: "fiber/find-similar-companies@v1" },
     ...overrides,
   };
@@ -45,12 +45,12 @@ function makePage(overrides: Partial<Page> = {}): Page {
       schema_markup: false,
       comparison_table: false,
       word_count: 800,
-      heading_structure: { h1: 1, h2: 3, h3: 2 },
+      heading_structure: 6, // h1=1 + h2=3 + h3=2
       freshness_days: 10,
       query_term_coverage: 0.5,
     },
     extractor_version: "extractor@v1",
-    scraped_at: "2026-06-27T00:00:00.000Z",
+    scraped_at: Date.parse("2026-06-27T00:00:00.000Z"),
     cache_key: "example.com|hash|extractor@v1",
     ...overrides,
   };
@@ -105,17 +105,17 @@ describe("join-integrity — inheritance (EVERY page inherits company context)",
   });
 });
 
-describe("join-integrity — www/subdomain mismatch is SURFACED, never dropped", () => {
-  it("blog.example.com page orphans against example.com company but is STILL emitted", () => {
-    // normalizeDomain strips only `www`, NOT arbitrary subdomains — so
-    // blog.example.com realistically misses example.com. That is the exact
-    // silent-drop risk this audit surfaces.
-    expect(normalizeDomain("blog.example.com")).toBe("blog.example.com");
+describe("join-integrity — domain mismatch is SURFACED, never dropped", () => {
+  it("asana.com page orphans against monday.com company but is STILL emitted", () => {
+    // normalizeDomain strips ALL subdomains (eTLD+1), so different registrable
+    // domains do NOT match — the orphan is correctly surfaced.
+    expect(normalizeDomain("monday.com")).toBe("monday.com");
+    expect(normalizeDomain("asana.com")).toBe("asana.com");
 
-    const company = makeCompany({ domain: "example.com" });
+    const company = makeCompany({ domain: "monday.com" });
     const page = makePage({
-      company_domain: "blog.example.com",
-      url: "https://blog.example.com/post",
+      company_domain: "asana.com",
+      url: "https://asana.com/post",
     });
 
     const { joined, report } = joinPagesToCompanies([company], [page]);
@@ -130,11 +130,11 @@ describe("join-integrity — www/subdomain mismatch is SURFACED, never dropped",
 
     // Surfaced as an orphan for P1 visibility.
     expect(report.orphan_pages).toEqual([
-      { url: "https://blog.example.com/post", company_domain: "blog.example.com" },
+      { url: "https://asana.com/post", company_domain: "asana.com" },
     ]);
     expect(report.joined).toBe(0);
     // And the company that lost all its pages is flagged childless.
-    expect(report.childless_companies).toEqual(["example.com"]);
+    expect(report.childless_companies).toEqual(["monday.com"]);
   });
 
   it("www IS normalized on both sides — does NOT cause a false orphan", () => {
@@ -203,7 +203,7 @@ describe("join-integrity — no page is ever dropped", () => {
       makePage({ company_domain: "example.com", url: "u1" }),
       makePage({ company_domain: "example.com", url: "u2" }),
       makePage({ company_domain: "orphan.com", url: "u3" }),
-      makePage({ company_domain: "blog.example.com", url: "u4" }),
+      makePage({ company_domain: "different.com", url: "u4" }),
     ];
 
     const { joined, report } = joinPagesToCompanies([company], pages);

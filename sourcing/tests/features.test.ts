@@ -26,7 +26,7 @@ const GOOD = {
   stats_density: 3.2,
   citation_density: 1,
   quote_density: 0,
-  listicle_vs_prose: "prose",
+  listicle_vs_prose: 1,
 };
 
 const input = { url: "https://linear.app/features", text: "Some page text about issue tracking." };
@@ -40,7 +40,7 @@ describe("extractSubjectiveFeatures — happy path", () => {
       stats_density: 3.2,
       citation_density: 1,
       quote_density: 0,
-      listicle_vs_prose: "prose",
+      listicle_vs_prose: 1,
     });
   });
 

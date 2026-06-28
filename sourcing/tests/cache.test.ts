@@ -22,7 +22,7 @@ const FEATURES: ContentFeatures = {
   schema_markup: true,
   comparison_table: true,
   word_count: 420,
-  heading_structure: { h1: 1, h2: 2, h3: 0 },
+  heading_structure: 3,
   freshness_days: 7,
   query_term_coverage: 0.5,
 };
@@ -36,7 +36,7 @@ function makePage(overrides: Partial<Page> = {}): Page {
     role: "competitor",
     content_features: FEATURES,
     extractor_version: "content@v1+subj",
-    scraped_at: "2026-06-20T00:00:00Z",
+    scraped_at: Date.parse("2026-06-20T00:00:00Z"),
     cache_key: "competitor.com|deadbeef|noqt|content@v1+subj",
     ...overrides,
   };

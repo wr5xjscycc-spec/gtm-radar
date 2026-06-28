@@ -244,6 +244,28 @@ export default defineSchema({
     ts: v.number(),
   }).index("by_workspace", ["workspaceId"]),
 
+  // +1. analysis_jobs (owner: P2/P4) — round-trip tracking for Convex → Python fit jobs.
+  analysis_jobs: defineTable({
+    workspaceId: v.id("workspaces"),
+    customer_id: v.string(),
+    category: v.string(),
+    engine,
+    request: v.string(), // JSON-serialized FitRequest
+    status: v.union(
+      v.literal("queued"),
+      v.literal("running"),
+      v.literal("complete"),
+      v.literal("failed"),
+    ),
+    job_id: v.string(), // Python service's job_id
+    result: v.optional(v.string()), // JSON-serialized ModelFit
+    error: v.optional(v.string()),
+    created_at: v.number(),
+    updated_at: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_job_id", ["job_id"]),
+
   // 9. intervention (owner: P4) — the moat store.
   interventions: defineTable({
     workspaceId: v.id("workspaces"),

@@ -36,17 +36,17 @@ export const DEFAULT_FRESHNESS_DAYS = 30;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-/** Parse an ISO-8601 string to a Date, or null when missing/unparseable. */
-function toDate(value: string | null | undefined): Date | null {
+/** Parse a timestamp to a Date, or null when missing/unparseable (number = epoch ms). */
+function toDate(value: number | string | null | undefined): Date | null {
   if (value == null) return null;
-  const trimmed = String(value).trim();
-  if (trimmed === "") return null;
-  const d = new Date(trimmed);
+  const d = typeof value === "number" && Number.isFinite(value)
+    ? new Date(value)
+    : new Date(String(value).trim());
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
 /**
- * Age of a cached entry in days, between `scrapedAt` and `now` (both ISO-8601).
+ * Age of a cached entry in days, between `scrapedAt` (epoch ms) and `now` (ISO-8601).
  * Fractional — we do NOT floor, so a boundary comparison against the window is
  * exact (a 30.5-day-old entry against a 30-day window is correctly stale).
  *
@@ -57,7 +57,7 @@ function toDate(value: string | null | undefined): Date | null {
  * a future-dated entry) — is CLAMPED to 0: a future-dated entry is treated as
  * "fresh" (age 0), not stale, mirroring freshnessDays() in parsers.ts.
  */
-export function ageInDays(scrapedAt: string, now: string): number | null {
+export function ageInDays(scrapedAt: number, now: string): number | null {
   const scraped = toDate(scrapedAt);
   const ref = toDate(now);
   if (scraped === null || ref === null) return null;

@@ -60,9 +60,9 @@ def _records() -> tuple[list[dict], list[dict], list[dict]]:
 def test_derive_topical_clusters_maps_page_to_cluster():
     measurements, _, _ = _records()
     clusters = derive_topical_clusters(measurements)
-    assert clusters["acme.com/compare"] == "q1"
-    assert clusters["globex.com/product"] == "q2"
-    assert clusters["initech.com/docs"] == "q2"
+    assert clusters["https://acme.com/compare"] == "q1"
+    assert clusters["https://globex.com/product"] == "q2"
+    assert clusters["https://initech.com/docs"] == "q2"
 
 
 def test_derive_topical_clusters_multi_query_primary_is_sorted_first():
@@ -72,7 +72,7 @@ def test_derive_topical_clusters_multi_query_primary_is_sorted_first():
     ]
     clusters = derive_topical_clusters(measurements)
     # tested by two queries -> deterministic primary = sorted-first query_id
-    assert clusters["acme.com/bridge"] == "q_alpha"
+    assert clusters["https://acme.com/bridge"] == "q_alpha"
 
 
 def test_pairs_are_always_cross_cluster_spillover_guard():
@@ -99,8 +99,8 @@ def test_expected_cross_cluster_pairs_form():
     # winners (compare ~0.70 / product ~0.66) and losers (guide ~0.08 / docs ~0.05)
     # pair across clusters; within-cluster winner<->loser gaps exceed tolerance.
     paired = {frozenset((p.treatment_page, p.control_page)) for p in pairs}
-    assert frozenset(("acme.com/compare", "globex.com/product")) in paired
-    assert frozenset(("acme.com/guide", "initech.com/docs")) in paired
+    assert frozenset(("https://acme.com/compare", "https://globex.com/product")) in paired
+    assert frozenset(("https://acme.com/guide", "https://initech.com/docs")) in paired
 
 
 def test_per_engine_isolation_uses_engine_specific_rates():

@@ -12,11 +12,14 @@
 // `scraped_at` from the INJECTED `now`, and compute a `cache_key` from the
 // normalized domain + a deterministic content hash + the extractor version.
 
-import { normalizeDomain } from "./domain";
+import { normalizeDomain, normalizeUrl } from "./domain";
 import { extractDeterministicFeatures, htmlToText } from "./parsers";
 import { CONTENT_EXTRACTOR_VERSION, extractSubjectiveFeatures } from "./features";
 import type { ChatModel } from "./understanding";
 import type { ContentFeatures, Page, PageRole } from "./types";
+
+// Re-export so content.test.ts can import normalizeUrl from this module.
+export { normalizeUrl } from "./domain";
 
 /** One scraped page as returned by Orange Slice (the fields we consume). */
 export interface OrangeSlicePage {
@@ -68,29 +71,6 @@ export function contentHash(input: string): string {
     h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
   }
   return (h >>> 0).toString(16).padStart(8, "0");
-}
-
-/**
- * Normalize a full page URL into a stable join key: lowercase scheme + host,
- * strip `www.`, drop the fragment, strip a trailing slash, keep path + query.
- * Distinct from `normalizeDomain` (which collapses to the bare host) — page keys
- * need the path. Falls back to a light string normalization if URL parsing fails.
- */
-export function normalizeUrl(raw: string): string {
-  const trimmed = (raw ?? "").trim();
-  if (trimmed === "") throw new Error("normalizeUrl: received empty url");
-  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-  try {
-    const u = new URL(withScheme);
-    const host = u.host.toLowerCase().replace(/^www\./, "");
-    const path = u.pathname.replace(/\/+$/, ""); // strip trailing slash(es)
-    return `${u.protocol.toLowerCase()}//${host}${path}${u.search}`;
-  } catch {
-    return trimmed
-      .toLowerCase()
-      .replace(/#.*$/, "")
-      .replace(/\/+$/, "");
-  }
 }
 
 /**
@@ -189,7 +169,7 @@ export async function enrichPages(orange: OrangeSliceClient, args: EnrichPagesAr
       role: page.role ?? "candidate",
       content_features: features,
       extractor_version: extractorVersion,
-      scraped_at: args.now,
+      scraped_at: Date.parse(args.now),
       cache_key: `${companyDomain}|${contentHash(page.html)}|${qtHash}|${extractorVersion}`,
     });
   }

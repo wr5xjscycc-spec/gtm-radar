@@ -21,7 +21,6 @@ from src.contract import (
     ExperimentPair,
     Intervention,
     LiftResult,
-    Window,
 )
 from src.delivery import deliver, route_delivery
 from src.did import estimate_lift
@@ -42,8 +41,8 @@ def test_design_experiment_from_fixtures():
         _load("company.json"),
         customer_id="ws_seed_001",
         engine="openai",
-        baseline_window=("2026-05-01", "2026-05-31"),
-        post_window=("2026-06-01", "2026-06-30"),
+        baseline_window="2026-05",
+        post_window="2026-06",
         experiment_id="exp_seed_1",
         target_feature="page__comparison_table",
         n_pairs=8,
@@ -85,8 +84,8 @@ def _synthetic_experiment(n_pairs: int = 6) -> Experiment:
     ]
     return Experiment(
         id="exp_synth_1", customer_id="ws_1", pairs=pairs,
-        baseline_window=Window(start="2026-05-01", end="2026-05-31"),
-        post_window=Window(start="2026-06-01", end="2026-06-30"),
+        baseline_window="2026-05",
+        post_window="2026-06",
         status="running",
     )
 

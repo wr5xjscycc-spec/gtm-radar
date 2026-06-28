@@ -13,8 +13,8 @@ export type CompanyRole = "customer" | "competitor" | "battlefield";
 export interface Firmographics {
   size?: string;
   funding_stage?: string;
-  headcount_growth?: string;
-  hiring_velocity?: string;
+  headcount_growth?: number | null;
+  hiring_velocity?: number | null;
   tech_stack?: string[];
 }
 
@@ -40,12 +40,15 @@ export interface Understanding {
 /**
  * coverage_flags — honest record of which feature families are NOT yet populated.
  * Red-team transparency requirement: never drop low-coverage rows silently; flag them.
- * Each present key names a family that still needs enrichment.
+ * Each present string names a family that still needs enrichment.
+ * e.g. ["firmographics_missing","offpage_missing"]
  */
-export interface CoverageFlags {
-  firmographics_missing?: boolean;
-  offpage_missing?: boolean;
-  understanding_missing?: boolean;
+
+/** Internal type: heading counts used by parsers.ts headingStructure extractor. */
+export interface HeadingStructure {
+  h1: number;
+  h2: number;
+  h3: number;
 }
 
 /** Provenance/versioning so a mid-run source change is detectable (contract Global rule). */
@@ -66,7 +69,7 @@ export interface Company {
   firmographics?: Firmographics;
   offpage?: OffPage;
   understanding?: Understanding;
-  coverage_flags: CoverageFlags;
+  coverage_flags: string[];
   source_versions: SourceVersions;
 }
 
@@ -82,13 +85,6 @@ export interface Company {
 
 export type PageRole = "candidate" | "customer" | "competitor";
 
-/** Counts of heading levels — a deterministic proxy for document structure. */
-export interface HeadingStructure {
-  h1: number;
-  h2: number;
-  h3: number;
-}
-
 /** Objective content features — deterministic parses (prefer these; low noise). */
 export interface DeterministicContentFeatures {
   /** JSON-LD / schema.org markup present. */
@@ -96,14 +92,13 @@ export interface DeterministicContentFeatures {
   /** A comparison/feature table present. */
   comparison_table: boolean;
   word_count: number;
-  heading_structure: HeadingStructure;
-  /** Days since last update; null when undeterminable. */
-  freshness_days: number | null;
+  /** Total heading count (h1+h2+h3) — scalar for schema conformance. */
+  heading_structure: number;
+  /** Days since last update; 0 when undeterminable. */
+  freshness_days: number;
   /** Fraction (0..1) of query terms that appear on the page. */
   query_term_coverage: number;
 }
-
-export type ListicleVsProse = "listicle" | "prose" | "mixed";
 
 /** Subjective content features — gpt-4o-mini-extracted, measurement-error-laden. */
 export interface SubjectiveContentFeatures {
@@ -114,7 +109,8 @@ export interface SubjectiveContentFeatures {
   citation_density: number;
   /** Density (per 1k words) of quotations. */
   quote_density: number;
-  listicle_vs_prose: ListicleVsProse;
+  /** 0=prose, 0.5=mixed, 1=listicle */
+  listicle_vs_prose: number;
 }
 
 /**
@@ -134,8 +130,8 @@ export interface Page {
   content_features: ContentFeatures;
   /** Stamps which extractor produced content_features (versioned — contract rule). */
   extractor_version: string;
-  /** ISO-8601 timestamp; injected by the caller so runs stay reproducible. */
-  scraped_at: string;
+  /** Epoch milliseconds; injected by the caller so runs stay reproducible. */
+  scraped_at: number;
   /** normalized domain + content hash + extractor_version (Phase 5 cache key). */
   cache_key: string;
 }
@@ -258,7 +254,7 @@ export interface JoinedPage {
   offpage?: OffPage;
   understanding?: Understanding;
   /** The company's coverage flags, inherited so the row carries honest coverage. */
-  company_coverage_flags?: CoverageFlags;
+  company_coverage_flags?: string[];
 }
 
 /** Join-integrity findings — surfaced for P1, never silently dropped. */
@@ -395,6 +391,6 @@ export interface VerticalCoverageQA {
   /** Low-coverage entities surfaced for P1's coverage UI (companies + pages). */
   surfaced_low_coverage: CoverageAssessment[];
   /** Reconciled company coverage flags (corrected toward actual data). */
-  reconciled_flags: Array<{ domain: string; coverage_flags: CoverageFlags }>;
+  reconciled_flags: Array<{ domain: string; coverage_flags: string[] }>;
   passed: boolean;
 }

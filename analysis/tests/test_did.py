@@ -12,11 +12,11 @@ from __future__ import annotations
 
 import numpy as np
 
-from src.contract import Experiment, ExperimentPair, Window
+from src.contract import Experiment, ExperimentPair
 from src.did import estimate_lift
 
-_BASELINE = Window(start="2026-05-01", end="2026-05-14")
-_POST = Window(start="2026-06-01", end="2026-06-14")
+_BASELINE = "2026-05"
+_POST = "2026-06"
 # Distinct ISO weeks per window so the period FE has real week-level structure.
 _BASE_WEEKS = ["2026-05-04", "2026-05-11"]
 _POST_WEEKS = ["2026-06-01", "2026-06-08"]

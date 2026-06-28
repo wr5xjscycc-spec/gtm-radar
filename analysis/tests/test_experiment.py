@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from src.contract import Experiment, ExperimentPair, Window
+from src.contract import Experiment, ExperimentPair
 from src.experiment import design_experiment, randomize_assignment
 from src.matching import Pair
 
@@ -66,8 +66,8 @@ def _design(seed: int = 0, **kw) -> Experiment:
         companies,
         customer_id="cust-1",
         engine="openai",
-        baseline_window=("2026-01-01", "2026-01-31"),
-        post_window=Window(start="2026-02-15", end="2026-03-15"),
+        baseline_window="2026-01",
+        post_window="2026-02",
         experiment_id=f"exp-{seed}",
         target_feature="page__listicle_vs_prose",
         seed=seed,
@@ -84,24 +84,24 @@ def test_returns_valid_experiment_with_windows_and_status():
     assert isinstance(exp, Experiment)
     assert exp.customer_id == "cust-1"
     assert exp.status == "designing"
-    assert isinstance(exp.baseline_window, Window) and isinstance(exp.post_window, Window)
-    assert exp.baseline_window.start == "2026-01-01"
-    assert exp.post_window.end == "2026-03-15"
+    assert isinstance(exp.baseline_window, str) and isinstance(exp.post_window, str)
+    assert exp.baseline_window == "2026-01"
+    assert exp.post_window == "2026-02"
     assert exp.pairs
     assert all(isinstance(p, ExperimentPair) for p in exp.pairs)
 
 
-def test_window_tuple_and_object_both_accepted():
+def test_window_strings_passed_through():
     measurements, pages, companies = _records()
     exp = design_experiment(
         measurements, pages, companies,
         customer_id="c", engine="openai",
-        baseline_window=Window(start="a", end="b"),
-        post_window=("c", "d"),
+        baseline_window="2026-05",
+        post_window="2026-06",
         experiment_id="e",
     )
-    assert exp.baseline_window == Window(start="a", end="b")
-    assert exp.post_window == Window(start="c", end="d")
+    assert exp.baseline_window == "2026-05"
+    assert exp.post_window == "2026-06"
 
 
 def test_determinism_same_seed_identical_assignment():
@@ -158,10 +158,10 @@ def test_covars_re_keyed_to_final_assignment_after_flip():
     # rate must match the rate of the page actually in that arm — not the
     # candidate's original slot. Catches stale-covar mislabeling.
     known_rate = {
-        "acme.com/compare": 0.70,
-        "globex.com/product": 0.66,
-        "acme.com/guide": 0.08,
-        "initech.com/docs": 0.05,
+        "https://acme.com/compare": 0.70,
+        "https://globex.com/product": 0.66,
+        "https://acme.com/guide": 0.08,
+        "https://initech.com/docs": 0.05,
     }
     for seed in range(20):
         exp = _design(seed=seed)
@@ -185,7 +185,7 @@ def test_target_feature_optional():
     exp = design_experiment(
         measurements, pages, companies,
         customer_id="c", engine="openai",
-        baseline_window=("a", "b"), post_window=("c", "d"),
+        baseline_window="2026-01", post_window="2026-02",
         experiment_id="e",
     )
     assert all("target_feature" not in p.match_covars for p in exp.pairs)

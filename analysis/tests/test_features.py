@@ -54,11 +54,11 @@ def test_one_row_per_page_with_namespaced_features():
     frame = build_feature_frame(pages, companies)
     assert len(frame) == 3
     assert set(frame["page_url"]) == {
-        "acme.com/pricing",
-        "acme.com/features",
-        "globex.com/home",
+        "https://acme.com/pricing",
+        "https://acme.com/features",
+        "https://globex.com/home",
     }
-    row = frame[frame["page_url"] == "acme.com/pricing"].iloc[0]
+    row = frame[frame["page_url"] == "https://acme.com/pricing"].iloc[0]
     assert row["page__word_count"] == 1200.0
     assert row["page__schema_markup"] == 1.0  # bool -> 1.0
     assert row["company__headcount_growth"] == 0.2
@@ -68,7 +68,7 @@ def test_one_row_per_page_with_namespaced_features():
 def test_join_uses_normalized_domain_key():
     pages, companies = _records()
     frame = build_feature_frame(pages, companies)
-    globex = frame[frame["page_url"] == "globex.com/home"].iloc[0]
+    globex = frame[frame["page_url"] == "https://globex.com/home"].iloc[0]
     # messy "https://WWW.Globex.com/" company_domain resolved to globex.com and
     # picked up globex's company features
     assert globex["company_domain"] == "globex.com"
@@ -124,8 +124,8 @@ def test_missing_company_page_dropped_and_recorded():
         _page("orphan.com", "https://orphan.com/blog"),  # no matching company
     ]
     frame = build_feature_frame(pages, companies)
-    assert set(frame["page_url"]) == {"acme.com/pricing"}
-    assert frame.attrs["dropped_pages"] == ["orphan.com/blog"]
+    assert set(frame["page_url"]) == {"https://acme.com/pricing"}
+    assert frame.attrs["dropped_pages"] == ["https://orphan.com/blog"]
 
 
 def test_inherit_check_handles_empty_frame():

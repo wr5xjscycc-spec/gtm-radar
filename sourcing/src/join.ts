@@ -31,7 +31,6 @@ import type {
   Firmographics,
   OffPage,
   Understanding,
-  CoverageFlags,
 } from "./types";
 import { normalizeDomain } from "./domain";
 
@@ -43,7 +42,7 @@ export interface InheritedContext {
   firmographics?: Firmographics;
   offpage?: OffPage;
   understanding?: Understanding;
-  company_coverage_flags?: CoverageFlags;
+  company_coverage_flags?: string[];
 }
 
 /**
@@ -61,17 +60,14 @@ export function inheritedContext(company: Company): InheritedContext {
     firmographics: company.firmographics ? { ...company.firmographics } : undefined,
     offpage: company.offpage ? { ...company.offpage } : undefined,
     understanding: company.understanding ? { ...company.understanding } : undefined,
-    company_coverage_flags: company.coverage_flags ? { ...company.coverage_flags } : undefined,
+    company_coverage_flags: company.coverage_flags ? [...company.coverage_flags] : undefined,
   };
 }
 
 /** Re-normalize defensively; return null (don't throw) when the value is unparseable. */
 function safeNormalize(value: string): string | null {
-  try {
-    return normalizeDomain(value);
-  } catch {
-    return null;
-  }
+  const key = normalizeDomain(value);
+  return key || null;
 }
 
 /**

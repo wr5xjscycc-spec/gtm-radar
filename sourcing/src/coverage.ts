@@ -20,7 +20,6 @@ import type {
   Page,
   CoverageAssessment,
   CoverageReport,
-  CoverageFlags,
 } from "./types";
 
 /**
@@ -66,8 +65,8 @@ export function hasFirmographics(company: Company): boolean {
   return (
     hasText(f.size) ||
     hasText(f.funding_stage) ||
-    hasText(f.headcount_growth) ||
-    hasText(f.hiring_velocity) ||
+    (typeof f.headcount_growth === "number" && Number.isFinite(f.headcount_growth)) ||
+    (typeof f.hiring_velocity === "number" && Number.isFinite(f.hiring_velocity)) ||
     (Array.isArray(f.tech_stack) && f.tech_stack.some((t) => hasText(t)))
   );
 }
@@ -101,12 +100,12 @@ export function hasUnderstanding(company: Company): boolean {
  * `*_missing` is true exactly when the family carries no real data. This is what
  * keeps a hollow row from being shown as "covered".
  */
-export function reconcileCompanyFlags(company: Company): CoverageFlags {
-  return {
-    firmographics_missing: !hasFirmographics(company),
-    offpage_missing: !hasOffpage(company),
-    understanding_missing: !hasUnderstanding(company),
-  };
+export function reconcileCompanyFlags(company: Company): string[] {
+  const flags: string[] = [];
+  if (!hasFirmographics(company)) flags.push("firmographics_missing");
+  if (!hasOffpage(company)) flags.push("offpage_missing");
+  if (!hasUnderstanding(company)) flags.push("understanding_missing");
+  return flags;
 }
 
 /**
@@ -157,10 +156,8 @@ export function hasDeterministicFeatures(page: Page): boolean {
     typeof c.schema_markup === "boolean" &&
     typeof c.comparison_table === "boolean" &&
     hasNumber(c.word_count) &&
-    !!c.heading_structure &&
-    hasNumber(c.heading_structure.h1) &&
-    hasNumber(c.heading_structure.h2) &&
-    hasNumber(c.heading_structure.h3) &&
+    hasNumber(c.heading_structure) &&
+    hasNumber(c.freshness_days) &&
     hasNumber(c.query_term_coverage)
   );
 }
@@ -178,8 +175,7 @@ export function hasSubjectiveFeatures(page: Page): boolean {
     hasNumber(c.stats_density) &&
     hasNumber(c.citation_density) &&
     hasNumber(c.quote_density) &&
-    typeof c.listicle_vs_prose === "string" &&
-    c.listicle_vs_prose.length > 0
+    hasNumber(c.listicle_vs_prose)
   );
 }
 

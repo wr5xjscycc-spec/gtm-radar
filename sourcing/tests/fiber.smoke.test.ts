@@ -66,11 +66,9 @@ describe("Fiber battlefield smoke (mocked)", () => {
 
   it("flags missing enrichment families (coverage honesty, not silent drops)", () => {
     const c = writer.byDomain.get("asana.com")!;
-    expect(c.coverage_flags).toMatchObject({
-      firmographics_missing: true,
-      offpage_missing: true,
-      understanding_missing: true,
-    });
+    expect(c.coverage_flags).toContain("firmographics_missing");
+    expect(c.coverage_flags).toContain("offpage_missing");
+    expect(c.coverage_flags).toContain("understanding_missing");
   });
 
   it("excludes the seed customer even when Fiber echoes it back", () => {

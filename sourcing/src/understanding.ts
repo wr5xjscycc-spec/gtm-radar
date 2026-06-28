@@ -12,6 +12,7 @@
 // (P1 wiring); this module imports no SDK and touches no network.
 
 import type { Company, Understanding } from "./types";
+import { toggleFlag } from "./battlefield";
 
 /**
  * The chat-model port. The real implementation calls OpenAI gpt-4o-mini and
@@ -176,10 +177,7 @@ export function applyUnderstanding(company: Company, result: UnderstandingResult
   return {
     ...company,
     understanding: { ...result.understanding },
-    coverage_flags: {
-      ...company.coverage_flags,
-      understanding_missing: false,
-    },
+    coverage_flags: toggleFlag(company.coverage_flags, "understanding_missing", false),
     source_versions: {
       ...company.source_versions,
       understanding: UNDERSTANDING_MODEL_VERSION,

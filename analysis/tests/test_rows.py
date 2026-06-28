@@ -101,13 +101,13 @@ def test_not_considered_rows_are_excluded():
     all_domains = {r.company_domain for t in tables.values() for r in t.rows}
     assert "nope.com" not in all_domains  # appeared=False everywhere -> never a loser
     all_urls = {r.page_url for t in tables.values() for r in t.rows}
-    assert "nope.com/ghost" not in all_urls
+    assert "https://nope.com/ghost" not in all_urls
 
 
 def test_per_engine_isolation_uses_engine_specific_labels():
     tables = build_modeling_tables(*_dataset())
-    openai_globex = next(r for r in tables[("crm", "openai")].rows if r.page_url == "globex.com/home")
-    perp_globex = next(r for r in tables[("crm", "perplexity")].rows if r.page_url == "globex.com/home")
+    openai_globex = next(r for r in tables[("crm", "openai")].rows if r.page_url == "https://globex.com/home")
+    perp_globex = next(r for r in tables[("crm", "perplexity")].rows if r.page_url == "https://globex.com/home")
     # same page: winner on openai, loser on perplexity -> labels are engine-scoped
     assert openai_globex.label == "winner"
     assert perp_globex.label == "loser"
@@ -117,7 +117,7 @@ def test_per_engine_isolation_uses_engine_specific_labels():
 
 def test_multiple_measurements_per_page_roll_up_to_winner():
     tables = build_modeling_tables(*_dataset())
-    pricing = next(r for r in tables[("crm", "openai")].rows if r.page_url == "acme.com/pricing")
+    pricing = next(r for r in tables[("crm", "openai")].rows if r.page_url == "https://acme.com/pricing")
     # cited on one query, not on another -> page-level rollup is winner
     assert pricing.label == "winner"
 
@@ -130,7 +130,7 @@ def test_both_winner_and_loser_labels_present():
 
 def test_rows_carry_weight_and_namespaced_features():
     tables = build_modeling_tables(*_dataset())
-    row = next(r for r in tables[("crm", "openai")].rows if r.page_url == "acme.com/pricing")
+    row = next(r for r in tables[("crm", "openai")].rows if r.page_url == "https://acme.com/pricing")
     assert row.weight == ci_weight(0.2)  # measurement ci bounds span 0.2 -> 1/(1+0.2)
     assert "page__word_count" in row.features
     assert "company__headcount_growth" in row.features

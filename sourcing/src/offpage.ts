@@ -27,6 +27,7 @@
 // is a true datum while "we didn't get a reading" is not.
 
 import type { Company, OffPage } from "./types";
+import { toggleFlag } from "./battlefield";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Vendor PORTS — one per source. Real impls call MCP/APIs; tests pass mocks.
@@ -195,10 +196,7 @@ export async function enrichOffpage(
   return {
     ...company,
     offpage,
-    coverage_flags: {
-      ...company.coverage_flags,
-      offpage_missing: !populated,
-    },
+    coverage_flags: toggleFlag(company.coverage_flags, "offpage_missing", !populated),
     source_versions: {
       ...company.source_versions,
       // Only assert off-page provenance when we actually have data.

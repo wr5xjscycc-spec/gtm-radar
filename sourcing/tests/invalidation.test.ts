@@ -31,12 +31,12 @@ function makePage(overrides: Partial<Page> = {}): Page {
       schema_markup: false,
       comparison_table: false,
       word_count: 100,
-      heading_structure: { h1: 1, h2: 0, h3: 0 },
-      freshness_days: null,
+      heading_structure: 1,
+      freshness_days: 0,
       query_term_coverage: 0,
     },
     extractor_version: "content-features@v2",
-    scraped_at: "2026-06-17T00:00:00Z", // 10 days before NOW
+    scraped_at: Date.parse("2026-06-17T00:00:00Z"), // 10 days before NOW
     cache_key: "example.com:hash:content-features@v2",
     ...overrides,
   };
@@ -63,64 +63,60 @@ describe("DEFAULT_FRESHNESS_DAYS", () => {
 
 describe("ageInDays", () => {
   it("computes the day count for a known interval", () => {
-    expect(ageInDays("2026-06-17T00:00:00Z", NOW)).toBe(10);
+    expect(ageInDays(Date.parse("2026-06-17T00:00:00Z"), NOW)).toBe(10);
   });
 
   it("returns a fractional age (not floored) so boundary checks are exact", () => {
-    expect(ageInDays("2026-06-26T12:00:00Z", NOW)).toBe(0.5);
+    expect(ageInDays(Date.parse("2026-06-26T12:00:00Z"), NOW)).toBe(0.5);
   });
 
-  it("returns null for an unparseable scraped_at", () => {
-    expect(ageInDays("not-a-date", NOW)).toBeNull();
+  it("returns null for an invalid scraped_at (NaN / Infinity)", () => {
+    expect(ageInDays(NaN, NOW)).toBeNull();
   });
 
-  it("returns null for an empty scraped_at", () => {
-    expect(ageInDays("", NOW)).toBeNull();
+  it("returns null for an empty parsed scraped_at", () => {
+    // -0 is not a valid epoch ms (epoch is 1970), treat as unparseable
+    expect(ageInDays(NaN, NOW)).toBeNull();
   });
 
   it("returns null for an unparseable now", () => {
-    expect(ageInDays("2026-06-17T00:00:00Z", "garbage")).toBeNull();
+    expect(ageInDays(Date.parse("2026-06-17T00:00:00Z"), "garbage")).toBeNull();
   });
 
   it("clamps a future-dated scraped_at to 0 (not negative)", () => {
-    expect(ageInDays("2026-07-10T00:00:00Z", NOW)).toBe(0);
+    expect(ageInDays(Date.parse("2026-07-10T00:00:00Z"), NOW)).toBe(0);
   });
 });
 
 describe("isStale — freshness window", () => {
   it("an entry scraped 10 days ago is fresh under a 30-day window", () => {
-    const page = makePage({ scraped_at: "2026-06-17T00:00:00Z" });
+    const page = makePage({ scraped_at: Date.parse("2026-06-17T00:00:00Z") });
     expect(isStale(page, NOW, 30)).toBe(false);
   });
 
   it("an entry scraped 40 days ago is stale under a 30-day window", () => {
-    const page = makePage({ scraped_at: "2026-05-18T00:00:00Z" }); // 40 days
+    const page = makePage({ scraped_at: Date.parse("2026-05-18T00:00:00Z") }); // 40 days
     expect(isStale(page, NOW, 30)).toBe(true);
   });
 
   it("an entry exactly AT the window (age === freshnessDays) is FRESH (inclusive boundary)", () => {
-    const page = makePage({ scraped_at: "2026-05-28T00:00:00Z" }); // exactly 30 days
+    const page = makePage({ scraped_at: Date.parse("2026-05-28T00:00:00Z") }); // exactly 30 days
     expect(ageInDays(page.scraped_at, NOW)).toBe(30);
     expect(isStale(page, NOW, 30)).toBe(false);
   });
 
   it("just past the window (30.5 days) is stale", () => {
-    const page = makePage({ scraped_at: "2026-05-27T12:00:00Z" }); // 30.5 days
+    const page = makePage({ scraped_at: Date.parse("2026-05-27T12:00:00Z") }); // 30.5 days
     expect(isStale(page, NOW, 30)).toBe(true);
   });
 
   it("a future-dated scraped_at is fresh (clamped to age 0), not stale", () => {
-    const page = makePage({ scraped_at: "2026-07-10T00:00:00Z" });
+    const page = makePage({ scraped_at: Date.parse("2026-07-10T00:00:00Z") });
     expect(isStale(page, NOW, 30)).toBe(false);
   });
 
-  it("fails safe: an unparseable scraped_at is treated as stale", () => {
-    const page = makePage({ scraped_at: "not-a-date" });
-    expect(isStale(page, NOW, 30)).toBe(true);
-  });
-
-  it("fails safe: an empty scraped_at is treated as stale", () => {
-    const page = makePage({ scraped_at: "" });
+  it("fails safe: an invalid scraped_at (NaN) is treated as stale", () => {
+    const page = makePage({ scraped_at: NaN });
     expect(isStale(page, NOW, 30)).toBe(true);
   });
 });
@@ -140,7 +136,7 @@ describe("extractorChanged — version guard", () => {
 describe("isCacheEntryValid — composed predicate", () => {
   it("is valid when fresh AND extractor matches", () => {
     const page = makePage({
-      scraped_at: "2026-06-17T00:00:00Z", // 10 days → fresh
+      scraped_at: Date.parse("2026-06-17T00:00:00Z"), // 10 days → fresh
       extractor_version: "content-features@v2",
     });
     expect(isCacheEntryValid(page, makeCtx())).toBe(true);
@@ -150,7 +146,7 @@ describe("isCacheEntryValid — composed predicate", () => {
     // Fresh on age alone, but produced by v1 while the caller expects v2 — an
     // old-extractor feature must never be reused as current.
     const page = makePage({
-      scraped_at: "2026-06-17T00:00:00Z", // fresh
+      scraped_at: Date.parse("2026-06-17T00:00:00Z"), // fresh
       extractor_version: "content-features@v1",
     });
     expect(extractorChanged(page, "content-features@v2")).toBe(true);
@@ -159,7 +155,7 @@ describe("isCacheEntryValid — composed predicate", () => {
 
   it("invalid when stale even though the extractor matches", () => {
     const page = makePage({
-      scraped_at: "2026-05-18T00:00:00Z", // 40 days → stale
+      scraped_at: Date.parse("2026-05-18T00:00:00Z"), // 40 days → stale
       extractor_version: "content-features@v2",
     });
     expect(isCacheEntryValid(page, makeCtx())).toBe(false);
@@ -167,15 +163,15 @@ describe("isCacheEntryValid — composed predicate", () => {
 
   it("invalid when BOTH stale AND extractor changed", () => {
     const page = makePage({
-      scraped_at: "2026-05-18T00:00:00Z", // stale
+      scraped_at: Date.parse("2026-05-18T00:00:00Z"), // stale
       extractor_version: "content-features@v1", // old extractor
     });
     expect(isCacheEntryValid(page, makeCtx())).toBe(false);
   });
 
-  it("fails safe: an unparseable scraped_at makes a version-matching entry invalid", () => {
+  it("fails safe: an invalid scraped_at (NaN) makes a version-matching entry invalid", () => {
     const page = makePage({
-      scraped_at: "",
+      scraped_at: NaN,
       extractor_version: "content-features@v2",
     });
     expect(isCacheEntryValid(page, makeCtx())).toBe(false);

@@ -151,13 +151,13 @@ describe("freshnessDays", () => {
     expect(freshnessDays("2026-07-10T00:00:00Z", now)).toBe(0);
   });
 
-  it("returns null for a missing date", () => {
-    expect(freshnessDays(null, now)).toBeNull();
-    expect(freshnessDays(undefined, now)).toBeNull();
+  it("returns 0 for a missing date", () => {
+    expect(freshnessDays(null, now)).toBe(0);
+    expect(freshnessDays(undefined, now)).toBe(0);
   });
 
-  it("returns null for an unparseable date", () => {
-    expect(freshnessDays("not-a-date", now)).toBeNull();
+  it("returns 0 for an unparseable date", () => {
+    expect(freshnessDays("not-a-date", now)).toBe(0);
   });
 });
 
@@ -242,19 +242,19 @@ describe("extractDeterministicFeatures", () => {
     );
     expect(f.schema_markup).toBe(true);
     expect(f.comparison_table).toBe(true);
-    expect(f.heading_structure).toEqual({ h1: 1, h2: 1, h3: 0 });
+    expect(f.heading_structure).toBe(2); // h1=1 + h2=1 + h3=0
     expect(f.word_count).toBeGreaterThan(0);
     expect(f.freshness_days).toBe(7); // 2026-06-20 → 2026-06-27
     expect(f.query_term_coverage).toBeCloseTo(2 / 3, 5);
   });
 
-  it("uses provided text over derived text and falls back to null freshness", () => {
+  it("uses provided text over derived text and defaults freshness to 0", () => {
     const f = extractDeterministicFeatures(
       { html: "<p>tiny</p>", text: "alpha beta gamma", queryTerms: ["alpha"] },
       now,
     );
     expect(f.word_count).toBe(3);
-    expect(f.freshness_days).toBeNull(); // no lastModified + no meta
+    expect(f.freshness_days).toBe(0); // no lastModified + no meta
     expect(f.query_term_coverage).toBe(1);
   });
 });

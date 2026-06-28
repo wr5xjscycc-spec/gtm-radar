@@ -15,6 +15,7 @@
 // client is supplied at the app edge (P1 wiring). No network, no real SDK here.
 
 import type { Company, Firmographics } from "./types";
+import { toggleFlag } from "./battlefield";
 
 /**
  * Raw payload from Fiber's firmographics/enrichment endpoint (modeled loosely so
@@ -68,6 +69,13 @@ function cleanString(raw: string | undefined): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+/** Parse a Fiber numeric value (number or numeric string) to a number, or null. */
+function parseNumeric(raw: string | number | undefined | null): number | null {
+  if (raw === undefined || raw === null) return null;
+  const n = typeof raw === "number" ? raw : Number(String(raw).trim());
+  return Number.isFinite(n) ? n : null;
+}
+
 /**
  * Map Fiber's raw response to the contract `Firmographics` shape.
  *
@@ -85,11 +93,11 @@ export function mapFirmographics(raw: FiberFirmographicsResponse): Firmographics
   const funding_stage = cleanString(raw.funding_stage);
   if (funding_stage !== undefined) out.funding_stage = funding_stage;
 
-  const headcount_growth = cleanString(raw.headcount_growth);
-  if (headcount_growth !== undefined) out.headcount_growth = headcount_growth;
+  const headcount_growth = parseNumeric(raw.headcount_growth);
+  if (headcount_growth !== null) out.headcount_growth = headcount_growth;
 
-  const hiring_velocity = cleanString(raw.hiring_velocity);
-  if (hiring_velocity !== undefined) out.hiring_velocity = hiring_velocity;
+  const hiring_velocity = parseNumeric(raw.hiring_velocity);
+  if (hiring_velocity !== null) out.hiring_velocity = hiring_velocity;
 
   const tech_stack = normalizeTechStack(raw.tech_stack);
   if (tech_stack !== undefined) out.tech_stack = tech_stack;
@@ -105,8 +113,8 @@ export function mapFirmographics(raw: FiberFirmographicsResponse): Firmographics
  * `firmographics` set from the mapped response.
  *
  * COVERAGE HONESTY (red-team transparency rule): the `firmographics_missing` flag
- * is flipped to `false` and the source version stamped ONLY when Fiber actually
- * returned at least one usable field. An empty/blank Fiber response leaves the
+ * is removed from coverage_flags and the source version stamped ONLY when Fiber
+ * actually returned at least one usable field. An empty/blank Fiber response leaves the
  * row flagged missing and unstamped — we never claim coverage we don't have.
  * The input company is never mutated; all other fields/flags are preserved.
  */
@@ -121,10 +129,7 @@ export async function enrichFirmographics(
   return {
     ...company,
     firmographics,
-    coverage_flags: {
-      ...company.coverage_flags,
-      firmographics_missing: !populated,
-    },
+    coverage_flags: toggleFlag(company.coverage_flags, "firmographics_missing", !populated),
     source_versions: {
       ...company.source_versions,
       // Only assert firmographics provenance when we actually have data.

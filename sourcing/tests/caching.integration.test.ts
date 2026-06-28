@@ -20,12 +20,12 @@ function makePage(overrides: Partial<Page> = {}): Page {
       schema_markup: true,
       comparison_table: true,
       word_count: 1200,
-      heading_structure: { h1: 1, h2: 4, h3: 2 },
+      heading_structure: 7, // h1=1 + h2=4 + h3=2
       freshness_days: 5,
       query_term_coverage: 0.6,
     },
     extractor_version: EXTRACTOR,
-    scraped_at: "2026-06-01T00:00:00.000Z",
+    scraped_at: Date.parse("2026-06-01T00:00:00.000Z"),
     cache_key: "competitor.com|abc123|noqt|content-features@v1",
     ...overrides,
   };
@@ -88,12 +88,12 @@ describe("Phase 5 caching integration (store + invalidation)", () => {
   it("invalidation: a STALE entry (beyond the freshness window) is re-enriched, not reused", async () => {
     const cache = createPageCache({ store: new InMemoryCacheStore() });
     const ctx = cacheContext("2026-06-10T00:00:00.000Z", { expectedExtractorVersion: EXTRACTOR });
-    await cache.put(makePage({ scraped_at: "2026-01-01T00:00:00.000Z" }), ctx); // ~5 months old
+    await cache.put(makePage({ scraped_at: Date.parse("2026-01-01T00:00:00.000Z") }), ctx); // ~5 months old
 
     let enrichCalls = 0;
     const enrich = async () => {
       enrichCalls += 1;
-      return makePage({ scraped_at: "2026-06-10T00:00:00.000Z" });
+      return makePage({ scraped_at: Date.parse("2026-06-10T00:00:00.000Z") });
     };
     const r = await cache.resolveOrEnrich("https://competitor.com/pricing", ctx, enrich);
 

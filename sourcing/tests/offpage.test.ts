@@ -42,11 +42,11 @@ function makeCompany(overrides: Partial<Company> = {}): Company {
     domain: "asana.com",
     name: "Asana",
     role: "battlefield",
-    coverage_flags: {
-      firmographics_missing: true,
-      offpage_missing: true,
-      understanding_missing: true,
-    },
+    coverage_flags: [
+      "firmographics_missing",
+      "offpage_missing",
+      "understanding_missing",
+    ],
     source_versions: { battlefield: "fiber/find-similar-companies@v1" },
     ...overrides,
   };
@@ -212,7 +212,7 @@ describe("enrichOffpage — enrichment + provenance", () => {
       review_site_presence: 5,
       reddit_presence: 33,
     });
-    expect(enriched.coverage_flags.offpage_missing).toBe(false);
+    expect(enriched.coverage_flags).not.toContain("offpage_missing");
     expect(enriched.source_versions.offpage).toBe(OFFPAGE_VERSION);
   });
 
@@ -233,8 +233,8 @@ describe("enrichOffpage — enrichment + provenance", () => {
 
   it("preserves other coverage flags, source versions, role and name", async () => {
     const enriched = await enrichOffpage(fullClients(), makeCompany());
-    expect(enriched.coverage_flags.firmographics_missing).toBe(true);
-    expect(enriched.coverage_flags.understanding_missing).toBe(true);
+    expect(enriched.coverage_flags).toContain("firmographics_missing");
+    expect(enriched.coverage_flags).toContain("understanding_missing");
     expect(enriched.source_versions.battlefield).toBe("fiber/find-similar-companies@v1");
     expect(enriched.role).toBe("battlefield");
     expect(enriched.name).toBe("Asana");
@@ -249,7 +249,7 @@ describe("enrichOffpage — enrichment + provenance", () => {
     // Input is byte-identical to before the call.
     expect(company).toEqual(snapshot);
     expect(company.offpage).toBeUndefined();
-    expect(company.coverage_flags.offpage_missing).toBe(true);
+    expect(company.coverage_flags).toContain("offpage_missing");
     expect(company.source_versions.offpage).toBeUndefined();
     // And a genuinely new object was returned.
     expect(enriched).not.toBe(company);
@@ -269,7 +269,7 @@ describe("enrichOffpage — coverage honesty", () => {
       makeCompany(),
     );
     expect(enriched.offpage).toEqual({});
-    expect(enriched.coverage_flags.offpage_missing).toBe(true);
+    expect(enriched.coverage_flags).toContain("offpage_missing");
     expect(enriched.source_versions.offpage).toBeUndefined();
   });
 });
@@ -296,7 +296,7 @@ describe("enrichOffpage — resilience (one vendor down)", () => {
       review_site_presence: 5,
       reddit_presence: 33,
     });
-    expect(enriched.coverage_flags.offpage_missing).toBe(false);
+    expect(enriched.coverage_flags).not.toContain("offpage_missing");
     expect(enriched.source_versions.offpage).toBe(OFFPAGE_VERSION);
   });
 
@@ -313,7 +313,7 @@ describe("enrichOffpage — resilience (one vendor down)", () => {
       makeCompany(),
     );
     expect(enriched.offpage).toEqual({});
-    expect(enriched.coverage_flags.offpage_missing).toBe(true);
+    expect(enriched.coverage_flags).toContain("offpage_missing");
     expect(enriched.source_versions.offpage).toBeUndefined();
   });
 });

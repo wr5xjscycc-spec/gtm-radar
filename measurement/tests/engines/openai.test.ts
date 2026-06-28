@@ -96,7 +96,7 @@ describe("parseResponsesCitations", () => {
     expect(citations).toHaveLength(1);
     expect(citations[0]).toEqual<Citation>({
       url: "https://Keep.Example.com/page?a=1",
-      domain: "keep.example.com",
+      domain: "example.com",
       title: "Keep",
       rank: 1,
     });

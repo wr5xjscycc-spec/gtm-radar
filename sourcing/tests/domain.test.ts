@@ -23,18 +23,16 @@ describe("normalizeDomain", () => {
     expect(normalizeDomain(once)).toBe(once);
   });
 
-  it("strips ONLY www — non-www subdomains are preserved (P1 helper owns suffix-aware stripping)", () => {
-    // Documented placeholder limitation: stripping arbitrary subdomains needs a
-    // public-suffix list. We keep the host intact rather than corrupt the key.
-    expect(normalizeDomain("JIRA.atlassian.com")).toBe("jira.atlassian.com");
-    expect(normalizeDomain("blog.example.co.uk")).toBe("blog.example.co.uk");
+  it("strips ALL subdomains to the registrable domain (eTLD+1) — per canonical domain.ts contract", () => {
+    expect(normalizeDomain("JIRA.atlassian.com")).toBe("atlassian.com");
+    expect(normalizeDomain("blog.example.co.uk")).toBe("example.co.uk");
   });
 
-  it("throws on empty / whitespace / null-ish input (fail loud, never write a junk key)", () => {
-    expect(() => normalizeDomain("")).toThrow();
-    expect(() => normalizeDomain("   ")).toThrow();
+  it("returns empty string on empty / whitespace / null-ish input (never throws)", () => {
+    expect(normalizeDomain("")).toBe("");
+    expect(normalizeDomain("   ")).toBe("");
     // @ts-expect-error exercising the runtime guard
-    expect(() => normalizeDomain(undefined)).toThrow();
+    expect(normalizeDomain(undefined)).toBe("");
   });
 
   it("isNormalizedDomain reflects whether input equals its normal form", () => {

@@ -18,7 +18,7 @@
 // The invalidation PREDICATE is built elsewhere and injected as a `CacheValidator`;
 // this module defaults it to always-valid so it stays self-contained.
 
-import { normalizeUrl } from "./content";
+import { normalizeUrl } from "./domain";
 import type { CacheValidator, CacheValidityContext, Page } from "./types";
 
 /**

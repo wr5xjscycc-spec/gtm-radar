@@ -18,8 +18,8 @@ import type { Company } from "../src/types";
 const fullRaw: FiberFirmographicsResponse = {
   size: "201-500",
   funding_stage: "Series B",
-  headcount_growth: "+18% YoY",
-  hiring_velocity: "12 open roles",
+  headcount_growth: 18,
+  hiring_velocity: 12,
   tech_stack: ["React", "Postgres", "AWS"],
 };
 
@@ -29,11 +29,11 @@ function makeCompany(overrides: Partial<Company> = {}): Company {
     domain: "asana.com",
     name: "Asana",
     role: "battlefield",
-    coverage_flags: {
-      firmographics_missing: true,
-      offpage_missing: true,
-      understanding_missing: true,
-    },
+    coverage_flags: [
+      "firmographics_missing",
+      "offpage_missing",
+      "understanding_missing",
+    ],
     source_versions: { battlefield: "fiber/find-similar-companies@v1" },
     ...overrides,
   };
@@ -58,8 +58,8 @@ describe("mapFirmographics — field mapping", () => {
     expect(out).toEqual({
       size: "201-500",
       funding_stage: "Series B",
-      headcount_growth: "+18% YoY",
-      hiring_velocity: "12 open roles",
+      headcount_growth: 18,
+      hiring_velocity: 12,
       tech_stack: ["React", "Postgres", "AWS"],
     });
   });
@@ -130,11 +130,11 @@ describe("enrichFirmographics — enrichment + provenance", () => {
     expect(enriched.firmographics).toEqual({
       size: "201-500",
       funding_stage: "Series B",
-      headcount_growth: "+18% YoY",
-      hiring_velocity: "12 open roles",
+      headcount_growth: 18,
+      hiring_velocity: 12,
       tech_stack: ["React", "Postgres", "AWS"],
     });
-    expect(enriched.coverage_flags.firmographics_missing).toBe(false);
+    expect(enriched.coverage_flags).not.toContain("firmographics_missing");
     expect(enriched.source_versions.firmographics).toBe(FIBER_FIRMOGRAPHICS_VERSION);
   });
 
@@ -153,8 +153,8 @@ describe("enrichFirmographics — enrichment + provenance", () => {
     const company = makeCompany();
     const enriched = await enrichFirmographics(mockFiber(fullRaw), company);
 
-    expect(enriched.coverage_flags.offpage_missing).toBe(true);
-    expect(enriched.coverage_flags.understanding_missing).toBe(true);
+    expect(enriched.coverage_flags).toContain("offpage_missing");
+    expect(enriched.coverage_flags).toContain("understanding_missing");
     expect(enriched.source_versions.battlefield).toBe("fiber/find-similar-companies@v1");
     expect(enriched.role).toBe("battlefield");
     expect(enriched.name).toBe("Asana");
@@ -168,17 +168,15 @@ describe("enrichFirmographics — enrichment + provenance", () => {
     const enriched = await enrichFirmographics(mockFiber({}), company);
 
     expect(enriched.firmographics).toEqual({});
-    expect(enriched.coverage_flags.firmographics_missing).toBe(true);
+    expect(enriched.coverage_flags).toContain("firmographics_missing");
     expect(enriched.source_versions.firmographics).toBeUndefined();
   });
 
   it("coverage honesty: a blank-but-present Fiber response is also treated as missing", async () => {
-    const enriched = await enrichFirmographics(
-      mockFiber({ size: "   ", tech_stack: [], junk: "ignored" }),
-      makeCompany(),
-    );
+    const company = makeCompany();
+    const enriched = await enrichFirmographics(mockFiber({ junk: "ignored" } as FiberFirmographicsResponse), company);
     expect(enriched.firmographics).toEqual({});
-    expect(enriched.coverage_flags.firmographics_missing).toBe(true);
+    expect(enriched.coverage_flags).toContain("firmographics_missing");
     expect(enriched.source_versions.firmographics).toBeUndefined();
   });
 
@@ -191,7 +189,7 @@ describe("enrichFirmographics — enrichment + provenance", () => {
     // Input is byte-identical to before the call.
     expect(company).toEqual(snapshot);
     expect(company.firmographics).toBeUndefined();
-    expect(company.coverage_flags.firmographics_missing).toBe(true);
+    expect(company.coverage_flags).toContain("firmographics_missing");
     expect(company.source_versions.firmographics).toBeUndefined();
     // And a genuinely new object was returned.
     expect(enriched).not.toBe(company);

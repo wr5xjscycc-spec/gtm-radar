@@ -16,6 +16,14 @@ import {
 } from "./fiber";
 import type { Company, CompanyRole } from "./types";
 
+/** Add a coverage flag when data is missing, remove it when present. */
+export function toggleFlag(flags: string[], flag: string, missing: boolean): string[] {
+  if (missing) {
+    return flags.includes(flag) ? flags : [...flags, flag];
+  }
+  return flags.filter((f) => f !== flag);
+}
+
 /**
  * The coverage stamp every Phase-1 `company` row carries: enrichment
  * (firmographics / offpage / understanding) has NOT run yet, so every family is
@@ -23,16 +31,13 @@ import type { Company, CompanyRole } from "./types";
  * byte-identical (a divergence here would be a silent coverage lie).
  */
 function freshCoverageFlags(): Company["coverage_flags"] {
-  return {
-    firmographics_missing: true,
-    offpage_missing: true,
-    understanding_missing: true,
-  };
+  return ["firmographics_missing", "offpage_missing", "understanding_missing"];
 }
 
 /** Build a contract-shaped `company` row with a given role (normalizes the key). */
 function toCompany(domain: string, name: string | undefined, role: CompanyRole): Company {
   const normalized = normalizeDomain(domain);
+  if (!normalized) throw new Error(`toCompany: normalizeDomain returned empty for "${domain}"`);
   return {
     domain: normalized,
     name: (name ?? "").trim() || normalized,
@@ -88,22 +93,11 @@ export interface RoleContext {
  */
 export function roleFor(domain: string, ctx: RoleContext): CompanyRole {
   const target = normalizeDomain(domain);
-  // Guard the customer key like we guard competitor keys: a junk/empty
-  // customerDomain shouldn't throw out of a pure classifier — it just can't match.
-  let customer: string | null = null;
-  try {
-    customer = normalizeDomain(ctx.customerDomain);
-  } catch {
-    customer = null;
-  }
+  const customer = normalizeDomain(ctx.customerDomain) || null;
   if (customer !== null && target === customer) return "customer";
   for (const raw of ctx.competitorDomains ?? []) {
-    let competitor: string;
-    try {
-      competitor = normalizeDomain(raw);
-    } catch {
-      continue; // ignore junk competitor entries rather than throw mid-classify
-    }
+    const competitor = normalizeDomain(raw);
+    if (!competitor) continue; // ignore junk competitor entries
     if (competitor === target) return "competitor";
   }
   return "battlefield";
@@ -133,12 +127,7 @@ export async function buildBattlefield(
   const byDomain = new Map<string, Company>();
   for (const raw of results) {
     if (!raw?.domain) continue; // skip malformed entries rather than write a junk key
-    let company: Company;
-    try {
-      company = toBattlefieldCompany(raw);
-    } catch {
-      continue; // unparseable domain -> skip (don't poison the join surface)
-    }
+    const company = toBattlefieldCompany(raw);
     if (company.domain === seed) continue; // the customer isn't its own competitor
     if (!byDomain.has(company.domain)) byDomain.set(company.domain, company);
   }
@@ -202,12 +191,7 @@ export async function buildCompanyLayer(
 
   // 2. known competitors — written even if Fiber didn't surface them.
   for (const raw of args.competitorDomains ?? []) {
-    let competitor: Company;
-    try {
-      competitor = toCompany(raw, undefined, "competitor");
-    } catch {
-      continue; // skip unparseable competitor inputs rather than write a junk key
-    }
+    const competitor = toCompany(raw, undefined, "competitor");
     if (!byDomain.has(competitor.domain)) byDomain.set(competitor.domain, competitor);
   }
 
@@ -217,12 +201,8 @@ export async function buildCompanyLayer(
   //    domain-placeholder name, without changing the row's role.
   for (const fiberCompany of results) {
     if (!fiberCompany?.domain) continue; // skip malformed entries
-    let domain: string;
-    try {
-      domain = normalizeDomain(fiberCompany.domain);
-    } catch {
-      continue; // unparseable domain -> skip (don't poison the join surface)
-    }
+    const domain = normalizeDomain(fiberCompany.domain);
+    if (!domain) continue; // unparseable domain -> skip
     const existing = byDomain.get(domain);
     if (existing) {
       // Precedence holds (customer/competitor). Borrow Fiber's name only if the

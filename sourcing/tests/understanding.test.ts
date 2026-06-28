@@ -40,11 +40,11 @@ function baseCompany(): Company {
     domain: "linear.app",
     name: "Linear",
     role: "battlefield",
-    coverage_flags: {
-      firmographics_missing: true,
-      offpage_missing: true,
-      understanding_missing: true,
-    },
+    coverage_flags: [
+      "firmographics_missing",
+      "offpage_missing",
+      "understanding_missing",
+    ],
     source_versions: { battlefield: "fiber/find-similar-companies@v1" },
   };
 }
@@ -152,14 +152,14 @@ describe("applyUnderstanding", () => {
     const updated = applyUnderstanding(company, result);
 
     expect(updated.understanding).toEqual(result.understanding);
-    expect(updated.coverage_flags.understanding_missing).toBe(false);
+    expect(updated.coverage_flags).not.toContain("understanding_missing");
     expect(updated.source_versions.understanding).toBe(UNDERSTANDING_MODEL_VERSION);
   });
 
   it("leaves other coverage flags and source versions untouched", () => {
     const updated = applyUnderstanding(baseCompany(), result);
-    expect(updated.coverage_flags.firmographics_missing).toBe(true);
-    expect(updated.coverage_flags.offpage_missing).toBe(true);
+    expect(updated.coverage_flags).toContain("firmographics_missing");
+    expect(updated.coverage_flags).toContain("offpage_missing");
     expect(updated.source_versions.battlefield).toBe("fiber/find-similar-companies@v1");
   });
 
