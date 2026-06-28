@@ -11,6 +11,7 @@ import {
 } from "./enrichmentReview";
 import { headline, measurementProgress } from "./gutPunch";
 import { rankedGaps, licensedRung, RUNG_BADGE, makeClaim, RUNG } from "./claimLadder";
+import { opsSummary } from "./observability";
 
 /**
  * Phase-0 live board (owner: P1) — minimal but real. Proves the DoD: write any
@@ -98,7 +99,31 @@ function Board({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
       <ExperimentConsole workspaceId={workspaceId} />
 
       <EnrichmentReview pages={pages} queries={queries} companies={battlefield} />
+
+      <OpsView workspaceId={workspaceId} />
     </section>
+  );
+}
+
+// P1·6: observability — per-cycle spend is VISIBLE (unit economics + judges).
+function OpsView({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
+  const runs = useQuery(api.board.runRecords, { workspaceId }) ?? [];
+  if (runs.length === 0) return null;
+  const s = opsSummary(runs as any);
+  return (
+    <div style={{ margin: "16px 0" }}>
+      <h3>Spend & reliability (ops)</h3>
+      <p style={{ color: s.within_budget ? "#070" : "#b00" }}>
+        ${s.total_spend} across {s.cycles} cycle(s) · avg ${s.avg_spend_per_cycle}/cycle ·{" "}
+        {s.within_budget ? "within budget ✓" : `${s.over_budget_cycles} over budget ⚠`}
+      </p>
+      <small>
+        {s.total_calls} calls · {s.total_queries} queries · error rate:{" "}
+        {Object.entries(s.per_engine_error_rate)
+          .map(([e, r]) => `${e} ${(r * 100).toFixed(1)}%`)
+          .join(" · ")}
+      </small>
+    </div>
   );
 }
 

@@ -236,6 +236,26 @@ export const insertLiftResult = mutation({
   },
 });
 
+// --- run_record (P1 obs; P2 writes spend) ------------------------------------
+export const recordCycle = mutation({
+  args: {
+    workspaceId: v.id("workspaces"),
+    cycle_id: v.string(),
+    queries_issued: v.number(),
+    calls_made: v.number(),
+    spend_usd: v.number(),
+    per_engine: v.record(
+      v.string(),
+      v.object({ calls: v.number(), errors: v.number() }),
+    ),
+    ts: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireWorkspace(ctx, args.workspaceId);
+    return await ctx.db.insert("run_records", args);
+  },
+});
+
 // --- intervention (P4) — the moat store --------------------------------------
 export const insertIntervention = mutation({
   args: {

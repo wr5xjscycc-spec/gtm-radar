@@ -199,6 +199,18 @@ export const modelFits = query({
   },
 });
 
+/** Per-cycle run records for the ops/observability view (P1·6) — spend visible. */
+export const runRecords = query({
+  args: { workspaceId: v.id("workspaces") },
+  handler: async (ctx, { workspaceId }) => {
+    await requireWorkspace(ctx, workspaceId);
+    return await ctx.db
+      .query("run_records")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
+      .collect();
+  },
+});
+
 /** Causal results — the only source that licenses Rung-2 causal language. */
 export const liftResults = query({
   args: { workspaceId: v.id("workspaces") },

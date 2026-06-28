@@ -229,6 +229,21 @@ export default defineSchema({
     .index("by_workspace", ["workspaceId"])
     .index("by_experiment", ["experiment_id"]),
 
+  // run_records (owner: P1, Phase 6) — observability: per-cycle spend + calls +
+  // per-engine error rates. P2 writes these; P1's ops view renders them.
+  run_records: defineTable({
+    workspaceId: v.id("workspaces"),
+    cycle_id: v.string(),
+    queries_issued: v.number(),
+    calls_made: v.number(),
+    spend_usd: v.number(),
+    per_engine: v.record(
+      v.string(),
+      v.object({ calls: v.number(), errors: v.number() }),
+    ),
+    ts: v.number(),
+  }).index("by_workspace", ["workspaceId"]),
+
   // 9. intervention (owner: P4) — the moat store.
   interventions: defineTable({
     workspaceId: v.id("workspaces"),
