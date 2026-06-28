@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { App } from "./App";
+import "./styles/theme.css";
 
 // VITE_CONVEX_URL is printed by `npx convex dev` and set in .env (see .env.example).
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);

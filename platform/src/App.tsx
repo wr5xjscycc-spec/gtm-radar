@@ -14,49 +14,125 @@ import { rankedGaps, licensedRung, RUNG_BADGE, makeClaim, RUNG } from "./claimLa
 import { opsSummary } from "./observability";
 
 /**
- * Phase-0 live board (owner: P1) — minimal but real. Proves the DoD: write any
- * record via the convex/records mutations and watch it render here reactively
- * (Convex queries update with no polling). Phases 1+ build the onboarding card,
- * the gut-punch board, and claim-ladder gating on this spine.
+ * GTM Radar — the live citation-measurement console (owner: P1).
+ *
+ * Every panel is a reactive view over Convex; rows fill in with no polling. The
+ * "Signal" design system (src/styles/theme.css) is presentation only — the data
+ * wiring, the claim-ladder gate (causal language is impossible without a
+ * lift_result), and the Hawthorne rule (control pages are never rendered) are
+ * load-bearing and unchanged.
  *
  * NOTE: requires `npx convex dev` (generates ../../convex/_generated and a
  * deployment URL). Not exercised in CI — UI glue is exempt per docs/TESTING.md.
  */
+
+function RadarMark({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" stroke="var(--signal)" strokeOpacity="0.4" />
+      <circle cx="12" cy="12" r="4.5" stroke="var(--signal)" strokeOpacity="0.6" />
+      <path d="M12 12 L12 2.5" stroke="var(--signal)" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="1.5" fill="var(--signal)" />
+    </svg>
+  );
+}
+
 export function App() {
   const workspaces = useQuery(api.customers.listWorkspaces) ?? [];
   const [selected, setSelected] = useState<Id<"workspaces"> | null>(null);
   const create = useMutation(api.customers.createWorkspace);
 
+  const loading = useQuery(api.customers.listWorkspaces) === undefined;
   const wsId = selected ?? (workspaces[0]?._id as Id<"workspaces"> | undefined);
 
+  const onCreate = (v: {
+    name: string;
+    vertical: string;
+    own_domain: string;
+    competitors: string[];
+  }) =>
+    create({
+      name: v.name,
+      vertical: v.vertical,
+      own_domain: v.own_domain,
+      competitor_domains: v.competitors,
+    });
+
   return (
-    <main style={{ fontFamily: "system-ui", maxWidth: 760, margin: "2rem auto" }}>
-      <h1>GTM Radar — live board</h1>
+    <div className="app">
+      <header className="topbar">
+        <span className="brand">
+          <span className="brand__mark">
+            <RadarMark size={16} />
+          </span>
+          GTM Radar
+          <span className="brand__sub">citation console</span>
+        </span>
+        <span className="topbar__spacer" />
+        <span className="live" title="Convex reactive — updates with no polling">
+          <span className="live__dot" />
+          live
+        </span>
+      </header>
 
-      <OnboardingForm
-        onCreate={(v) =>
-          create({
-            name: v.name,
-            vertical: v.vertical,
-            own_domain: v.own_domain,
-            competitor_domains: v.competitors,
-          })
-        }
-      />
+      <main className="shell">
+        {loading ? (
+          <BoardSkeleton />
+        ) : workspaces.length === 0 ? (
+          <section className="empty">
+            <span className="empty__mark">
+              <RadarMark size={26} />
+            </span>
+            <h2>See who the AI engines actually cite</h2>
+            <p>
+              Add your company and a few competitors. GTM Radar measures who answer engines name
+              for your buyers' real questions, then helps you prove what moves the needle.
+            </p>
+            <div className="panel" style={{ width: "100%", textAlign: "left" }}>
+              <div className="section-label">New workspace</div>
+              <OnboardingForm onCreate={onCreate} />
+            </div>
+          </section>
+        ) : (
+          <>
+            <div className="reveal" style={{ marginBottom: 28 }}>
+              <div className="section-label">Workspaces</div>
+              <div className="ws-switch">
+                {workspaces.map((w) => (
+                  <button
+                    key={w._id}
+                    className="ws-chip"
+                    aria-pressed={w._id === wsId}
+                    onClick={() => setSelected(w._id as Id<"workspaces">)}
+                  >
+                    {w.name}
+                    <span className="ws-chip__dom">{w.own_domain}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-      <h2>Workspaces</h2>
-      <ul>
-        {workspaces.map((w) => (
-          <li key={w._id}>
-            <button onClick={() => setSelected(w._id as Id<"workspaces">)}>
-              {w.name} — {w.own_domain}
-            </button>
-          </li>
-        ))}
-      </ul>
+            {wsId && <Board workspaceId={wsId} />}
 
-      {wsId && <Board workspaceId={wsId} />}
-    </main>
+            <details className="panel" style={{ marginTop: 40 }}>
+              <summary
+                style={{
+                  cursor: "pointer",
+                  color: "var(--ink-2)",
+                  fontFamily: "var(--mono)",
+                  fontSize: 13,
+                }}
+              >
+                + Add another workspace
+              </summary>
+              <div style={{ marginTop: 16 }}>
+                <OnboardingForm onCreate={onCreate} />
+              </div>
+            </details>
+          </>
+        )}
+      </main>
+    </div>
   );
 }
 
@@ -71,37 +147,71 @@ function Board({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
 
   const customer = battlefield.find((c) => c.role === "customer");
   const bf = battlefieldProgress(battlefield);
+  const counts = (summary?.counts ?? {}) as Record<string, number>;
 
   return (
-    <section>
-      <h2>Board</h2>
+    <div className="board-stack">
+      <section className="reveal">
+        <CompanyCard understanding={customer?.understanding} />
+      </section>
 
-      <CompanyCard understanding={customer?.understanding} />
+      <section className="reveal panel">
+        <div className="bf__head">
+          <h2 className="panel__title">Battlefield</h2>
+          <span className="num bf__count">{bf.count} sourced</span>
+          {bf.filling ? (
+            <span className="faint" style={{ fontSize: 13 }}>
+              filling… target {bf.target}
+            </span>
+          ) : (
+            <span className="pos" style={{ fontSize: 13 }}>
+              complete
+            </span>
+          )}
+        </div>
+        <div className="bf-grid">
+          {battlefield.map((c) => {
+            const you = c.role === "customer";
+            return (
+              <div key={c._id} className={`bf-row${you ? " is-you" : ""}`}>
+                <span>{c.domain}</span>
+                <span className={`role-tag${you ? " is-you" : ""}`}>{c.role}</span>
+              </div>
+            );
+          })}
+        </div>
+        {Object.keys(counts).length > 0 && (
+          <div className="seed-breakdown" style={{ marginTop: 16 }}>
+            {Object.entries(counts).map(([k, n]) => (
+              <span key={k} className="seed-chip">
+                {k} <b className="num">{n}</b>
+              </span>
+            ))}
+          </div>
+        )}
+      </section>
 
-      <h3>
-        Battlefield — {bf.count} sourced{" "}
-        {bf.filling ? <em>(filling… target {bf.target})</em> : "✓"}
-      </h3>
-      <ul>
-        {battlefield.map((c) => (
-          <li key={c._id}>
-            {c.domain} — {c.role}
-          </li>
-        ))}
-      </ul>
+      <section className="reveal panel">
+        <GutPunchBoard gut={gut} measurements={measurements} />
+      </section>
 
-      <pre>{JSON.stringify(summary?.counts, null, 2)}</pre>
+      <div className="grid-2">
+        <section className="panel">
+          <DiagnosisPanel diagnosis={diagnosis} />
+        </section>
+        <section className="panel">
+          <ExperimentConsole workspaceId={workspaceId} />
+        </section>
+      </div>
 
-      <GutPunchBoard gut={gut} measurements={measurements} />
+      <section className="panel">
+        <EnrichmentReview pages={pages} queries={queries} companies={battlefield} />
+      </section>
 
-      <DiagnosisPanel diagnosis={diagnosis} />
-
-      <ExperimentConsole workspaceId={workspaceId} />
-
-      <EnrichmentReview pages={pages} queries={queries} companies={battlefield} />
-
-      <OpsView workspaceId={workspaceId} />
-    </section>
+      <section>
+        <OpsView workspaceId={workspaceId} />
+      </section>
+    </div>
   );
 }
 
@@ -111,19 +221,47 @@ function OpsView({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
   if (runs.length === 0) return null;
   const s = opsSummary(runs as any);
   return (
-    <div style={{ margin: "16px 0" }}>
-      <h3>Spend & reliability (ops)</h3>
-      <p style={{ color: s.within_budget ? "#070" : "#b00" }}>
-        ${s.total_spend} across {s.cycles} cycle(s) · avg ${s.avg_spend_per_cycle}/cycle ·{" "}
-        {s.within_budget ? "within budget ✓" : `${s.over_budget_cycles} over budget ⚠`}
-      </p>
-      <small>
-        {s.total_calls} calls · {s.total_queries} queries · error rate:{" "}
-        {Object.entries(s.per_engine_error_rate)
-          .map(([e, r]) => `${e} ${(r * 100).toFixed(1)}%`)
-          .join(" · ")}
-      </small>
-    </div>
+    <>
+      <div className="section-label">Spend &amp; reliability</div>
+      <div className="ops">
+        <div className="stat">
+          <span className={`stat__num ${s.within_budget ? "is-pos" : "is-neg"}`}>
+            ${s.total_spend}
+          </span>
+          <span className="stat__label">total spend</span>
+          <span className="stat__sub">
+            {s.within_budget ? "within budget" : `${s.over_budget_cycles} cycle(s) over`}
+          </span>
+        </div>
+        <div className="stat">
+          <span className="stat__num">${s.avg_spend_per_cycle}</span>
+          <span className="stat__label">avg / cycle</span>
+          <span className="stat__sub">
+            {s.cycles} cycle{s.cycles === 1 ? "" : "s"}
+          </span>
+        </div>
+        <div className="stat">
+          <span className="stat__num">{s.total_calls}</span>
+          <span className="stat__label">engine calls</span>
+          <span className="stat__sub">{s.total_queries} queries</span>
+        </div>
+        <div className="stat">
+          <span className="stat__num">
+            {Object.values(s.per_engine_error_rate).length > 0
+              ? `${(
+                  Math.max(...(Object.values(s.per_engine_error_rate) as number[])) * 100
+                ).toFixed(1)}%`
+              : "0%"}
+          </span>
+          <span className="stat__label">peak error rate</span>
+          <span className="stat__sub">
+            {Object.entries(s.per_engine_error_rate)
+              .map(([e, r]) => `${e} ${((r as number) * 100).toFixed(0)}%`)
+              .join(" · ") || "no errors"}
+          </span>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -134,45 +272,96 @@ function ExperimentConsole({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
   const feed = useQuery(api.experiments.consoleFeed, { workspaceId }) ?? [];
   const requestPublish = useMutation(api.experiments.requestPublish);
   const recordPublish = useMutation(api.experiments.recordPublish);
-  if (feed.length === 0) return null;
+  if (feed.length === 0) {
+    return (
+      <>
+        <h2 className="panel__title">Experiments</h2>
+        <p className="panel__note">
+          No experiments yet. Once a hypothesis survives, design a randomized test to earn a causal
+          result.
+        </p>
+      </>
+    );
+  }
   return (
-    <div style={{ margin: "16px 0" }}>
-      <h2>Experiments</h2>
-      {feed.map((e: any) => (
-        <div key={e._id} style={{ border: "1px solid #eee", borderRadius: 8, padding: 12, marginBottom: 8 }}>
-          <div>
-            <strong>{e.n_pairs} pair(s)</strong> · status: <code>{e.status}</code>
-          </div>
-          <small>treatment pages: {e.treatments.join(", ")}</small>
-          {/* control_page intentionally absent — Hawthorne */}
-          <div style={{ marginTop: 6 }}>
-            {e.status === "designing" && (
-              <button onClick={() => requestPublish({ experimentId: e._id })}>
-                Ready to publish
-              </button>
-            )}
-            {e.status === "awaiting_publish" && (
-              <button onClick={() => recordPublish({ experimentId: e._id })}>
-                ✅ I published it (start measuring)
-              </button>
-            )}
-            {e.status === "awaiting_publish" && (
-              <small style={{ color: "#b80", marginLeft: 8 }}>awaiting publication — slot expires in 14 days</small>
-            )}
-          </div>
-          {e.lift ? (
-            <div style={{ border: "1px solid #0a0", borderRadius: 6, padding: 8, marginTop: 8 }}>
-              <strong>Causal (experiment)</strong> — treated pages saw{" "}
-              {(e.lift.estimate * 100).toFixed(0)}% vs matched controls (CI{" "}
-              {(e.lift.ci_low * 100).toFixed(0)}–{(e.lift.ci_high * 100).toFixed(0)}%, p=
-              {e.lift.p_value}) — {e.lift.verdict}
+    <>
+      <h2 className="panel__title">Experiments</h2>
+      <div>
+        {feed.map((e: any) => (
+          <div key={e._id} className="exp-row">
+            <div className="exp-row__head">
+              <span className="num exp-row__pairs">
+                {e.n_pairs} pair{e.n_pairs === 1 ? "" : "s"}
+              </span>
+              <span className={`status-pill status-pill--${e.status}`}>{e.status}</span>
             </div>
-          ) : (
-            <small style={{ color: "#888" }}> · no causal result yet (Rung-2 locked)</small>
-          )}
-        </div>
-      ))}
-    </div>
+            {/* control_page intentionally absent — Hawthorne */}
+            <div className="exp-row__meta">treatment: {e.treatments.join(", ")}</div>
+
+            <div className="exp-actions">
+              {e.status === "designing" && (
+                <button
+                  className="btn btn--sm"
+                  onClick={() => requestPublish({ experimentId: e._id })}
+                >
+                  Mark ready to publish
+                </button>
+              )}
+              {e.status === "awaiting_publish" && (
+                <>
+                  <button
+                    className="btn btn--primary btn--sm"
+                    onClick={() => recordPublish({ experimentId: e._id })}
+                  >
+                    I published it — start measuring
+                  </button>
+                  <span className="expire-note">slot expires in 14 days</span>
+                </>
+              )}
+            </div>
+
+            {e.lift ? (
+              <div className="causal">
+                <span className="causal__badge">
+                  <RadarMark size={13} /> Causal · experiment
+                </span>
+                <p>
+                  Treated pages saw{" "}
+                  <span className="num pos">{(e.lift.estimate * 100).toFixed(0)}%</span> vs matched
+                  controls{" "}
+                  <span className="faint num">
+                    (CI {(e.lift.ci_low * 100).toFixed(0)}–{(e.lift.ci_high * 100).toFixed(0)}%, p=
+                    {e.lift.p_value})
+                  </span>{" "}
+                  — {e.lift.verdict}
+                </p>
+              </div>
+            ) : (
+              <div className="locked" style={{ marginTop: 12 }}>
+                <LockIcon />
+                No causal result yet — Rung-2 locked until the experiment completes.
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg
+      className="locked__icon"
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
   );
 }
 
@@ -181,49 +370,99 @@ function ExperimentConsole({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
 // rung the evidence licenses. Causal language is structurally impossible here —
 // the causal block only renders when a lift_result exists (rung 2).
 function DiagnosisPanel({ diagnosis }: { diagnosis: any }) {
-  if (!diagnosis) return null;
+  if (!diagnosis) {
+    return (
+      <>
+        <h2 className="panel__title">Diagnosis</h2>
+        <p className="pending" style={{ marginTop: 8 }}>
+          <span className="pending__dot" />
+          fitting the model…
+        </p>
+      </>
+    );
+  }
   const evidence = {
     hasModelFit: diagnosis.modelFits.length > 0,
     hasLiftResult: diagnosis.hasLiftResult,
   };
-  if (!evidence.hasModelFit) return <p style={{ color: "#888" }}>diagnosis pending — fitting the model…</p>;
+  if (!evidence.hasModelFit) {
+    return (
+      <>
+        <h2 className="panel__title">Diagnosis</h2>
+        <p className="pending" style={{ marginTop: 8 }}>
+          <span className="pending__dot" />
+          fitting the model…
+        </p>
+      </>
+    );
+  }
 
   const fit = diagnosis.modelFits[0];
   const { surviving, noise } = rankedGaps(fit.coefficients);
   const rung = licensedRung(evidence);
+  const rungClass = evidence.hasLiftResult
+    ? "rung rung--causal"
+    : "rung rung--hypothesis";
+
+  // Relative CI track shared across surviving signals (presentation only).
+  const lows = surviving.map((c: any) => c.ci_low);
+  const highs = surviving.map((c: any) => c.ci_high);
+  const lo = Math.min(0, ...lows);
+  const hi = Math.max(0, ...highs);
+  const span = hi - lo || 1;
 
   return (
-    <div style={{ margin: "16px 0" }}>
-      <h2>
-        Diagnosis{" "}
-        <span style={{ fontSize: 12, background: "#eee", borderRadius: 4, padding: "2px 6px" }}>
-          {RUNG_BADGE[rung]}
-        </span>
+    <>
+      <h2 className="panel__title">
+        Diagnosis <span className={rungClass}>{RUNG_BADGE[rung]}</span>
       </h2>
-      <small style={{ color: "#888" }}>
-        Hypotheses from {fit.n_companies} companies (effective N) — correlational, not causal. Test before you trust.
-      </small>
+      <p className="panel__note">
+        Hypotheses from <span className="num">{fit.n_companies}</span> companies (effective N).
+        Correlational, not causal — test before you trust.
+      </p>
 
-      <h3>Surviving signals ({surviving.length})</h3>
-      {surviving.map((c: any) => (
-        <p key={c.feature}>
-          <strong>{c.feature}</strong>: {c.posterior_median.toFixed(2)} (90% CI{" "}
-          {c.ci_low.toFixed(2)}–{c.ci_high.toFixed(2)}) — <em>correlates with citation in this category; test it</em>
-        </p>
-      ))}
+      <div style={{ marginTop: 18 }}>
+        <div className="section-label">Surviving signals ({surviving.length})</div>
+        {surviving.map((c: any) => {
+          const left = ((c.ci_low - lo) / span) * 100;
+          const width = Math.max(2, ((c.ci_high - c.ci_low) / span) * 100);
+          return (
+            <div key={c.feature} className="signal-row">
+              <span className="signal-row__name">{c.feature}</span>
+              <span className="signal-row__stat">
+                {c.posterior_median.toFixed(2)}{" "}
+                <span className="signal-row__ci">
+                  (90% {c.ci_low.toFixed(2)}–{c.ci_high.toFixed(2)})
+                </span>
+              </span>
+              <div className="ci-bar">
+                <span className="ci-bar__span" style={{ left: `${left}%`, width: `${width}%` }} />
+              </div>
+              <span className="signal-row__desc">
+                correlates with citation in this category — test it
+              </span>
+            </div>
+          );
+        })}
+      </div>
 
-      <h3 style={{ color: "#999" }}>Not distinguishable from noise ({noise.length})</h3>
-      <small style={{ color: "#999" }}>{noise.map((c: any) => c.feature).join(", ")}</small>
+      {noise.length > 0 && (
+        <div className="noise-note">
+          <h4>Not distinguishable from noise ({noise.length})</h4>
+          <small>{noise.map((c: any) => c.feature).join(" · ")}</small>
+        </div>
+      )}
 
       {/* Causal block — IMPOSSIBLE to render without a lift_result (claim-ladder). */}
       {evidence.hasLiftResult ? (
         <CausalBlock liftResults={diagnosis.liftResults} />
       ) : (
-        <p style={{ color: "#888", marginTop: 12 }}>
-          🔒 No causal claims yet — run a randomized experiment to earn a Rung-2 result.
-        </p>
+        <div className="locked">
+          <LockIcon />
+          No causal claims yet — run a randomized experiment to earn a Rung-2 result.
+        </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -231,12 +470,18 @@ function CausalBlock({ liftResults }: { liftResults: any[] }) {
   // Reaching here means a lift_result exists; makeClaim(CAUSAL) is now licensed.
   const claim = makeClaim(RUNG.CAUSAL, { hasLiftResult: true });
   return (
-    <div style={{ border: "1px solid #0a0", borderRadius: 8, padding: 12, marginTop: 12 }}>
-      <strong>{claim.badge}</strong>
+    <div className="causal">
+      <span className="causal__badge">
+        <RadarMark size={13} /> {claim.badge}
+      </span>
       {liftResults.map((lr: any) => (
         <p key={lr._id}>
-          treated pages saw {(lr.estimate * 100).toFixed(0)}% vs matched controls (CI{" "}
-          {(lr.ci_low * 100).toFixed(0)}–{(lr.ci_high * 100).toFixed(0)}%, p={lr.p_value}) — {lr.verdict}
+          Treated pages saw{" "}
+          <span className="num pos">{(lr.estimate * 100).toFixed(0)}%</span> vs matched controls{" "}
+          <span className="faint num">
+            (CI {(lr.ci_low * 100).toFixed(0)}–{(lr.ci_high * 100).toFixed(0)}%, p={lr.p_value})
+          </span>{" "}
+          — {lr.verdict}
         </p>
       ))}
     </div>
@@ -247,24 +492,58 @@ function CausalBlock({ liftResults }: { liftResults: any[] }) {
 // per engine, live. The demo's emotional core. Shows a measurement (not a model).
 function GutPunchBoard({ gut, measurements }: { gut: any; measurements: any[] }) {
   const prog = measurementProgress(measurements);
-  if (!gut) return <p>measuring…</p>;
-  return (
-    <div style={{ margin: "16px 0" }}>
-      <h2 style={{ marginBottom: 4 }}>Are you cited?</h2>
-      <small style={{ color: "#888" }}>
-        {prog.done} measurements in · {prog.pct}% {prog.pct < 100 ? "(sweeping…)" : "✓"}
-      </small>
-      {Object.entries(gut.perEngine).map(([engine, e]: [string, any]) => (
-        <div key={engine} style={{ border: "1px solid #eee", borderRadius: 8, padding: 14, marginTop: 10 }}>
-          <div style={{ fontWeight: 600 }}>{engine} (web_search)</div>
-          <div style={{ fontSize: 22, margin: "6px 0" }}>{headline(e.you, e.topCompetitor)}</div>
-          {e.citedSources.length > 0 && (
-            <small>cited from: {e.citedSources.join(", ")}</small>
-          )}
+  if (!gut) {
+    return (
+      <>
+        <div className="gut__head">
+          <h2 className="gut__q">Are you cited?</h2>
+          <span className="pending">
+            <span className="pending__dot" />
+            measuring…
+          </span>
         </div>
-      ))}
-      <small style={{ color: "#888" }}>{gut.note}</small>
-    </div>
+        <div className="engines">
+          {[0, 1].map((i) => (
+            <div key={i} className="engine">
+              <div className="skeleton skel-line w-40" />
+              <div className="skeleton skel-line w-80" style={{ height: 24 }} />
+              <div className="skeleton skel-line w-60" />
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
+  return (
+    <>
+      <div className="gut__head">
+        <h2 className="gut__q">Are you cited?</h2>
+        <span className="gut__progress">
+          {prog.done} measurements · {prog.pct}% {prog.pct < 100 ? "sweeping…" : "complete"}
+        </span>
+      </div>
+      <div className="engines">
+        {Object.entries(gut.perEngine).map(([engine, e]: [string, any]) => (
+          <div key={engine} className="engine">
+            <div className="engine__name">
+              <RadarMark size={12} />
+              {engine} <b>web_search</b>
+            </div>
+            <div className="engine__line">{headline(e.you, e.topCompetitor)}</div>
+            {e.citedSources.length > 0 && (
+              <div className="engine__sources">
+                cited from <b>{e.citedSources.join(", ")}</b>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      {gut.note && (
+        <p className="panel__note" style={{ marginTop: 14 }}>
+          {gut.note}
+        </p>
+      )}
+    </>
   );
 }
 
@@ -281,53 +560,92 @@ function EnrichmentReview({
 }) {
   const grounding = llmExpandRatio(queries);
   const breakdown = seedSourceBreakdown(queries);
+  const groundingPct = Math.round(grounding.ratio * 100);
   return (
-    <div style={{ marginTop: 24 }}>
-      <h3>Query set review ({grounding.total})</h3>
-      <p style={{ color: grounding.tooHigh ? "#b00" : "#070" }}>
-        llm_expand: {(grounding.ratio * 100).toFixed(0)}%{" "}
-        {grounding.tooHigh ? "⚠ ungrounded — needs more real seeds" : "✓ grounded"}
-      </p>
-      <small>
-        {Object.entries(breakdown)
-          .filter(([, n]) => (n as number) > 0)
-          .map(([k, n]) => `${k}:${n}`)
-          .join(" · ")}
-      </small>
+    <>
+      <h2 className="panel__title">Enrichment review</h2>
+      <p className="panel__note">The supply behind the numbers — surfaced, not hidden.</p>
 
-      <h3>Off-page coverage</h3>
-      {companies.map((c) => {
-        const cov = coverageSummary(c);
-        return (
-          <p key={c._id}>
-            {c.domain}: {(cov.coverage * 100).toFixed(0)}% covered
-            {cov.missing.length > 0 && (
-              <span style={{ color: "#b00" }}> — missing: {cov.missing.join(", ")}</span>
-            )}
-            {cov.flags.map((f) => (
-              <span key={f} style={{ color: "#b80" }}> [{f}]</span>
+      <div style={{ marginTop: 18 }}>
+        <div className="section-label">Query grounding ({grounding.total})</div>
+        <div className="metric-line">
+          <span className={`metric-line__val ${grounding.tooHigh ? "neg" : "pos"}`}>
+            {groundingPct}% llm_expand
+          </span>
+          <span className={`bar ${grounding.tooHigh ? "is-running" : ""}`}>
+            <span
+              className={`bar__fill ${grounding.tooHigh ? "is-neg" : ""}`}
+              style={{ width: `${groundingPct}%` }}
+            />
+          </span>
+          <span className="faint" style={{ fontSize: 12.5 }}>
+            {grounding.tooHigh ? "ungrounded — needs more real seeds" : "grounded"}
+          </span>
+        </div>
+        <div className="seed-breakdown">
+          {Object.entries(breakdown)
+            .filter(([, n]) => (n as number) > 0)
+            .map(([k, n]) => (
+              <span key={k} className="seed-chip">
+                {k} <b className="num">{n as number}</b>
+              </span>
             ))}
-          </p>
-        );
-      })}
+        </div>
+      </div>
 
-      <h3>Feature vectors ({pages.length} pages)</h3>
-      {pages.map((p) => {
-        const v = featureVectorView(p);
-        return (
-          <details key={p._id}>
-            <summary>{p.url} — {v.extractor_version}</summary>
-            <ul>
-              {v.fields.map((f) => (
-                <li key={f.key} style={{ color: f.present ? "inherit" : "#999" }}>
-                  {f.key}: {f.present ? String(f.value) : "—"}
-                </li>
+      <div style={{ marginTop: 22 }}>
+        <div className="section-label">Off-page coverage</div>
+        {companies.map((c) => {
+          const cov = coverageSummary(c);
+          const pct = Math.round(cov.coverage * 100);
+          return (
+            <div key={c._id} className="cov-row">
+              <span className="cov-row__dom">{c.domain}</span>
+              <span className="bar">
+                <span
+                  className={`bar__fill ${pct < 50 ? "is-neg" : pct < 80 ? "is-warn" : ""}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </span>
+              <span className="cov-row__pct">{pct}%</span>
+              {cov.missing.length > 0 && (
+                <span className="miss">missing {cov.missing.join(", ")}</span>
+              )}
+              {cov.flags.map((f) => (
+                <span key={f} className="flag">
+                  {f}
+                </span>
               ))}
-            </ul>
-          </details>
-        );
-      })}
-    </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ marginTop: 22 }}>
+        <div className="section-label">Feature vectors ({pages.length} pages)</div>
+        {pages.map((p) => {
+          const v = featureVectorView(p);
+          return (
+            <details key={p._id} className="feat">
+              <summary>
+                {p.url}
+                <span className="faint" style={{ marginLeft: "auto" }}>
+                  {v.extractor_version}
+                </span>
+              </summary>
+              <div className="feat__body">
+                {v.fields.map((f) => (
+                  <span key={f.key} className={`feat__field ${f.present ? "" : "is-absent"}`}>
+                    <span>{f.key}</span>
+                    <span>{f.present ? String(f.value) : "—"}</span>
+                  </span>
+                ))}
+              </div>
+            </details>
+          );
+        })}
+      </div>
+    </>
   );
 }
 
@@ -345,22 +663,38 @@ function CompanyCard({
 }) {
   const card = companyCardState(understanding);
   return (
-    <div style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, margin: "12px 0" }}>
-      <strong>Here's what you are</strong>
-      {card.isReading ? (
-        <p style={{ color: "#888" }}>reading your site…</p>
-      ) : (
-        <>
-          <p style={{ fontSize: 18, margin: "8px 0" }}>{card.fields.what_you_are || "…"}</p>
-          <dl style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: 4, margin: 0 }}>
-            <dt>Category</dt><dd>{card.fields.category || "…"}</dd>
-            <dt>Positioning</dt><dd>{card.fields.positioning || "…"}</dd>
-            <dt>ICP</dt><dd>{card.fields.icp || "…"}</dd>
-          </dl>
-          {card.status === "partial" && (
-            <small style={{ color: "#888" }}>still reading: {card.missing.join(", ")}</small>
-          )}
-        </>
+    <div className="panel you">
+      <div>
+        <div className="you__label">Here's what you are</div>
+        {card.isReading ? (
+          <div>
+            <div className="skeleton skel-line w-80" style={{ height: 22 }} />
+            <div className="skeleton skel-line w-60" />
+            <p className="pending" style={{ marginTop: 12 }}>
+              <span className="pending__dot" />
+              reading your site…
+            </p>
+          </div>
+        ) : (
+          <>
+            <p className="you__headline">{card.fields.what_you_are || "…"}</p>
+            {card.status === "partial" && (
+              <p className="faint" style={{ fontSize: 12.5, marginTop: 10, fontFamily: "var(--mono)" }}>
+                still reading: {card.missing.join(", ")}
+              </p>
+            )}
+          </>
+        )}
+      </div>
+      {!card.isReading && (
+        <dl className="kv">
+          <dt>Category</dt>
+          <dd>{card.fields.category || "…"}</dd>
+          <dt>Positioning</dt>
+          <dd>{card.fields.positioning || "…"}</dd>
+          <dt>ICP</dt>
+          <dd>{card.fields.icp || "…"}</dd>
+        </dl>
       )}
     </div>
   );
@@ -380,28 +714,111 @@ function OnboardingForm({
   const [vertical, setVertical] = useState("");
   const [own, setOwn] = useState("");
   const [competitors, setCompetitors] = useState("");
+  const [touched, setTouched] = useState(false);
+
+  const domainOk = /^([a-z0-9-]+\.)+[a-z]{2,}$/i.test(own.trim());
+  const ownInvalid = touched && own.trim().length > 0 && !domainOk;
 
   return (
     <form
+      className="onboard"
       onSubmit={(e) => {
         e.preventDefault();
+        setTouched(true);
+        if (!name.trim() || !vertical.trim() || !domainOk) return;
         onCreate({
-          name,
-          vertical,
-          own_domain: own,
-          competitors: competitors.split(",").map((s) => s.trim()).filter(Boolean),
+          name: name.trim(),
+          vertical: vertical.trim(),
+          own_domain: own.trim(),
+          competitors: competitors
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
         });
         setName("");
         setOwn("");
         setCompetitors("");
+        setTouched(false);
       }}
-      style={{ display: "grid", gap: 8, maxWidth: 420 }}
     >
-      <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Company name" required />
-      <input value={vertical} onChange={(e) => setVertical(e.target.value)} placeholder="Vertical" required />
-      <input value={own} onChange={(e) => setOwn(e.target.value)} placeholder="Your URL (e.g. acme.com)" required />
-      <input value={competitors} onChange={(e) => setCompetitors(e.target.value)} placeholder="Competitor URLs (comma-separated)" />
-      <button type="submit">Create workspace</button>
+      <div className="field">
+        <label className="field__label" htmlFor="ob-name">
+          Company name
+        </label>
+        <input
+          id="ob-name"
+          className="input"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Northbeam"
+          required
+        />
+      </div>
+      <div className="field">
+        <label className="field__label" htmlFor="ob-vertical">
+          Vertical
+        </label>
+        <input
+          id="ob-vertical"
+          className="input"
+          value={vertical}
+          onChange={(e) => setVertical(e.target.value)}
+          placeholder="marketing attribution"
+          required
+        />
+      </div>
+      <div className="field">
+        <label className="field__label" htmlFor="ob-domain">
+          Your domain
+        </label>
+        <input
+          id="ob-domain"
+          className="input"
+          value={own}
+          onChange={(e) => setOwn(e.target.value)}
+          onBlur={() => setTouched(true)}
+          placeholder="northbeam.io"
+          aria-invalid={ownInvalid}
+          required
+        />
+        {ownInvalid && (
+          <span className="field__error">Enter a domain like northbeam.io (no http://).</span>
+        )}
+      </div>
+      <div className="field">
+        <label className="field__label" htmlFor="ob-competitors">
+          Competitor domains
+        </label>
+        <input
+          id="ob-competitors"
+          className="input"
+          value={competitors}
+          onChange={(e) => setCompetitors(e.target.value)}
+          placeholder="triplewhale.com, rockerbox.com"
+        />
+      </div>
+      <button type="submit" className="btn btn--primary">
+        Create workspace
+      </button>
     </form>
+  );
+}
+
+function BoardSkeleton() {
+  return (
+    <div className="board-stack" aria-busy="true">
+      <div className="panel">
+        <div className="skeleton skel-line w-40" />
+        <div className="skeleton skel-line w-80" style={{ height: 22 }} />
+        <div className="skeleton skel-line w-60" />
+      </div>
+      <div className="panel">
+        <div className="skeleton skel-line w-40" />
+        <div className="engines" style={{ marginTop: 16 }}>
+          <div className="skeleton skel-block" />
+          <div className="skeleton skel-block" />
+        </div>
+      </div>
+    </div>
   );
 }
