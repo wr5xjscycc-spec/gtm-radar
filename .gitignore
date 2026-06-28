@@ -11,6 +11,8 @@ dist/
 
 # Convex
 .convex/
+convex/_generated/
+convex/*.js
 
 # Python
 __pycache__/

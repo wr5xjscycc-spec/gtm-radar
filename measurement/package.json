@@ -2,8 +2,15 @@
   "name": "@gtm-radar/measurement",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "description": "P2 — answer-engine adapters, K-repeats, adaptive sampling, citation parsing, case-control labeling, cost guards.",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "smoke": "tsx scripts/p0-smoke.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.19.0"
   }
 }
