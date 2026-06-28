@@ -45,4 +45,11 @@ Makes P2's labels and P4's features trustworthy. Reads `query`/`page`; writes th
 - New artifacts in `types.ts` (`CandidatePoolEntry`, `AgreementReport`) are a **contract-extension proposal** beyond the 9 records — freeze with P2/P4 sign-off before they build against them.
 - Tests: `tests/candidates.test.ts`, `tests/agreement.test.ts` (SERP + LLM mocked). Independent review (anchor-bias) → verdict ship; fixed the agreement-range doc (κ ∈ [-1,1], not [0,1]), added attrition counts, made rank policy all-or-nothing.
 
+**Phase 4 — Join integrity for the model ✅** (`p3/phase-4-join-integrity`)
+Guarantees P4 gets correctly-joined, coverage-honest context. Reads `company`/`page`; writes the joined feature set + coverage flags.
+
+- `src/join.ts` — `joinPagesToCompanies()`: joins every `page` to its `company` on the normalized domain and inherits the company-level context (offpage/firmographics/understanding) to EVERY page. The join is **audited, not trusted** — a www/subdomain miss (orphan), a childless company, a **key collision** (first-wins, loser surfaced — never mis-attribute the dominant off-page signal), and an unjoinable company are all **surfaced** in `JoinReport`, never silently dropped. Inherited context is per-row copies (no cross-row/source corruption).
+- `src/coverage.ts` — `assessCompanyCoverage()` / `assessPageCoverage()` / `buildCoverageReport()` / `reconcileCompanyFlags()`: coverage judged from **actual data presence** (reconciles stale `coverage_flags` toward reality; a measured `0` counts as present). Low-coverage entities are **flagged and kept** in the report (never dropped) — the transparency guarantee.
+- Tests: `tests/join.test.ts`, `tests/coverage.test.ts`. Independent review (anchor-bias) caught a **Critical** (silent company-key collision mis-attributing off-page) + a **Major** (unjoinable companies vanishing) — both fixed before commit with new `duplicate_domains` / `unjoinable_companies` audit surfaces and tests.
+
 Run: `npm test --workspace sourcing`.

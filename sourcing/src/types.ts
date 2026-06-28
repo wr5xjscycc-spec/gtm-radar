@@ -226,3 +226,78 @@ export interface AgreementReport {
   /** Items excluded because extraction failed loud (attrition visibility, not inferred from a low `n`). */
   skipped?: number;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 4 — Join integrity & coverage (P3-produced, P4-facing).
+//
+// The model (P4) fits on PAGE rows that must each inherit their COMPANY's
+// company-level context (offpage/firmographics/understanding) — joined on the
+// normalized domain. A single www/subdomain mismatch silently strips the dominant
+// off-page signals from all of a company's pages, so the join is AUDITED and
+// every miss is SURFACED (never a silent drop). Coverage is made visible, not
+// hidden (red-team transparency). These shapes are a contract-extension proposal.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * A `page` joined with its company's INHERITED company-level context — the clean
+ * row P4 fits on. When the page's company can't be found (orphan), `company_found`
+ * is false and the context fields are absent: the row is still EMITTED (coverage
+ * honesty), never dropped.
+ */
+export interface JoinedPage {
+  page: Page;
+  /** Normalized domain — the join key (page.company_domain ↔ company.domain). */
+  company_domain: string;
+  company_found: boolean;
+  /**
+   * Inherited company-level context (absent when company_found is false).
+   * READ-ONLY: these are per-row copies of the company's families — consumers
+   * (P4) must treat them as immutable; the join does not deep-copy nested arrays.
+   */
+  firmographics?: Firmographics;
+  offpage?: OffPage;
+  understanding?: Understanding;
+  /** The company's coverage flags, inherited so the row carries honest coverage. */
+  company_coverage_flags?: CoverageFlags;
+}
+
+/** Join-integrity findings — surfaced for P1, never silently dropped. */
+export interface JoinReport {
+  /** Pages successfully joined to a company. */
+  joined: number;
+  /** Pages whose company_domain matched NO company (the dangerous www/subdomain miss). Raw declared value. */
+  orphan_pages: Array<{ url: string; company_domain: string }>;
+  /** Companies with no pages (nothing inherits their context yet). */
+  childless_companies: string[];
+  /**
+   * Two companies whose domains collided on the same normalized key — the loser is
+   * surfaced here (first-wins) instead of silently overwriting the index, which
+   * would mis-attribute the dominant off-page signal to the wrong company's pages.
+   */
+  duplicate_domains: string[];
+  /** Companies whose domain couldn't be normalized at all (most coverage-broken — surfaced, not dropped). */
+  unjoinable_companies: string[];
+}
+
+/** Per-entity coverage assessment — low coverage is FLAGGED, not dropped. */
+export interface CoverageAssessment {
+  kind: "company" | "page";
+  /** Domain (company) or normalized url (page). */
+  key: string;
+  /** Which expected feature families are missing. */
+  missing: string[];
+  /** Fraction (0..1) of expected families present. */
+  coverage_score: number;
+  /** Below the threshold → surfaced to P1 for transparency, NOT excluded from fits. */
+  low_coverage: boolean;
+}
+
+/** Coverage roll-up across companies + pages. */
+export interface CoverageReport {
+  companies: CoverageAssessment[];
+  pages: CoverageAssessment[];
+  /** Threshold used to mark `low_coverage` (so the number is reproducible). */
+  threshold: number;
+  /** Count of low-coverage entities (surfaced, never dropped). */
+  low_coverage_count: number;
+}

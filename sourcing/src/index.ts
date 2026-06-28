@@ -13,3 +13,5 @@ export * from "./offpage";
 export * from "./queries";
 export * from "./candidates";
 export * from "./agreement";
+export * from "./join";
+export * from "./coverage";
