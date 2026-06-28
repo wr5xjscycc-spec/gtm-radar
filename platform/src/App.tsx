@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Component, type ReactNode } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -37,12 +37,32 @@ function RadarMark({ size = 18 }: { size?: number }) {
   );
 }
 
+/** Catches render/query failures so a panel error never blanks the whole board. */
+class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    if (this.state.failed) {
+      return (
+        <div className="locked" role="alert">
+          <LockIcon />
+          Couldn't load this view. Check the connection and reload.
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export function App() {
-  const workspaces = useQuery(api.customers.listWorkspaces) ?? [];
+  const wsResult = useQuery(api.customers.listWorkspaces);
+  const workspaces = wsResult ?? [];
+  const loading = wsResult === undefined;
   const [selected, setSelected] = useState<Id<"workspaces"> | null>(null);
   const create = useMutation(api.customers.createWorkspace);
 
-  const loading = useQuery(api.customers.listWorkspaces) === undefined;
   const wsId = selected ?? (workspaces[0]?._id as Id<"workspaces"> | undefined);
 
   const onCreate = (v: {
@@ -69,7 +89,7 @@ export function App() {
           <span className="brand__sub">citation console</span>
         </span>
         <span className="topbar__spacer" />
-        <span className="live" title="Convex reactive — updates with no polling">
+        <span className="live" title="Convex reactive; updates with no polling">
           <span className="live__dot" />
           live
         </span>
@@ -79,14 +99,14 @@ export function App() {
         {loading ? (
           <BoardSkeleton />
         ) : workspaces.length === 0 ? (
-          <section className="empty">
+          <section className="empty" aria-labelledby="empty-title">
             <span className="empty__mark">
               <RadarMark size={26} />
             </span>
-            <h2>See who the AI engines actually cite</h2>
+            <h2 id="empty-title">See who the AI engines actually cite</h2>
             <p>
-              Add your company and a few competitors. GTM Radar measures who answer engines name
-              for your buyers' real questions, then helps you prove what moves the needle.
+              Add your company and a few competitors. GTM Radar measures which answer engines cite
+              you for your buyers' real questions, then helps you prove what moves the needle.
             </p>
             <div className="panel" style={{ width: "100%", textAlign: "left" }}>
               <div className="section-label">New workspace</div>
@@ -112,7 +132,11 @@ export function App() {
               </div>
             </div>
 
-            {wsId && <Board workspaceId={wsId} />}
+            {wsId && (
+              <ErrorBoundary>
+                <Board workspaceId={wsId} />
+              </ErrorBoundary>
+            )}
 
             <details className="panel" style={{ marginTop: 40 }}>
               <summary
@@ -151,23 +175,25 @@ function Board({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
 
   return (
     <div className="board-stack">
-      <section className="reveal">
+      <section className="reveal reveal--1">
         <CompanyCard understanding={customer?.understanding} />
       </section>
 
-      <section className="reveal panel">
+      <section className="reveal reveal--2 panel">
         <div className="bf__head">
           <h2 className="panel__title">Battlefield</h2>
           <span className="num bf__count">{bf.count} sourced</span>
-          {bf.filling ? (
-            <span className="faint" style={{ fontSize: 13 }}>
-              filling… target {bf.target}
-            </span>
-          ) : (
-            <span className="pos" style={{ fontSize: 13 }}>
-              complete
-            </span>
-          )}
+          <span aria-live="polite">
+            {bf.filling ? (
+              <span className="faint" style={{ fontSize: 13 }}>
+                filling… target {bf.target}
+              </span>
+            ) : (
+              <span className="pos" style={{ fontSize: 13 }}>
+                complete
+              </span>
+            )}
+          </span>
         </div>
         <div className="bf-grid">
           {battlefield.map((c) => {
@@ -191,7 +217,7 @@ function Board({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
         )}
       </section>
 
-      <section className="reveal panel">
+      <section className="reveal reveal--3 panel">
         <GutPunchBoard gut={gut} measurements={measurements} />
       </section>
 
@@ -293,7 +319,9 @@ function ExperimentConsole({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
               <span className="num exp-row__pairs">
                 {e.n_pairs} pair{e.n_pairs === 1 ? "" : "s"}
               </span>
-              <span className={`status-pill status-pill--${e.status}`}>{e.status}</span>
+              <span className={`status-pill status-pill--${e.status}`}>
+                {e.status.replace(/_/g, " ")}
+              </span>
             </div>
             {/* control_page intentionally absent — Hawthorne */}
             <div className="exp-row__meta">treatment: {e.treatments.join(", ")}</div>
@@ -313,7 +341,7 @@ function ExperimentConsole({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
                     className="btn btn--primary btn--sm"
                     onClick={() => recordPublish({ experimentId: e._id })}
                   >
-                    I published it — start measuring
+                    Mark as published
                   </button>
                   <span className="expire-note">slot expires in 14 days</span>
                 </>
@@ -332,14 +360,14 @@ function ExperimentConsole({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
                   <span className="faint num">
                     (CI {(e.lift.ci_low * 100).toFixed(0)}–{(e.lift.ci_high * 100).toFixed(0)}%, p=
                     {e.lift.p_value})
-                  </span>{" "}
-                  — {e.lift.verdict}
+                  </span>{" · "}
+                  {e.lift.verdict}
                 </p>
               </div>
             ) : (
               <div className="locked" style={{ marginTop: 12 }}>
                 <LockIcon />
-                No causal result yet — Rung-2 locked until the experiment completes.
+                No causal result yet. Rung-2 locked until the experiment completes.
               </div>
             )}
           </div>
@@ -418,7 +446,7 @@ function DiagnosisPanel({ diagnosis }: { diagnosis: any }) {
       </h2>
       <p className="panel__note">
         Hypotheses from <span className="num">{fit.n_companies}</span> companies (effective N).
-        Correlational, not causal — test before you trust.
+        Correlational, not causal. Test before you trust.
       </p>
 
       <div style={{ marginTop: 18 }}>
@@ -435,11 +463,11 @@ function DiagnosisPanel({ diagnosis }: { diagnosis: any }) {
                   (90% {c.ci_low.toFixed(2)}–{c.ci_high.toFixed(2)})
                 </span>
               </span>
-              <div className="ci-bar">
+              <div className="ci-bar" aria-hidden="true">
                 <span className="ci-bar__span" style={{ left: `${left}%`, width: `${width}%` }} />
               </div>
               <span className="signal-row__desc">
-                correlates with citation in this category — test it
+                correlates with citation in this category; test it
               </span>
             </div>
           );
@@ -459,7 +487,7 @@ function DiagnosisPanel({ diagnosis }: { diagnosis: any }) {
       ) : (
         <div className="locked">
           <LockIcon />
-          No causal claims yet — run a randomized experiment to earn a Rung-2 result.
+          No causal claims yet. Run a randomized experiment to earn a Rung-2 result.
         </div>
       )}
     </>
@@ -480,8 +508,8 @@ function CausalBlock({ liftResults }: { liftResults: any[] }) {
           <span className="num pos">{(lr.estimate * 100).toFixed(0)}%</span> vs matched controls{" "}
           <span className="faint num">
             (CI {(lr.ci_low * 100).toFixed(0)}–{(lr.ci_high * 100).toFixed(0)}%, p={lr.p_value})
-          </span>{" "}
-          — {lr.verdict}
+          </span>{" · "}
+          {lr.verdict}
         </p>
       ))}
     </div>
@@ -518,7 +546,7 @@ function GutPunchBoard({ gut, measurements }: { gut: any; measurements: any[] })
     <>
       <div className="gut__head">
         <h2 className="gut__q">Are you cited?</h2>
-        <span className="gut__progress">
+        <span className="gut__progress" aria-live="polite">
           {prog.done} measurements · {prog.pct}% {prog.pct < 100 ? "sweeping…" : "complete"}
         </span>
       </div>
@@ -547,6 +575,15 @@ function GutPunchBoard({ gut, measurements }: { gut: any; measurements: any[] })
   );
 }
 
+// Humanize the internal seed-source keys for display.
+const SEED_LABEL: Record<string, string> = {
+  paa: "People Also Ask",
+  keyword: "Keyword data",
+  reddit: "Reddit",
+  analytics: "Your analytics",
+  llm_expand: "LLM-expanded",
+};
+
 // P1·2: makes P3's supply auditable. SURFACES (never hides) low off-page
 // coverage + an llm_expand-heavy query set — the two red-team holes.
 function EnrichmentReview({
@@ -564,22 +601,22 @@ function EnrichmentReview({
   return (
     <>
       <h2 className="panel__title">Enrichment review</h2>
-      <p className="panel__note">The supply behind the numbers — surfaced, not hidden.</p>
+      <p className="panel__note">The supply behind the numbers: surfaced, not hidden.</p>
 
       <div style={{ marginTop: 18 }}>
         <div className="section-label">Query grounding ({grounding.total})</div>
         <div className="metric-line">
           <span className={`metric-line__val ${grounding.tooHigh ? "neg" : "pos"}`}>
-            {groundingPct}% llm_expand
+            {groundingPct}% LLM-expanded
           </span>
-          <span className={`bar ${grounding.tooHigh ? "is-running" : ""}`}>
+          <span className={`bar ${grounding.tooHigh ? "is-running" : ""}`} aria-hidden="true">
             <span
               className={`bar__fill ${grounding.tooHigh ? "is-neg" : ""}`}
               style={{ width: `${groundingPct}%` }}
             />
           </span>
           <span className="faint" style={{ fontSize: 12.5 }}>
-            {grounding.tooHigh ? "ungrounded — needs more real seeds" : "grounded"}
+            {grounding.tooHigh ? "ungrounded, needs more real seeds" : "grounded"}
           </span>
         </div>
         <div className="seed-breakdown">
@@ -587,7 +624,7 @@ function EnrichmentReview({
             .filter(([, n]) => (n as number) > 0)
             .map(([k, n]) => (
               <span key={k} className="seed-chip">
-                {k} <b className="num">{n as number}</b>
+                {SEED_LABEL[k] ?? k} <b className="num">{n as number}</b>
               </span>
             ))}
         </div>
@@ -601,7 +638,7 @@ function EnrichmentReview({
           return (
             <div key={c._id} className="cov-row">
               <span className="cov-row__dom">{c.domain}</span>
-              <span className="bar">
+              <span className="bar" aria-hidden="true">
                 <span
                   className={`bar__fill ${pct < 50 ? "is-neg" : pct < 80 ? "is-warn" : ""}`}
                   style={{ width: `${pct}%` }}
@@ -708,13 +745,14 @@ function OnboardingForm({
     vertical: string;
     own_domain: string;
     competitors: string[];
-  }) => void;
+  }) => void | Promise<unknown>;
 }) {
   const [name, setName] = useState("");
   const [vertical, setVertical] = useState("");
   const [own, setOwn] = useState("");
   const [competitors, setCompetitors] = useState("");
   const [touched, setTouched] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const domainOk = /^([a-z0-9-]+\.)+[a-z]{2,}$/i.test(own.trim());
   const ownInvalid = touched && own.trim().length > 0 && !domainOk;
@@ -722,23 +760,29 @@ function OnboardingForm({
   return (
     <form
       className="onboard"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
         setTouched(true);
+        setSubmitError("");
         if (!name.trim() || !vertical.trim() || !domainOk) return;
-        onCreate({
-          name: name.trim(),
-          vertical: vertical.trim(),
-          own_domain: own.trim(),
-          competitors: competitors
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean),
-        });
-        setName("");
-        setOwn("");
-        setCompetitors("");
-        setTouched(false);
+        try {
+          // Clear only after the mutation resolves, so typed input survives a failure.
+          await onCreate({
+            name: name.trim(),
+            vertical: vertical.trim(),
+            own_domain: own.trim(),
+            competitors: competitors
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean),
+          });
+          setName("");
+          setOwn("");
+          setCompetitors("");
+          setTouched(false);
+        } catch {
+          setSubmitError("Couldn't create the workspace. Check the connection and try again.");
+        }
       }}
     >
       <div className="field">
@@ -782,12 +826,14 @@ function OnboardingForm({
           required
         />
         {ownInvalid && (
-          <span className="field__error">Enter a domain like northbeam.io (no http://).</span>
+          <span className="field__error" role="alert">
+            Enter a domain like northbeam.io (no http://).
+          </span>
         )}
       </div>
       <div className="field">
         <label className="field__label" htmlFor="ob-competitors">
-          Competitor domains
+          Competitor domains (optional)
         </label>
         <input
           id="ob-competitors"
@@ -795,18 +841,24 @@ function OnboardingForm({
           value={competitors}
           onChange={(e) => setCompetitors(e.target.value)}
           placeholder="triplewhale.com, rockerbox.com"
+          aria-required="false"
         />
       </div>
       <button type="submit" className="btn btn--primary">
         Create workspace
       </button>
+      {submitError && (
+        <span className="field__error" role="alert">
+          {submitError}
+        </span>
+      )}
     </form>
   );
 }
 
 function BoardSkeleton() {
   return (
-    <div className="board-stack" aria-busy="true">
+    <div className="board-stack" aria-busy="true" aria-live="polite">
       <div className="panel">
         <div className="skeleton skel-line w-40" />
         <div className="skeleton skel-line w-80" style={{ height: 22 }} />

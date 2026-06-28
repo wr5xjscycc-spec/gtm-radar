@@ -1,35 +1,43 @@
 /* ============================================================================
-   GTM Radar — "Signal" design system
-   A measurement console: dark, instrument-grade, one phosphor accent.
-   Tokens in OKLCH. Numerics in Geist Mono w/ tabular figures. CSS-only motion.
+   GTM Radar — "Signal" design system · LIGHT
+   A measurement console: clean cool-white instrument surfaces, one deep
+   signal-teal accent. Numerics in Geist Mono w/ tabular figures. CSS-only motion.
+   Cool neutrals (not cream) keep it clinical, not the warm-AI-default.
    ========================================================================== */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* — Surfaces (cool-tinted near-black, single hue family ~220) — */
-  --bg:        oklch(0.165 0.012 232);
-  --surface:   oklch(0.205 0.014 232);
-  --surface-2: oklch(0.245 0.016 232);
-  --hairline:  oklch(1 0 0 / 0.09);
-  --hairline-strong: oklch(1 0 0 / 0.16);
+  /* — Surfaces (cool near-white, single hue family ~250; bg is a faint grey,
+       cards sit above it in near-white) — */
+  --bg:        oklch(0.972 0.004 250);
+  --surface:   oklch(0.995 0.0015 250);
+  --surface-2: oklch(0.984 0.004 250);
+  --hairline:  oklch(0.30 0.03 250 / 0.13);
+  --hairline-strong: oklch(0.30 0.03 250 / 0.22);
 
-  /* — Ink (high-contrast, contrast-verified against --bg/--surface) — */
-  --ink:    oklch(0.96 0.006 232);   /* primary text   */
-  --ink-2:  oklch(0.78 0.012 232);   /* secondary/body */
-  --ink-3:  oklch(0.64 0.014 232);   /* labels/meta (non-essential micro only) */
+  /* — Ink (cool near-black, contrast-verified against --bg/--surface) — */
+  --ink:    oklch(0.25 0.022 252);   /* headings / primary text */
+  --ink-2:  oklch(0.40 0.018 252);   /* body                    */
+  --ink-3:  oklch(0.50 0.016 252);   /* labels / meta           */
 
-  /* — Phosphor accent: the live/cited/positive signal (used sparingly) — */
-  --signal:      oklch(0.84 0.16 168);
-  --signal-dim:  oklch(0.84 0.16 168 / 0.14);
-  --signal-line: oklch(0.84 0.16 168 / 0.34);
-  --on-signal:   oklch(0.18 0.02 168);   /* dark ink for on-accent surfaces */
+  /* — Signal accent: deep teal, dark enough for text on white AND button fill — */
+  --signal:      oklch(0.50 0.115 188);
+  --signal-ink:  oklch(0.44 0.12 190);   /* slightly darker for small accent text */
+  --signal-dim:  oklch(0.50 0.115 188 / 0.10);
+  --signal-line: oklch(0.50 0.115 188 / 0.30);
+  --on-signal:   oklch(0.995 0 0);        /* white text on accent fills */
 
-  /* — Semantic status — */
-  --warn:     oklch(0.83 0.13 78);
-  --warn-dim: oklch(0.83 0.13 78 / 0.14);
-  --neg:      oklch(0.70 0.16 26);
-  --neg-dim:  oklch(0.70 0.16 26 / 0.14);
+  /* — Semantic status (darkened for a light bg) — */
+  --warn:     oklch(0.50 0.12 58);
+  --warn-dim: oklch(0.62 0.14 62 / 0.16);
+  --neg:      oklch(0.52 0.20 27);
+  --neg-dim:  oklch(0.58 0.20 27 / 0.12);
+
+  /* — Neutral overlays / tracks (dark-on-light, low alpha) — */
+  --track:   oklch(0.45 0.02 252 / 0.13);
+  --chip-bg: oklch(0.45 0.02 252 / 0.05);
+  --hover:   oklch(0.45 0.02 252 / 0.06);
 
   /* — Type — */
   --sans: "Geist", system-ui, -apple-system, sans-serif;
@@ -49,10 +57,10 @@
   --ease:   cubic-bezier(0.22, 1, 0.36, 1);     /* ease-out-quint-ish */
   --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* — Elevation (tinted, not pure black) — */
-  --shadow-1: 0 1px 2px oklch(0.1 0.02 232 / 0.5);
-  --shadow-2: 0 8px 30px oklch(0.08 0.02 232 / 0.55);
-  --glow: 0 0 0 1px var(--signal-line), 0 0 24px oklch(0.84 0.16 168 / 0.16);
+  /* — Elevation (tinted cool, real light-mode shadows) — */
+  --shadow-1: 0 1px 2px oklch(0.40 0.04 252 / 0.08), 0 1px 1px oklch(0.40 0.04 252 / 0.05);
+  --shadow-2: 0 12px 34px oklch(0.40 0.06 252 / 0.12), 0 2px 8px oklch(0.40 0.04 252 / 0.07);
+  --glow: 0 0 0 1px var(--signal-line), 0 10px 26px oklch(0.50 0.115 188 / 0.16);
 
   /* — z-scale (semantic, never arbitrary) — */
   --z-base: 1;
@@ -84,7 +92,7 @@ body {
   position: relative;
 }
 
-/* Ambient depth: a faint radial wash + grain, so the dark never reads flat. */
+/* Ambient: a whisper of cool tint + faint grain so the white never reads flat. */
 body::before {
   content: "";
   position: fixed;
@@ -92,8 +100,8 @@ body::before {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(1100px 620px at 78% -8%, oklch(0.84 0.16 168 / 0.06), transparent 60%),
-    radial-gradient(900px 600px at -6% 4%, oklch(0.5 0.07 232 / 0.10), transparent 55%);
+    radial-gradient(1100px 640px at 82% -10%, oklch(0.50 0.115 188 / 0.05), transparent 60%),
+    radial-gradient(900px 600px at -6% 2%, oklch(0.55 0.06 250 / 0.06), transparent 55%);
 }
 body::after {
   content: "";
@@ -101,7 +109,7 @@ body::after {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.025;
+  opacity: 0.018;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -126,7 +134,7 @@ button { font: inherit; color: inherit; }
 
 .muted { color: var(--ink-2); }
 .faint { color: var(--ink-3); }
-.pos { color: var(--signal); }
+.pos { color: var(--signal-ink); }
 .warn { color: var(--warn); }
 .neg  { color: var(--neg); }
 
@@ -142,8 +150,8 @@ button { font: inherit; color: inherit; }
   align-items: center;
   gap: 18px;
   padding: 14px clamp(16px, 4vw, 40px);
-  background: oklch(0.165 0.012 232 / 0.72);
-  backdrop-filter: blur(14px) saturate(1.4);
+  background: oklch(0.972 0.004 250 / 0.78);
+  backdrop-filter: blur(14px) saturate(1.2);
   border-bottom: 1px solid var(--hairline);
 }
 
@@ -169,7 +177,7 @@ button { font: inherit; color: inherit; }
   width: 7px; height: 7px; border-radius: var(--r-full);
   background: var(--signal);
   box-shadow: 0 0 0 0 var(--signal);
-  animation: pulse 2.4s var(--ease) infinite;
+  animation: pulse 2.4s ease-in-out infinite;
 }
 
 .shell {
@@ -190,8 +198,10 @@ button { font: inherit; color: inherit; }
   background: var(--surface);
   color: var(--ink-2);
   cursor: pointer;
+  box-shadow: var(--shadow-1);
   transition: border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease), color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
 }
+.ws-chip { max-width: 100%; min-width: 0; }
 .ws-chip:hover { border-color: var(--hairline-strong); color: var(--ink); }
 .ws-chip:active { transform: translateY(1px); }
 .ws-chip[aria-pressed="true"] {
@@ -199,9 +209,8 @@ button { font: inherit; color: inherit; }
   background: var(--signal-dim);
   color: var(--ink);
 }
-.ws-chip { max-width: 100%; min-width: 0; }
 .ws-chip__dom { font-family: var(--mono); font-size: 12px; color: var(--ink-3); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ws-chip[aria-pressed="true"] .ws-chip__dom { color: var(--signal); }
+.ws-chip[aria-pressed="true"] .ws-chip__dom { color: var(--signal-ink); }
 
 /* ------------------------------ sections --------------------------------- */
 
@@ -217,7 +226,7 @@ button { font: inherit; color: inherit; }
 
 .grid-2 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
   gap: 18px;
 }
 
@@ -227,8 +236,9 @@ button { font: inherit; color: inherit; }
   border: 1px solid var(--hairline);
   border-radius: var(--r-lg);
   padding: clamp(18px, 2.4vw, 26px);
+  box-shadow: var(--shadow-1);
 }
-.panel--flush { background: transparent; border: 0; padding: 0; }
+.panel--flush { background: transparent; border: 0; padding: 0; box-shadow: none; }
 
 .panel__title { font-size: 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .panel__note { color: var(--ink-3); font-size: 13px; margin-top: 5px; }
@@ -239,15 +249,16 @@ button { font: inherit; color: inherit; }
 .gut__q { font-size: clamp(1.9rem, 4.4vw, 3.1rem); letter-spacing: -0.035em; font-weight: 600; }
 .gut__progress { font-family: var(--mono); font-size: 12.5px; color: var(--ink-3); letter-spacing: 0.01em; }
 
-.engines { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 18px; }
+.engines { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 16px; margin-top: 18px; }
 
 .engine {
   position: relative;
-  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  background: linear-gradient(180deg, var(--surface), var(--surface-2));
   border: 1px solid var(--hairline);
   border-radius: var(--r-md);
   padding: 18px 18px 16px;
   overflow: hidden;
+  box-shadow: var(--shadow-1);
 }
 .engine__name {
   font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase;
@@ -264,12 +275,6 @@ button { font: inherit; color: inherit; }
 }
 .engine__sources { font-size: 12.5px; color: var(--ink-3); }
 .engine__sources b { color: var(--ink-2); font-weight: 500; }
-
-/* big score readouts inside the gut line */
-.score { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 600; }
-.score--you  { color: var(--neg); }
-.score--you.is-cited { color: var(--signal); }
-.score--rival { color: var(--ink); }
 
 /* ----------------------------- you-card ---------------------------------- */
 
@@ -306,9 +311,9 @@ button { font: inherit; color: inherit; }
 .role-tag {
   font-size: 10px; font-family: var(--mono); letter-spacing: 0.05em; text-transform: uppercase;
   padding: 2px 6px; border-radius: var(--r-xs);
-  color: var(--ink-3); background: oklch(1 0 0 / 0.05);
+  color: var(--ink-3); background: var(--chip-bg);
 }
-.role-tag.is-you { color: var(--signal); background: var(--signal-dim); }
+.role-tag.is-you { color: var(--signal-ink); background: var(--signal-dim); }
 
 /* ------------------------------ diagnosis -------------------------------- */
 
@@ -320,7 +325,7 @@ button { font: inherit; color: inherit; }
   white-space: nowrap;
 }
 .rung--hypothesis { color: var(--warn); border-color: var(--warn-dim); background: var(--warn-dim); }
-.rung--causal { color: var(--signal); border-color: var(--signal-line); background: var(--signal-dim); }
+.rung--causal { color: var(--signal-ink); border-color: var(--signal-line); background: var(--signal-dim); }
 
 .signal-row {
   display: grid;
@@ -333,15 +338,14 @@ button { font: inherit; color: inherit; }
 .signal-row:first-of-type { border-top: 0; }
 .signal-row__name { color: var(--ink); font-weight: 500; }
 .signal-row__desc { grid-column: 1 / -1; color: var(--ink-3); font-size: 12.5px; }
-.signal-row__stat { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--signal); font-weight: 600; text-align: right; }
+.signal-row__stat { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--signal-ink); font-weight: 600; text-align: right; }
 .signal-row__ci { color: var(--ink-3); font-weight: 400; }
 
 /* CI visual bar: a track with the credible interval marked */
-.ci-bar { grid-column: 1 / -1; height: 4px; border-radius: var(--r-full); background: oklch(1 0 0 / 0.06); position: relative; overflow: hidden; }
-.ci-bar__span { position: absolute; top: 0; bottom: 0; background: var(--signal-line); border-radius: var(--r-full); }
-.ci-bar__span::after { content: ""; position: absolute; inset: 0; background: var(--signal); opacity: 0.55; mix-blend-mode: screen; }
+.ci-bar { grid-column: 1 / -1; height: 4px; border-radius: var(--r-full); background: var(--track); position: relative; overflow: hidden; }
+.ci-bar__span { position: absolute; top: 0; bottom: 0; background: var(--signal); border-radius: var(--r-full); }
 
-.noise-note { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--hairline); }
+.noise-note { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--hairline-strong); }
 .noise-note h4 { color: var(--ink-3); font-size: 13px; font-weight: 500; margin-bottom: 5px; }
 .noise-note small { color: var(--ink-3); font-family: var(--mono); font-size: 12px; }
 
@@ -361,7 +365,7 @@ button { font: inherit; color: inherit; }
   background: var(--signal-dim);
   box-shadow: var(--glow);
 }
-.causal__badge { display: inline-flex; align-items: center; gap: 8px; color: var(--signal); font-weight: 600; font-size: 13px; font-family: var(--mono); letter-spacing: 0.02em; margin-bottom: 8px; }
+.causal__badge { display: inline-flex; align-items: center; gap: 8px; color: var(--signal-ink); font-weight: 600; font-size: 13px; font-family: var(--mono); letter-spacing: 0.02em; margin-bottom: 8px; }
 .causal p { color: var(--ink); }
 
 /* ----------------------------- experiments ------------------------------- */
@@ -382,8 +386,8 @@ button { font: inherit; color: inherit; }
 }
 .status-pill--designing { color: var(--ink-2); }
 .status-pill--awaiting_publish { color: var(--warn); border-color: var(--warn-dim); background: var(--warn-dim); }
-.status-pill--running { color: var(--signal); border-color: var(--signal-line); background: var(--signal-dim); }
-.status-pill--complete { color: var(--signal); border-color: var(--signal-line); background: var(--signal-dim); }
+.status-pill--running { color: var(--signal-ink); border-color: var(--signal-line); background: var(--signal-dim); }
+.status-pill--complete { color: var(--signal-ink); border-color: var(--signal-line); background: var(--signal-dim); }
 .status-pill--expired { color: var(--neg); border-color: var(--neg-dim); background: var(--neg-dim); }
 
 .exp-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
@@ -399,10 +403,11 @@ button { font: inherit; color: inherit; }
   border: 1px solid var(--hairline);
   border-radius: var(--r-md);
   overflow: hidden;
+  box-shadow: var(--shadow-1);
 }
 .stat { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
 .stat__num { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: clamp(1.2rem, 2vw, 1.55rem); font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
-.stat__num.is-pos { color: var(--signal); }
+.stat__num.is-pos { color: var(--signal-ink); }
 .stat__num.is-neg { color: var(--neg); }
 .stat__label { font-size: 11.5px; font-family: var(--mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); }
 .stat__sub { font-size: 12px; color: var(--ink-3); }
@@ -411,7 +416,7 @@ button { font: inherit; color: inherit; }
 
 .metric-line { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .metric-line__val { font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums; }
-.bar { height: 6px; border-radius: var(--r-full); background: oklch(1 0 0 / 0.06); overflow: hidden; position: relative; min-width: 120px; flex: 1; }
+.bar { height: 6px; border-radius: var(--r-full); background: var(--track); overflow: hidden; position: relative; min-width: 120px; flex: 1; }
 .bar__fill { position: absolute; inset: 0 auto 0 0; border-radius: var(--r-full); background: var(--signal); transition: width var(--t-slow) var(--ease); }
 .bar__fill.is-warn { background: var(--warn); }
 .bar__fill.is-neg { background: var(--neg); }
@@ -419,12 +424,12 @@ button { font: inherit; color: inherit; }
 /* a faint sweep while a process is still running (<100%) */
 .bar.is-running .bar__fill::after {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.35), transparent);
-  animation: sweep 1.5s var(--ease) infinite;
+  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.45), transparent);
+  animation: sweep 1.5s linear infinite;
 }
 
 .seed-breakdown { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.seed-chip { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); padding: 3px 9px; border-radius: var(--r-full); background: oklch(1 0 0 / 0.05); border: 1px solid var(--hairline); }
+.seed-chip { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); padding: 3px 9px; border-radius: var(--r-full); background: var(--chip-bg); border: 1px solid var(--hairline); }
 .seed-chip b { color: var(--ink); }
 
 .cov-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--hairline); flex-wrap: wrap; }
@@ -453,7 +458,8 @@ button { font: inherit; color: inherit; }
 .feat[open] > summary::before { content: "\2212"; }
 .feat > summary:hover { background: var(--surface-2); color: var(--ink); }
 .feat__body { padding: 4px 14px 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 4px 18px; }
-.feat__field { font-size: 12.5px; font-family: var(--mono); color: var(--ink-2); display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+.feat__field { font-size: 12.5px; font-family: var(--mono); color: var(--ink-2); display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; min-width: 0; }
+.feat__field span:first-child { min-width: 0; overflow-wrap: anywhere; }
 .feat__field.is-absent { color: var(--ink-3); }
 .feat__field span:last-child { color: var(--ink); }
 
@@ -473,8 +479,8 @@ button { font: inherit; color: inherit; }
   transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
 }
 .input::placeholder { color: var(--ink-3); }
-.input:hover { border-color: oklch(1 0 0 / 0.22); }
-.input:focus { outline: none; border-color: var(--signal-line); box-shadow: 0 0 0 3px var(--signal-dim); }
+.input:hover { border-color: oklch(0.30 0.03 250 / 0.34); }
+.input:focus { outline: 2px solid transparent; outline-offset: 0; border-color: var(--signal-line); box-shadow: 0 0 0 3px var(--signal-dim); }
 .input[aria-invalid="true"] { border-color: var(--neg); box-shadow: 0 0 0 3px var(--neg-dim); }
 .field__error { font-size: 12px; color: var(--neg); font-family: var(--mono); }
 
@@ -483,13 +489,14 @@ button { font: inherit; color: inherit; }
   padding: 10px 17px;
   border-radius: var(--r-sm);
   border: 1px solid var(--hairline-strong);
-  background: var(--surface-2);
+  background: var(--surface);
   color: var(--ink);
   font-weight: 500;
   cursor: pointer;
+  box-shadow: var(--shadow-1);
   transition: transform var(--t-fast) var(--ease), background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
 }
-.btn:hover { background: oklch(0.29 0.018 232); border-color: var(--hairline-strong); }
+.btn:hover { background: var(--surface-2); border-color: var(--hairline-strong); }
 .btn:active { transform: translateY(1px) scale(0.99); }
 .btn--primary {
   background: var(--signal);
@@ -497,9 +504,9 @@ button { font: inherit; color: inherit; }
   border-color: transparent;
   font-weight: 600;
 }
-.btn--primary:hover { background: oklch(0.88 0.16 168); box-shadow: 0 0 24px oklch(0.84 0.16 168 / 0.3); }
-.btn--ghost { background: transparent; }
-.btn--ghost:hover { background: oklch(1 0 0 / 0.05); }
+.btn--primary:hover { background: oklch(0.45 0.115 188); box-shadow: 0 6px 18px oklch(0.50 0.115 188 / 0.28); }
+.btn--ghost { background: transparent; box-shadow: none; }
+.btn--ghost:hover { background: var(--hover); }
 .btn--sm { padding: 7px 12px; font-size: 13px; }
 
 /* ------------------------------- states ---------------------------------- */
@@ -524,7 +531,7 @@ button { font: inherit; color: inherit; }
 
 .skeleton {
   border-radius: var(--r-sm);
-  background: linear-gradient(100deg, var(--surface) 30%, var(--surface-2) 50%, var(--surface) 70%);
+  background: linear-gradient(100deg, oklch(0.935 0.004 250) 30%, oklch(0.965 0.004 250) 50%, oklch(0.935 0.004 250) 70%);
   background-size: 220% 100%;
   animation: shimmer 1.5s linear infinite;
 }
@@ -535,14 +542,14 @@ button { font: inherit; color: inherit; }
 .skel-block { height: 92px; }
 
 .pending { color: var(--ink-3); font-family: var(--mono); font-size: 13px; display: inline-flex; align-items: center; gap: 9px; }
-.pending__dot { width: 6px; height: 6px; border-radius: var(--r-full); background: var(--ink-3); animation: pulse 1.4s var(--ease) infinite; }
+.pending__dot { width: 6px; height: 6px; border-radius: var(--r-full); background: var(--ink-3); animation: pulse 1.4s ease-in-out infinite; }
 
 /* ------------------------------- motion ---------------------------------- */
 
 @keyframes pulse {
   0%   { box-shadow: 0 0 0 0 var(--signal); opacity: 1; }
-  70%  { box-shadow: 0 0 0 7px oklch(0.84 0.16 168 / 0); opacity: 0.85; }
-  100% { box-shadow: 0 0 0 0 oklch(0.84 0.16 168 / 0); opacity: 1; }
+  70%  { box-shadow: 0 0 0 7px oklch(0.50 0.115 188 / 0); opacity: 0.85; }
+  100% { box-shadow: 0 0 0 0 oklch(0.50 0.115 188 / 0); opacity: 1; }
 }
 @keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
@@ -555,9 +562,10 @@ button { font: inherit; color: inherit; }
    card → battlefield → gut-punch). Lower utility panels (diagnosis, experiments,
    enrichment, spend) render immediately — no reflexive whole-page stagger. */
 .reveal { opacity: 0; animation: rise var(--t-slow) var(--ease-expo) forwards; }
-.reveal:nth-child(1) { animation-delay: 40ms; }
-.reveal:nth-child(2) { animation-delay: 120ms; }
-.reveal:nth-child(3) { animation-delay: 200ms; }
+/* Explicit per-section delays (robust against sibling reordering, unlike nth-child). */
+.reveal--1 { animation-delay: 40ms; }
+.reveal--2 { animation-delay: 120ms; }
+.reveal--3 { animation-delay: 200ms; }
 
 /* ------------------------------ responsive ------------------------------- */
 
