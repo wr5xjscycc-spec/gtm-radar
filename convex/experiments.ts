@@ -6,10 +6,19 @@
  * event; unpublished slots expire at 14 days. The publish event is what triggers
  * P2's event-driven post-window re-measurement.
  */
-import { mutation, internalMutation, query } from "./_generated/server";
+import {
+  mutation,
+  internalMutation,
+  internalQuery,
+  query,
+  action,
+} from "./_generated/server";
 import { v } from "convex/values";
 import { canTransition, slotExpired } from "./lib/compliance";
 import { requireWorkspace } from "./lib/auth";
+import { api, internal } from "./_generated/api";
+import type { Doc } from "./_generated/dataModel";
+import { runMeasurementSweep, pagesToCandidatePool, type SweepSummary } from "./measure";
 
 /** Customer clicks "ready to publish" — move design → awaiting_publish, start the 14-day clock. */
 export const requestPublish = mutation({
@@ -85,17 +94,74 @@ export const expireStaleSlots = internalMutation({
 });
 
 /**
- * Cron target: monthly baseline re-measurement trigger. Marks active workspaces
- * for a baseline sweep (P2 executes). Monthly cadence ONLY — never weekly
- * multi-engine (cost guard; see ./lib/compliance isAllowedCadence).
+ * Cron target: monthly baseline re-measurement trigger. Schedules a real
+ * `measureWorkspace` sweep per workspace (P2 executes). Monthly cadence ONLY —
+ * never weekly multi-engine (cost guard; see ./lib/compliance isAllowedCadence).
+ * Scheduled (not awaited) so the cron returns promptly; each sweep runs as its
+ * own action.
  */
 export const monthlyBaseline = internalMutation({
   args: {},
   handler: async (ctx) => {
     const workspaces = await ctx.db.query("workspaces").collect();
-    // Hand-off point: enqueue a baseline measurement per workspace for P2.
-    // (P2's remeasure action consumes this; kept as a no-op marker for v1.)
+    for (const ws of workspaces) {
+      await ctx.scheduler.runAfter(0, api.measure.measureWorkspace, {
+        workspaceId: ws._id,
+      });
+    }
     return { scheduled: workspaces.length };
+  },
+});
+
+/**
+ * Read one experiment + its workspace for the post-window re-measure. INTERNAL by
+ * design: it returns the full experiment doc including `control_page`, which the
+ * customer-facing `consoleFeed` deliberately strips (Hawthorne). Only the
+ * server-side `remeasure` action may see it — never the client.
+ */
+export const getExperiment = internalQuery({
+  args: { experimentId: v.id("experiments") },
+  handler: async (
+    ctx,
+    { experimentId },
+  ): Promise<{ experiment: Doc<"experiments">; workspace: Doc<"workspaces"> } | null> => {
+    const experiment = await ctx.db.get(experimentId);
+    if (!experiment) return null;
+    const workspace = await requireWorkspace(ctx, experiment.workspaceId);
+    return { experiment, workspace };
+  },
+});
+
+/**
+ * Post-window re-measurement (Card A · re-measure loop). Runs the SAME OpenAI
+ * sweep as the baseline, but over the experiment's treatment + control pages and
+ * stamped `window_tag: "post"` with the `experiment_id` — the rows Card C's DiD
+ * differences against the baseline window to estimate causal lift.
+ */
+export const remeasure = action({
+  args: { experimentId: v.id("experiments") },
+  handler: async (ctx, { experimentId }): Promise<SweepSummary> => {
+    const data = await ctx.runQuery(internal.experiments.getExperiment, {
+      experimentId,
+    });
+    if (!data) throw new Error("experiment not found");
+    const { experiment, workspace } = data;
+
+    // Candidate pool = every page in the experiment (treatment + control), so the
+    // post-window measures the same pages the experiment shipped.
+    const urls: string[] = [];
+    for (const p of experiment.pairs) {
+      urls.push(p.treatment_page, p.control_page);
+    }
+    const pool = pagesToCandidatePool(urls);
+
+    return await runMeasurementSweep(ctx, {
+      workspaceId: experiment.workspaceId,
+      vertical: workspace.vertical,
+      candidatePool: pool,
+      windowTag: "post",
+      experimentId,
+    });
   },
 });
 

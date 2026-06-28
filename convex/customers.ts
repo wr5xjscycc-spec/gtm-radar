@@ -10,6 +10,7 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { normalizeDomain } from "./lib/domain";
 import { getOwner, requireWorkspace } from "./lib/auth";
+import { api } from "./_generated/api";
 
 /** Create the workspace skeleton from onboarding input. */
 export const createWorkspace = mutation({
@@ -19,6 +20,10 @@ export const createWorkspace = mutation({
     own_domain: v.string(),
     competitor_domains: v.array(v.string()),
     query_pack_id: v.optional(v.string()),
+    // When true, kick off a live OpenAI baseline measurement right after create
+    // (Card A onboarding trigger). DEFAULT FALSE so the seed script + tests, which
+    // create workspaces without wanting a real engine sweep, are unaffected.
+    measure_on_create: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const own_domain = normalizeDomain(args.own_domain);
@@ -32,7 +37,7 @@ export const createWorkspace = mutation({
       ),
     );
     const owner = await getOwner(ctx);
-    return await ctx.db.insert("workspaces", {
+    const workspaceId = await ctx.db.insert("workspaces", {
       name: args.name,
       vertical: args.vertical,
       own_domain,
@@ -40,6 +45,13 @@ export const createWorkspace = mutation({
       query_pack_id: args.query_pack_id,
       owner,
     });
+    // Onboarding → live measurement: schedule the OpenAI sweep so the board's
+    // gut-punch fills with REAL "you N/M vs competitor" data. Scheduled (not
+    // awaited) so onboarding returns instantly; the board streams in reactively.
+    if (args.measure_on_create) {
+      await ctx.scheduler.runAfter(0, api.measure.measureWorkspace, { workspaceId });
+    }
+    return workspaceId;
   },
 });
 
