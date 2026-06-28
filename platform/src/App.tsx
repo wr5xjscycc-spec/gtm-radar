@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { companyCardState, battlefieldProgress } from "./companyCard";
 
 /**
  * Phase-0 live board (owner: P1) — minimal but real. Proves the DoD: write any
@@ -55,12 +56,19 @@ function Board({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
   const battlefield = useQuery(api.board.battlefield, { workspaceId }) ?? [];
   const citations = useQuery(api.board.citationBoard, { workspaceId });
 
+  const customer = battlefield.find((c) => c.role === "customer");
+  const bf = battlefieldProgress(battlefield);
+
   return (
     <section>
       <h2>Board</h2>
-      <pre>{JSON.stringify(summary?.counts, null, 2)}</pre>
 
-      <h3>Battlefield ({battlefield.length})</h3>
+      <CompanyCard understanding={customer?.understanding} />
+
+      <h3>
+        Battlefield — {bf.count} sourced{" "}
+        {bf.filling ? <em>(filling… target {bf.target})</em> : "✓"}
+      </h3>
       <ul>
         {battlefield.map((c) => (
           <li key={c._id}>
@@ -68,6 +76,8 @@ function Board({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
           </li>
         ))}
       </ul>
+
+      <pre>{JSON.stringify(summary?.counts, null, 2)}</pre>
 
       <h3>Citation board (per engine)</h3>
       {citations &&
@@ -79,6 +89,41 @@ function Board({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
         ))}
       <small>{citations?.note}</small>
     </section>
+  );
+}
+
+// PRD Stage 1–2: the "here's what you are" trust card. Renders progressively
+// (reading -> partial -> ready) as P3's understanding fields land via reactivity.
+function CompanyCard({
+  understanding,
+}: {
+  understanding?: {
+    category?: string;
+    icp?: string;
+    positioning?: string;
+    what_you_are?: string;
+  };
+}) {
+  const card = companyCardState(understanding);
+  return (
+    <div style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, margin: "12px 0" }}>
+      <strong>Here's what you are</strong>
+      {card.isReading ? (
+        <p style={{ color: "#888" }}>reading your site…</p>
+      ) : (
+        <>
+          <p style={{ fontSize: 18, margin: "8px 0" }}>{card.fields.what_you_are || "…"}</p>
+          <dl style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: 4, margin: 0 }}>
+            <dt>Category</dt><dd>{card.fields.category || "…"}</dd>
+            <dt>Positioning</dt><dd>{card.fields.positioning || "…"}</dd>
+            <dt>ICP</dt><dd>{card.fields.icp || "…"}</dd>
+          </dl>
+          {card.status === "partial" && (
+            <small style={{ color: "#888" }}>still reading: {card.missing.join(", ")}</small>
+          )}
+        </>
+      )}
+    </div>
   );
 }
 
