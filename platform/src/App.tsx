@@ -10,6 +10,7 @@ import {
   featureVectorView,
 } from "./enrichmentReview";
 import { headline, measurementProgress } from "./gutPunch";
+import { rankedGaps, licensedRung, RUNG_BADGE, makeClaim, RUNG } from "./claimLadder";
 
 /**
  * Phase-0 live board (owner: P1) — minimal but real. Proves the DoD: write any
@@ -65,6 +66,7 @@ function Board({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
   const queries = useQuery(api.board.queries, { workspaceId }) ?? [];
   const gut = useQuery(api.board.gutPunch, { workspaceId });
   const measurements = useQuery(api.board.measurements, { workspaceId }) ?? [];
+  const diagnosis = useQuery(api.board.diagnosis, { workspaceId });
 
   const customer = battlefield.find((c) => c.role === "customer");
   const bf = battlefieldProgress(battlefield);
@@ -91,8 +93,77 @@ function Board({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
 
       <GutPunchBoard gut={gut} measurements={measurements} />
 
+      <DiagnosisPanel diagnosis={diagnosis} />
+
       <EnrichmentReview pages={pages} queries={queries} companies={battlefield} />
     </section>
+  );
+}
+
+// P1·4: diagnosis + claim-ladder gating. Renders model_fit as RANKED HYPOTHESES
+// (surviving signals separated from noise, each with its CI + noise flag), at the
+// rung the evidence licenses. Causal language is structurally impossible here —
+// the causal block only renders when a lift_result exists (rung 2).
+function DiagnosisPanel({ diagnosis }: { diagnosis: any }) {
+  if (!diagnosis) return null;
+  const evidence = {
+    hasModelFit: diagnosis.modelFits.length > 0,
+    hasLiftResult: diagnosis.hasLiftResult,
+  };
+  if (!evidence.hasModelFit) return <p style={{ color: "#888" }}>diagnosis pending — fitting the model…</p>;
+
+  const fit = diagnosis.modelFits[0];
+  const { surviving, noise } = rankedGaps(fit.coefficients);
+  const rung = licensedRung(evidence);
+
+  return (
+    <div style={{ margin: "16px 0" }}>
+      <h2>
+        Diagnosis{" "}
+        <span style={{ fontSize: 12, background: "#eee", borderRadius: 4, padding: "2px 6px" }}>
+          {RUNG_BADGE[rung]}
+        </span>
+      </h2>
+      <small style={{ color: "#888" }}>
+        Hypotheses from {fit.n_companies} companies (effective N) — correlational, not causal. Test before you trust.
+      </small>
+
+      <h3>Surviving signals ({surviving.length})</h3>
+      {surviving.map((c: any) => (
+        <p key={c.feature}>
+          <strong>{c.feature}</strong>: {c.posterior_median.toFixed(2)} (90% CI{" "}
+          {c.ci_low.toFixed(2)}–{c.ci_high.toFixed(2)}) — <em>correlates with citation in this category; test it</em>
+        </p>
+      ))}
+
+      <h3 style={{ color: "#999" }}>Not distinguishable from noise ({noise.length})</h3>
+      <small style={{ color: "#999" }}>{noise.map((c: any) => c.feature).join(", ")}</small>
+
+      {/* Causal block — IMPOSSIBLE to render without a lift_result (claim-ladder). */}
+      {evidence.hasLiftResult ? (
+        <CausalBlock liftResults={diagnosis.liftResults} />
+      ) : (
+        <p style={{ color: "#888", marginTop: 12 }}>
+          🔒 No causal claims yet — run a randomized experiment to earn a Rung-2 result.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function CausalBlock({ liftResults }: { liftResults: any[] }) {
+  // Reaching here means a lift_result exists; makeClaim(CAUSAL) is now licensed.
+  const claim = makeClaim(RUNG.CAUSAL, { hasLiftResult: true });
+  return (
+    <div style={{ border: "1px solid #0a0", borderRadius: 8, padding: 12, marginTop: 12 }}>
+      <strong>{claim.badge}</strong>
+      {liftResults.map((lr: any) => (
+        <p key={lr._id}>
+          treated pages saw {(lr.estimate * 100).toFixed(0)}% vs matched controls (CI{" "}
+          {(lr.ci_low * 100).toFixed(0)}–{(lr.ci_high * 100).toFixed(0)}%, p={lr.p_value}) — {lr.verdict}
+        </p>
+      ))}
+    </div>
   );
 }
 

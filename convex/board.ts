@@ -159,6 +159,34 @@ export const queries = query({
   },
 });
 
+/**
+ * Diagnosis (P1·4): the day-1 product surface. Returns model_fit hypotheses
+ * (Rung 1) and the licensed claim rung. The rung is CAUSAL (2) ONLY when a
+ * lift_result exists for this workspace — otherwise it is capped at hypothesis
+ * (1). This is the claim-ladder gate enforced at the DATA layer: no causal
+ * payload is emitted without a lift_result, so the UI cannot render one.
+ */
+export const diagnosis = query({
+  args: { workspaceId: v.id("workspaces") },
+  handler: async (ctx, { workspaceId }) => {
+    await requireWorkspace(ctx, workspaceId);
+    const [fits, lifts] = await Promise.all([
+      ctx.db.query("model_fits").withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId)).collect(),
+      ctx.db.query("lift_results").withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId)).collect(),
+    ]);
+    const hasModelFit = fits.length > 0;
+    const hasLiftResult = lifts.length > 0;
+    const rung = hasLiftResult ? 2 : hasModelFit ? 1 : 0;
+    return {
+      modelFits: fits, // hypotheses w/ coefficients + noise_flags (Rung 1)
+      hasLiftResult,
+      // Causal payload is present ONLY when licensed — never fabricated.
+      liftResults: hasLiftResult ? lifts : [],
+      rung,
+    };
+  },
+});
+
 /** Hypotheses (model_fit) — rendered with uncertainty + noise flags, never causal. */
 export const modelFits = query({
   args: { workspaceId: v.id("workspaces") },
