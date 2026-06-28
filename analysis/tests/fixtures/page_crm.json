@@ -1,0 +1,128 @@
+[
+  {
+    "company_domain": "nimbus.example",
+    "url": "https://nimbus.example/compare",
+    "role": "customer",
+    "content_features": {
+      "schema_markup": 1,
+      "comparison_table": 1,
+      "word_count": 1920,
+      "heading_structure": 15,
+      "freshness_days": 9,
+      "query_term_coverage": 0.84,
+      "direct_answer_first": 1,
+      "stats_density": 0.048,
+      "citation_density": 0.033,
+      "quote_density": 0.013,
+      "listicle_vs_prose": 0.66
+    },
+    "extractor_version": "ext-v1",
+    "scraped_at": "2026-06-22T08:15:00Z",
+    "cache_key": "nimbus-compare-2026w25"
+  },
+  {
+    "company_domain": "nimbus.example",
+    "url": "https://nimbus.example/blog/tips",
+    "role": "candidate",
+    "content_features": {
+      "schema_markup": 0,
+      "comparison_table": 0,
+      "word_count": 610,
+      "heading_structure": 4,
+      "freshness_days": 430,
+      "query_term_coverage": 0.22,
+      "direct_answer_first": 0,
+      "stats_density": 0.005,
+      "citation_density": 0.0,
+      "quote_density": 0.0,
+      "listicle_vs_prose": 0.11
+    },
+    "extractor_version": "ext-v1",
+    "scraped_at": "2026-06-22T08:16:00Z",
+    "cache_key": "nimbus-blogtips-2026w25"
+  },
+  {
+    "company_domain": "vortex.example",
+    "url": "https://vortex.example/platform",
+    "role": "competitor",
+    "content_features": {
+      "schema_markup": 1,
+      "comparison_table": 1,
+      "word_count": 2380,
+      "heading_structure": 18,
+      "freshness_days": 24,
+      "query_term_coverage": 0.8,
+      "direct_answer_first": 1,
+      "stats_density": 0.054,
+      "citation_density": 0.026,
+      "quote_density": 0.019,
+      "listicle_vs_prose": 0.57
+    },
+    "extractor_version": "ext-v1",
+    "scraped_at": "2026-06-22T08:17:00Z",
+    "cache_key": "vortex-platform-2026w25"
+  },
+  {
+    "company_domain": "vortex.example",
+    "url": "https://vortex.example/changelog",
+    "role": "candidate",
+    "content_features": {
+      "schema_markup": 0,
+      "comparison_table": 0,
+      "word_count": 360,
+      "heading_structure": 2,
+      "freshness_days": 540,
+      "query_term_coverage": 0.16,
+      "direct_answer_first": 0,
+      "stats_density": 0.003,
+      "citation_density": 0.0,
+      "quote_density": 0.0,
+      "listicle_vs_prose": 0.07
+    },
+    "extractor_version": "ext-v1",
+    "scraped_at": "2026-06-22T08:18:00Z",
+    "cache_key": "vortex-changelog-2026w25"
+  },
+  {
+    "company_domain": "summit.example",
+    "url": "https://summit.example/features",
+    "role": "competitor",
+    "content_features": {
+      "schema_markup": 1,
+      "comparison_table": 1,
+      "word_count": 1480,
+      "heading_structure": 12,
+      "freshness_days": 38,
+      "query_term_coverage": 0.7,
+      "direct_answer_first": 1,
+      "stats_density": 0.039,
+      "citation_density": 0.02,
+      "quote_density": 0.009,
+      "listicle_vs_prose": 0.62
+    },
+    "extractor_version": "ext-v1",
+    "scraped_at": "2026-06-22T08:19:00Z",
+    "cache_key": "summit-features-2026w25"
+  },
+  {
+    "company_domain": "summit.example",
+    "url": "https://summit.example/docs",
+    "role": "candidate",
+    "content_features": {
+      "schema_markup": 0,
+      "comparison_table": 0,
+      "word_count": 340,
+      "heading_structure": 2,
+      "freshness_days": 690,
+      "query_term_coverage": 0.19,
+      "direct_answer_first": 0,
+      "stats_density": 0.004,
+      "citation_density": 0.0,
+      "quote_density": 0.0,
+      "listicle_vs_prose": 0.09
+    },
+    "extractor_version": "ext-v1",
+    "scraped_at": "2026-06-22T08:20:00Z",
+    "cache_key": "summit-docs-2026w25"
+  }
+]

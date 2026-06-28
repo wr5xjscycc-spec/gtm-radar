@@ -1,0 +1,18 @@
+[
+  {
+    "id": "qry_crm_001",
+    "customer_id": "ws_seed_001",
+    "vertical": "crm-software",
+    "text": "best crm software for b2b saas sales teams",
+    "seed_source": "paa",
+    "target_engines": ["openai", "perplexity"]
+  },
+  {
+    "id": "qry_crm_002",
+    "customer_id": "ws_seed_001",
+    "vertical": "crm-software",
+    "text": "enterprise crm platform comparison",
+    "seed_source": "keyword",
+    "target_engines": ["openai", "perplexity"]
+  }
+]

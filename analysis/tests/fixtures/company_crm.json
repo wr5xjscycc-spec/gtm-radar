@@ -1,0 +1,89 @@
+[
+  {
+    "domain": "nimbus.example",
+    "name": "Nimbus CRM",
+    "role": "customer",
+    "firmographics": {
+      "size": "mid-market",
+      "funding_stage": "series-b",
+      "headcount_growth": 0.29,
+      "hiring_velocity": 15,
+      "tech_stack": ["nextjs", "postgres", "stripe", "hubspot"]
+    },
+    "offpage": {
+      "thirdparty_mentions": 168,
+      "reddit_presence": true,
+      "g2_presence": true,
+      "wikipedia_presence": false,
+      "review_site_presence": true,
+      "brand_search_volume": 6100,
+      "backlink_density": 0.58,
+      "entity_cooccurrence": 0.44
+    },
+    "understanding": {
+      "category": "crm-software",
+      "icp": "RevOps and sales leaders at 50-500 person B2B SaaS",
+      "positioning": "CRM that auto-logs activity and surfaces next steps"
+    },
+    "coverage_flags": {},
+    "source_versions": { "fiber": "v1" }
+  },
+  {
+    "domain": "vortex.example",
+    "name": "Vortex Cloud CRM",
+    "role": "competitor",
+    "firmographics": {
+      "size": "enterprise",
+      "funding_stage": "series-e",
+      "headcount_growth": 0.1,
+      "hiring_velocity": 9,
+      "tech_stack": ["react", "oracle", "salesforce", "marketo"]
+    },
+    "offpage": {
+      "thirdparty_mentions": 402,
+      "reddit_presence": true,
+      "g2_presence": true,
+      "wikipedia_presence": true,
+      "review_site_presence": true,
+      "brand_search_volume": 24500,
+      "backlink_density": 0.85,
+      "entity_cooccurrence": 0.74
+    },
+    "understanding": {
+      "category": "crm-software",
+      "icp": "Enterprise revenue orgs with 300+ seats",
+      "positioning": "Full-suite enterprise CRM and revenue cloud"
+    },
+    "coverage_flags": { "stale_firmographics": true },
+    "source_versions": { "fiber": "v1" }
+  },
+  {
+    "domain": "summit.example",
+    "name": "Summit CRM",
+    "role": "competitor",
+    "firmographics": {
+      "size": "startup",
+      "funding_stage": "series-a",
+      "headcount_growth": 0.48,
+      "hiring_velocity": 6,
+      "tech_stack": ["vue", "postgres", "paddle"]
+    },
+    "offpage": {
+      "thirdparty_mentions": 41,
+      "reddit_presence": false,
+      "g2_presence": true,
+      "wikipedia_presence": false,
+      "review_site_presence": false,
+      "brand_search_volume": 980,
+      "backlink_density": 0.19,
+      "entity_cooccurrence": 0.13
+    },
+    "understanding": {
+      "category": "crm-software",
+      "icp": "Small sales teams at early-stage startups",
+      "positioning": "Simple, affordable CRM for growing teams"
+    },
+    "coverage_flags": {},
+    "source_versions": { "fiber": "v1" }
+  }
+]
