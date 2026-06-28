@@ -101,7 +101,7 @@ class TestFit:
         data = resp.json()
         coeffs = {c["feature"]: c for c in data["coefficients"]}
         assert abs(coeffs["signal"]["posterior_median"]) > abs(coeffs["noise"]["posterior_median"])
-        assert data["prior_version"] == "baseline-ridge-0.1.0"
+        assert data["prior_version"] == "bayesian-logit-student-t-0.1.0"
 
     def test_can_post_without_P_cited(self):
         rows = [
@@ -148,4 +148,4 @@ class TestFixturePipeline:
             assert data.n_companies >= 1
             assert data.n_rows >= 1
             assert len(data.coefficients) >= 1
-            assert data.prior_version == "baseline-ridge-0.1.0"
+            assert data.prior_version == "bayesian-logit-student-t-0.1.0"

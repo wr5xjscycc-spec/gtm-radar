@@ -8,7 +8,6 @@ numpy>=1.26
 pandas>=2.2
 scikit-learn>=1.5
 statsmodels>=0.14
-# Phase 4 (Bayesian hypothesis generator) — uncomment when implemented:
-# pymc>=5.10
+pymc>=5.10
 # Phase 5 (DiD) also uses:
 # linearmodels>=6.0
