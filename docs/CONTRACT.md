@@ -27,6 +27,7 @@ P1 implements these as the Convex schema in `convex/`. This document is the huma
 
 ### 5. measurement  *(owner: P2)*
 `id · query_id · page_url · engine(openai|perplexity|gemini) · model_version · run_idx · appeared(bool) · cited(bool) · position(int|null) · source_urls[] · ts · window_tag(baseline|post|adhoc) · experiment_id?`
+> **v1: only `engine:"openai"` rows are produced** (the only engine we have credits for). The `perplexity`/`gemini` enum values stay for forward-compatibility — their adapters are built but dormant until keyed. A row's `engine` MUST match the vendor that produced it (never relabel an OpenAI model as another engine).
 **Aggregates** (per query×page×engine over K runs): `P_cited · ci_low · ci_high · position_weight`
 
 ### 6. model_fit  *(owner: P4)*

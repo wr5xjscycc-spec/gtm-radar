@@ -3,7 +3,24 @@
   "version": "0.0.0",
   "private": true,
   "description": "P1 — Convex backend, data model, live board, reporting + claim-ladder gating, scheduling/compliance.",
+  "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "dev": "vite",
+    "dev:convex": "convex dev",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "convex": "^1.16.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "convex-test": "^0.0.54",
+    "vite": "^5.4.0"
   }
 }

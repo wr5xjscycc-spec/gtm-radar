@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "lr_acme_comptable",
+    "workspaceId": "ws_acme",
+    "experiment_id": "exp_acme_comptable",
+    "estimate": 0.18,
+    "ci_low": 0.04,
+    "ci_high": 0.32,
+    "p_value": 0.012,
+    "verdict": "worked",
+    "claim_rung": 2,
+    "computed_at": 1752600000000
+  }
+]

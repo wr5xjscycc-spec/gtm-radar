@@ -1,0 +1,18 @@
+[
+  {
+    "_id": "exp_acme_comptable",
+    "workspaceId": "ws_acme",
+    "customer_id": "ws_acme",
+    "pairs": [
+      {
+        "treatment_page": "https://acme.com/pricing",
+        "control_page": "https://acme.com/features",
+        "match_covars": { "word_count": 480, "freshness_days": 210 }
+      }
+    ],
+    "baseline_window": "2026-06",
+    "post_window": "2026-07",
+    "status": "designing",
+    "publish_event_ts": null
+  }
+]

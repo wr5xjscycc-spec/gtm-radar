@@ -1,0 +1,40 @@
+[
+  {
+    "_id": "ms_acme_openai",
+    "workspaceId": "ws_acme",
+    "query_id": "qry_best_gtm",
+    "page_url": "https://acme.com/pricing",
+    "engine": "openai",
+    "model_version": "responses-2026.06",
+    "run_idx": 0,
+    "appeared": false,
+    "cited": false,
+    "position": null,
+    "source_urls": ["competitor.com", "rival.io", "g2.com"],
+    "ts": 1750000100000,
+    "window_tag": "baseline",
+    "P_cited": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.26,
+    "position_weight": 0.0
+  },
+  {
+    "_id": "ms_competitor_openai",
+    "workspaceId": "ws_acme",
+    "query_id": "qry_best_gtm",
+    "page_url": "https://competitor.com/pricing",
+    "engine": "openai",
+    "model_version": "responses-2026.06",
+    "run_idx": 0,
+    "appeared": true,
+    "cited": true,
+    "position": 1,
+    "source_urls": ["competitor.com"],
+    "ts": 1750000100000,
+    "window_tag": "baseline",
+    "P_cited": 1.0,
+    "ci_low": 0.74,
+    "ci_high": 1.0,
+    "position_weight": 1.0
+  }
+]

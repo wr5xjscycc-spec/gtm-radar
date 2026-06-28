@@ -1,0 +1,37 @@
+[
+  {
+    "_id": "co_acme",
+    "workspaceId": "ws_acme",
+    "domain": "acme.com",
+    "name": "Acme Analytics",
+    "role": "customer",
+    "firmographics": { "size": "11-50", "funding_stage": "seed", "tech_stack": ["next.js", "convex"] },
+    "offpage": { "thirdparty_mentions": 3, "reddit_presence": 0, "g2_presence": 1, "brand_search_volume": 120 },
+    "understanding": { "category": "GTM analytics", "icp": "PLG SaaS growth teams", "positioning": "AI-answer citation measurement", "what_you_are": "A tool that measures whether AI answer engines cite you." },
+    "coverage_flags": [],
+    "source_versions": { "firmographics": "fiber-2026.06", "understanding": "gpt-4o-mini-2026.06" }
+  },
+  {
+    "_id": "co_competitor",
+    "workspaceId": "ws_acme",
+    "domain": "competitor.com",
+    "name": "Competitor Inc",
+    "role": "competitor",
+    "firmographics": { "size": "51-200", "funding_stage": "series-a", "tech_stack": ["react"] },
+    "offpage": { "thirdparty_mentions": 41, "reddit_presence": 12, "g2_presence": 1, "wikipedia_presence": 1, "brand_search_volume": 5400 },
+    "understanding": { "category": "GTM analytics", "icp": "mid-market RevOps", "positioning": "category incumbent" },
+    "coverage_flags": [],
+    "source_versions": { "firmographics": "fiber-2026.06", "understanding": "gpt-4o-mini-2026.06" }
+  },
+  {
+    "_id": "co_rival",
+    "workspaceId": "ws_acme",
+    "domain": "rival.io",
+    "name": "Rival.io",
+    "role": "battlefield",
+    "firmographics": { "size": "11-50", "funding_stage": "seed" },
+    "offpage": { "thirdparty_mentions": 7, "brand_search_volume": 300 },
+    "coverage_flags": ["low_offpage_coverage"],
+    "source_versions": { "firmographics": "fiber-2026.06" }
+  }
+]

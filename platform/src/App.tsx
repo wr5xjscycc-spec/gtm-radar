@@ -1,0 +1,407 @@
+import { useState } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
+import { companyCardState, battlefieldProgress } from "./companyCard";
+import {
+  llmExpandRatio,
+  seedSourceBreakdown,
+  coverageSummary,
+  featureVectorView,
+} from "./enrichmentReview";
+import { headline, measurementProgress } from "./gutPunch";
+import { rankedGaps, licensedRung, RUNG_BADGE, makeClaim, RUNG } from "./claimLadder";
+import { opsSummary } from "./observability";
+
+/**
+ * Phase-0 live board (owner: P1) — minimal but real. Proves the DoD: write any
+ * record via the convex/records mutations and watch it render here reactively
+ * (Convex queries update with no polling). Phases 1+ build the onboarding card,
+ * the gut-punch board, and claim-ladder gating on this spine.
+ *
+ * NOTE: requires `npx convex dev` (generates ../../convex/_generated and a
+ * deployment URL). Not exercised in CI — UI glue is exempt per docs/TESTING.md.
+ */
+export function App() {
+  const workspaces = useQuery(api.customers.listWorkspaces) ?? [];
+  const [selected, setSelected] = useState<Id<"workspaces"> | null>(null);
+  const create = useMutation(api.customers.createWorkspace);
+
+  const wsId = selected ?? (workspaces[0]?._id as Id<"workspaces"> | undefined);
+
+  return (
+    <main style={{ fontFamily: "system-ui", maxWidth: 760, margin: "2rem auto" }}>
+      <h1>GTM Radar — live board</h1>
+
+      <OnboardingForm
+        onCreate={(v) =>
+          create({
+            name: v.name,
+            vertical: v.vertical,
+            own_domain: v.own_domain,
+            competitor_domains: v.competitors,
+          })
+        }
+      />
+
+      <h2>Workspaces</h2>
+      <ul>
+        {workspaces.map((w) => (
+          <li key={w._id}>
+            <button onClick={() => setSelected(w._id as Id<"workspaces">)}>
+              {w.name} — {w.own_domain}
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      {wsId && <Board workspaceId={wsId} />}
+    </main>
+  );
+}
+
+function Board({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
+  const summary = useQuery(api.board.summary, { workspaceId });
+  const battlefield = useQuery(api.board.battlefield, { workspaceId }) ?? [];
+  const pages = useQuery(api.board.pages, { workspaceId }) ?? [];
+  const queries = useQuery(api.board.queries, { workspaceId }) ?? [];
+  const gut = useQuery(api.board.gutPunch, { workspaceId });
+  const measurements = useQuery(api.board.measurements, { workspaceId }) ?? [];
+  const diagnosis = useQuery(api.board.diagnosis, { workspaceId });
+
+  const customer = battlefield.find((c) => c.role === "customer");
+  const bf = battlefieldProgress(battlefield);
+
+  return (
+    <section>
+      <h2>Board</h2>
+
+      <CompanyCard understanding={customer?.understanding} />
+
+      <h3>
+        Battlefield — {bf.count} sourced{" "}
+        {bf.filling ? <em>(filling… target {bf.target})</em> : "✓"}
+      </h3>
+      <ul>
+        {battlefield.map((c) => (
+          <li key={c._id}>
+            {c.domain} — {c.role}
+          </li>
+        ))}
+      </ul>
+
+      <pre>{JSON.stringify(summary?.counts, null, 2)}</pre>
+
+      <GutPunchBoard gut={gut} measurements={measurements} />
+
+      <DiagnosisPanel diagnosis={diagnosis} />
+
+      <ExperimentConsole workspaceId={workspaceId} />
+
+      <EnrichmentReview pages={pages} queries={queries} companies={battlefield} />
+
+      <OpsView workspaceId={workspaceId} />
+    </section>
+  );
+}
+
+// P1·6: observability — per-cycle spend is VISIBLE (unit economics + judges).
+function OpsView({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
+  const runs = useQuery(api.board.runRecords, { workspaceId }) ?? [];
+  if (runs.length === 0) return null;
+  const s = opsSummary(runs as any);
+  return (
+    <div style={{ margin: "16px 0" }}>
+      <h3>Spend & reliability (ops)</h3>
+      <p style={{ color: s.within_budget ? "#070" : "#b00" }}>
+        ${s.total_spend} across {s.cycles} cycle(s) · avg ${s.avg_spend_per_cycle}/cycle ·{" "}
+        {s.within_budget ? "within budget ✓" : `${s.over_budget_cycles} over budget ⚠`}
+      </p>
+      <small>
+        {s.total_calls} calls · {s.total_queries} queries · error rate:{" "}
+        {Object.entries(s.per_engine_error_rate)
+          .map(([e, r]) => `${e} ${(r * 100).toFixed(1)}%`)
+          .join(" · ")}
+      </small>
+    </div>
+  );
+}
+
+// P1·5: experiment console + compliance. Controls are NEVER shown (Hawthorne);
+// the loop is gated (publish before running); Rung-2 causal renders only when a
+// lift_result exists.
+function ExperimentConsole({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
+  const feed = useQuery(api.experiments.consoleFeed, { workspaceId }) ?? [];
+  const requestPublish = useMutation(api.experiments.requestPublish);
+  const recordPublish = useMutation(api.experiments.recordPublish);
+  if (feed.length === 0) return null;
+  return (
+    <div style={{ margin: "16px 0" }}>
+      <h2>Experiments</h2>
+      {feed.map((e: any) => (
+        <div key={e._id} style={{ border: "1px solid #eee", borderRadius: 8, padding: 12, marginBottom: 8 }}>
+          <div>
+            <strong>{e.n_pairs} pair(s)</strong> · status: <code>{e.status}</code>
+          </div>
+          <small>treatment pages: {e.treatments.join(", ")}</small>
+          {/* control_page intentionally absent — Hawthorne */}
+          <div style={{ marginTop: 6 }}>
+            {e.status === "designing" && (
+              <button onClick={() => requestPublish({ experimentId: e._id })}>
+                Ready to publish
+              </button>
+            )}
+            {e.status === "awaiting_publish" && (
+              <button onClick={() => recordPublish({ experimentId: e._id })}>
+                ✅ I published it (start measuring)
+              </button>
+            )}
+            {e.status === "awaiting_publish" && (
+              <small style={{ color: "#b80", marginLeft: 8 }}>awaiting publication — slot expires in 14 days</small>
+            )}
+          </div>
+          {e.lift ? (
+            <div style={{ border: "1px solid #0a0", borderRadius: 6, padding: 8, marginTop: 8 }}>
+              <strong>Causal (experiment)</strong> — treated pages saw{" "}
+              {(e.lift.estimate * 100).toFixed(0)}% vs matched controls (CI{" "}
+              {(e.lift.ci_low * 100).toFixed(0)}–{(e.lift.ci_high * 100).toFixed(0)}%, p=
+              {e.lift.p_value}) — {e.lift.verdict}
+            </div>
+          ) : (
+            <small style={{ color: "#888" }}> · no causal result yet (Rung-2 locked)</small>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// P1·4: diagnosis + claim-ladder gating. Renders model_fit as RANKED HYPOTHESES
+// (surviving signals separated from noise, each with its CI + noise flag), at the
+// rung the evidence licenses. Causal language is structurally impossible here —
+// the causal block only renders when a lift_result exists (rung 2).
+function DiagnosisPanel({ diagnosis }: { diagnosis: any }) {
+  if (!diagnosis) return null;
+  const evidence = {
+    hasModelFit: diagnosis.modelFits.length > 0,
+    hasLiftResult: diagnosis.hasLiftResult,
+  };
+  if (!evidence.hasModelFit) return <p style={{ color: "#888" }}>diagnosis pending — fitting the model…</p>;
+
+  const fit = diagnosis.modelFits[0];
+  const { surviving, noise } = rankedGaps(fit.coefficients);
+  const rung = licensedRung(evidence);
+
+  return (
+    <div style={{ margin: "16px 0" }}>
+      <h2>
+        Diagnosis{" "}
+        <span style={{ fontSize: 12, background: "#eee", borderRadius: 4, padding: "2px 6px" }}>
+          {RUNG_BADGE[rung]}
+        </span>
+      </h2>
+      <small style={{ color: "#888" }}>
+        Hypotheses from {fit.n_companies} companies (effective N) — correlational, not causal. Test before you trust.
+      </small>
+
+      <h3>Surviving signals ({surviving.length})</h3>
+      {surviving.map((c: any) => (
+        <p key={c.feature}>
+          <strong>{c.feature}</strong>: {c.posterior_median.toFixed(2)} (90% CI{" "}
+          {c.ci_low.toFixed(2)}–{c.ci_high.toFixed(2)}) — <em>correlates with citation in this category; test it</em>
+        </p>
+      ))}
+
+      <h3 style={{ color: "#999" }}>Not distinguishable from noise ({noise.length})</h3>
+      <small style={{ color: "#999" }}>{noise.map((c: any) => c.feature).join(", ")}</small>
+
+      {/* Causal block — IMPOSSIBLE to render without a lift_result (claim-ladder). */}
+      {evidence.hasLiftResult ? (
+        <CausalBlock liftResults={diagnosis.liftResults} />
+      ) : (
+        <p style={{ color: "#888", marginTop: 12 }}>
+          🔒 No causal claims yet — run a randomized experiment to earn a Rung-2 result.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function CausalBlock({ liftResults }: { liftResults: any[] }) {
+  // Reaching here means a lift_result exists; makeClaim(CAUSAL) is now licensed.
+  const claim = makeClaim(RUNG.CAUSAL, { hasLiftResult: true });
+  return (
+    <div style={{ border: "1px solid #0a0", borderRadius: 8, padding: 12, marginTop: 12 }}>
+      <strong>{claim.badge}</strong>
+      {liftResults.map((lr: any) => (
+        <p key={lr._id}>
+          treated pages saw {(lr.estimate * 100).toFixed(0)}% vs matched controls (CI{" "}
+          {(lr.ci_low * 100).toFixed(0)}–{(lr.ci_high * 100).toFixed(0)}%, p={lr.p_value}) — {lr.verdict}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+// P1·3: the gut-punch — "you 0/12 · competitor 9/12 · cited from these sources",
+// per engine, live. The demo's emotional core. Shows a measurement (not a model).
+function GutPunchBoard({ gut, measurements }: { gut: any; measurements: any[] }) {
+  const prog = measurementProgress(measurements);
+  if (!gut) return <p>measuring…</p>;
+  return (
+    <div style={{ margin: "16px 0" }}>
+      <h2 style={{ marginBottom: 4 }}>Are you cited?</h2>
+      <small style={{ color: "#888" }}>
+        {prog.done} measurements in · {prog.pct}% {prog.pct < 100 ? "(sweeping…)" : "✓"}
+      </small>
+      {Object.entries(gut.perEngine).map(([engine, e]: [string, any]) => (
+        <div key={engine} style={{ border: "1px solid #eee", borderRadius: 8, padding: 14, marginTop: 10 }}>
+          <div style={{ fontWeight: 600 }}>{engine} (web_search)</div>
+          <div style={{ fontSize: 22, margin: "6px 0" }}>{headline(e.you, e.topCompetitor)}</div>
+          {e.citedSources.length > 0 && (
+            <small>cited from: {e.citedSources.join(", ")}</small>
+          )}
+        </div>
+      ))}
+      <small style={{ color: "#888" }}>{gut.note}</small>
+    </div>
+  );
+}
+
+// P1·2: makes P3's supply auditable. SURFACES (never hides) low off-page
+// coverage + an llm_expand-heavy query set — the two red-team holes.
+function EnrichmentReview({
+  pages,
+  queries,
+  companies,
+}: {
+  pages: any[];
+  queries: any[];
+  companies: any[];
+}) {
+  const grounding = llmExpandRatio(queries);
+  const breakdown = seedSourceBreakdown(queries);
+  return (
+    <div style={{ marginTop: 24 }}>
+      <h3>Query set review ({grounding.total})</h3>
+      <p style={{ color: grounding.tooHigh ? "#b00" : "#070" }}>
+        llm_expand: {(grounding.ratio * 100).toFixed(0)}%{" "}
+        {grounding.tooHigh ? "⚠ ungrounded — needs more real seeds" : "✓ grounded"}
+      </p>
+      <small>
+        {Object.entries(breakdown)
+          .filter(([, n]) => (n as number) > 0)
+          .map(([k, n]) => `${k}:${n}`)
+          .join(" · ")}
+      </small>
+
+      <h3>Off-page coverage</h3>
+      {companies.map((c) => {
+        const cov = coverageSummary(c);
+        return (
+          <p key={c._id}>
+            {c.domain}: {(cov.coverage * 100).toFixed(0)}% covered
+            {cov.missing.length > 0 && (
+              <span style={{ color: "#b00" }}> — missing: {cov.missing.join(", ")}</span>
+            )}
+            {cov.flags.map((f) => (
+              <span key={f} style={{ color: "#b80" }}> [{f}]</span>
+            ))}
+          </p>
+        );
+      })}
+
+      <h3>Feature vectors ({pages.length} pages)</h3>
+      {pages.map((p) => {
+        const v = featureVectorView(p);
+        return (
+          <details key={p._id}>
+            <summary>{p.url} — {v.extractor_version}</summary>
+            <ul>
+              {v.fields.map((f) => (
+                <li key={f.key} style={{ color: f.present ? "inherit" : "#999" }}>
+                  {f.key}: {f.present ? String(f.value) : "—"}
+                </li>
+              ))}
+            </ul>
+          </details>
+        );
+      })}
+    </div>
+  );
+}
+
+// PRD Stage 1–2: the "here's what you are" trust card. Renders progressively
+// (reading -> partial -> ready) as P3's understanding fields land via reactivity.
+function CompanyCard({
+  understanding,
+}: {
+  understanding?: {
+    category?: string;
+    icp?: string;
+    positioning?: string;
+    what_you_are?: string;
+  };
+}) {
+  const card = companyCardState(understanding);
+  return (
+    <div style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, margin: "12px 0" }}>
+      <strong>Here's what you are</strong>
+      {card.isReading ? (
+        <p style={{ color: "#888" }}>reading your site…</p>
+      ) : (
+        <>
+          <p style={{ fontSize: 18, margin: "8px 0" }}>{card.fields.what_you_are || "…"}</p>
+          <dl style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: 4, margin: 0 }}>
+            <dt>Category</dt><dd>{card.fields.category || "…"}</dd>
+            <dt>Positioning</dt><dd>{card.fields.positioning || "…"}</dd>
+            <dt>ICP</dt><dd>{card.fields.icp || "…"}</dd>
+          </dl>
+          {card.status === "partial" && (
+            <small style={{ color: "#888" }}>still reading: {card.missing.join(", ")}</small>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function OnboardingForm({
+  onCreate,
+}: {
+  onCreate: (v: {
+    name: string;
+    vertical: string;
+    own_domain: string;
+    competitors: string[];
+  }) => void;
+}) {
+  const [name, setName] = useState("");
+  const [vertical, setVertical] = useState("");
+  const [own, setOwn] = useState("");
+  const [competitors, setCompetitors] = useState("");
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onCreate({
+          name,
+          vertical,
+          own_domain: own,
+          competitors: competitors.split(",").map((s) => s.trim()).filter(Boolean),
+        });
+        setName("");
+        setOwn("");
+        setCompetitors("");
+      }}
+      style={{ display: "grid", gap: 8, maxWidth: 420 }}
+    >
+      <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Company name" required />
+      <input value={vertical} onChange={(e) => setVertical(e.target.value)} placeholder="Vertical" required />
+      <input value={own} onChange={(e) => setOwn(e.target.value)} placeholder="Your URL (e.g. acme.com)" required />
+      <input value={competitors} onChange={(e) => setCompetitors(e.target.value)} placeholder="Competitor URLs (comma-separated)" />
+      <button type="submit">Create workspace</button>
+    </form>
+  );
+}

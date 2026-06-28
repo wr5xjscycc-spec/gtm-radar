@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "iv_comptable_openai",
+    "workspaceId": "ws_acme",
+    "feature_changed": "comparison_table",
+    "category": "GTM analytics",
+    "engine": "openai",
+    "measured_lift": 0.18,
+    "ci_low": 0.04,
+    "ci_high": 0.32,
+    "experiment_id": "exp_acme_comptable",
+    "recorded_at": 1752600000000
+  }
+]
