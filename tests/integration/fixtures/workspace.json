@@ -1,0 +1,9 @@
+{
+  "_id": "ws_acme",
+  "name": "Acme Analytics",
+  "vertical": "gtm-analytics",
+  "own_domain": "acme.com",
+  "competitor_domains": ["competitor.com", "rival.io"],
+  "query_pack_id": "pack_gtm_analytics_v1",
+  "owner": "user|seed"
+}

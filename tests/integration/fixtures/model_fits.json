@@ -1,0 +1,21 @@
+[
+  {
+    "_id": "mf_acme_openai",
+    "workspaceId": "ws_acme",
+    "customer_id": "ws_acme",
+    "category": "GTM analytics",
+    "engine": "openai",
+    "coefficients": [
+      { "feature": "comparison_table", "posterior_median": 0.82, "ci_low": 0.21, "ci_high": 1.44, "noise_flag": false },
+      { "feature": "offpage.thirdparty_mentions", "posterior_median": 0.61, "ci_low": 0.12, "ci_high": 1.10, "noise_flag": false },
+      { "feature": "word_count", "posterior_median": 0.05, "ci_low": -0.31, "ci_high": 0.40, "noise_flag": true }
+    ],
+    "prior_version": "r2d2-2026.06",
+    "top_hypotheses": [
+      "comparison_table correlates with citation in this category; test it",
+      "third-party mentions correlate with citation; test it"
+    ],
+    "n_companies": 24,
+    "n_rows": 312
+  }
+]

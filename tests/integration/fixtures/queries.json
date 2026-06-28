@@ -1,0 +1,11 @@
+[
+  {
+    "_id": "qry_best_gtm",
+    "workspaceId": "ws_acme",
+    "customer_id": "ws_acme",
+    "vertical": "gtm-analytics",
+    "text": "best GTM analytics tool for PLG SaaS",
+    "seed_source": "paa",
+    "target_engines": ["openai", "perplexity", "gemini"]
+  }
+]

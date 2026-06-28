@@ -1,0 +1,46 @@
+[
+  {
+    "_id": "pg_acme_pricing",
+    "workspaceId": "ws_acme",
+    "company_domain": "acme.com",
+    "url": "https://acme.com/pricing",
+    "role": "candidate",
+    "content_features": {
+      "schema_markup": false,
+      "comparison_table": false,
+      "word_count": 480,
+      "heading_structure": 3,
+      "freshness_days": 210,
+      "query_term_coverage": 0.4,
+      "direct_answer_first": false,
+      "stats_density": 0.1,
+      "citation_density": 0.0,
+      "listicle_vs_prose": 0.2
+    },
+    "extractor_version": "orangeslice-2026.06",
+    "scraped_at": 1750000000000,
+    "cache_key": "acme.com/pricing@2026.06"
+  },
+  {
+    "_id": "pg_competitor_pricing",
+    "workspaceId": "ws_acme",
+    "company_domain": "competitor.com",
+    "url": "https://competitor.com/pricing",
+    "role": "competitor",
+    "content_features": {
+      "schema_markup": true,
+      "comparison_table": true,
+      "word_count": 1850,
+      "heading_structure": 7,
+      "freshness_days": 14,
+      "query_term_coverage": 0.9,
+      "direct_answer_first": true,
+      "stats_density": 0.6,
+      "citation_density": 0.4,
+      "listicle_vs_prose": 0.7
+    },
+    "extractor_version": "orangeslice-2026.06",
+    "scraped_at": 1750000000000,
+    "cache_key": "competitor.com/pricing@2026.06"
+  }
+]
