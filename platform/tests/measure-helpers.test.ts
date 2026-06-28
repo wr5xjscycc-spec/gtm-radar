@@ -10,6 +10,7 @@ import {
   buildSeedQueries,
   buildCandidatePool,
   pagesToCandidatePool,
+  buildPoolFromCompanies,
 } from "../../convex/measure";
 
 describe("buildSeedQueries", () => {
@@ -72,5 +73,47 @@ describe("pagesToCandidatePool", () => {
       role: "candidate",
     });
     expect(pool[1].company_domain).toBe("rival.io");
+  });
+});
+
+describe("buildPoolFromCompanies", () => {
+  it("falls back to own+typed when no companies have been sourced", () => {
+    const pool = buildPoolFromCompanies("acme.com", ["rival.io"], []);
+    expect(pool).toEqual(buildCandidatePool("acme.com", ["rival.io"]));
+  });
+
+  it("adds discovered battlefield companies on top of the precision core", () => {
+    const pool = buildPoolFromCompanies("acme.com", ["rival.io"], [
+      { domain: "acme.com", role: "customer" }, // already in base
+      { domain: "rival.io", role: "competitor" }, // already in base
+      { domain: "discovered1.com", role: "battlefield" },
+      { domain: "discovered2.com", role: "battlefield" },
+    ]);
+    expect(pool.map((p) => p.company_domain)).toEqual([
+      "acme.com",
+      "rival.io",
+      "discovered1.com",
+      "discovered2.com",
+    ]);
+    // Discovered companies join as neutral candidates (not competitors).
+    expect(pool.find((p) => p.company_domain === "discovered1.com")?.role).toBe("candidate");
+  });
+
+  it("de-dupes and caps the battlefield additions", () => {
+    const companies = [
+      { domain: "rival.io", role: "battlefield" }, // dup of a typed competitor -> skipped
+      ...Array.from({ length: 30 }, (_, i) => ({ domain: `c${i}.com`, role: "battlefield" })),
+    ];
+    const pool = buildPoolFromCompanies("acme.com", ["rival.io"], companies, 5);
+    // base (acme + rival) + 5 capped discoveries; rival dup not re-added.
+    expect(pool).toHaveLength(2 + 5);
+    expect(pool.filter((p) => p.company_domain === "rival.io")).toHaveLength(1);
+  });
+
+  it("ignores non-battlefield roles when folding in companies", () => {
+    const pool = buildPoolFromCompanies("acme.com", [], [
+      { domain: "other.com", role: "competitor" }, // not battlefield -> not added here
+    ]);
+    expect(pool.map((p) => p.company_domain)).toEqual(["acme.com"]);
   });
 });

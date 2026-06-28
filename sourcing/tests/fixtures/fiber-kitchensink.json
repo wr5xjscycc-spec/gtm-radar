@@ -1,0 +1,367 @@
+{
+ "output": {
+  "data": [
+   {
+    "domains": [
+     "linear.app"
+    ],
+    "websites": [
+     "linear.app"
+    ],
+    "preferred_name": "Linear",
+    "names": [
+     "Linear Orbit, Inc.",
+     "linear.app",
+     "Linear"
+    ],
+    "standard_industries": [
+     "Information Technology",
+     "Software"
+    ],
+    "short_description": "Linear is a purpose-built tool for tracking issues, managing sprints, and organizing project roadmaps in software development teams.",
+    "employee_count_consensus": {
+     "gte": 266,
+     "lte": 266
+    },
+    "funding_stage": "series_c",
+    "historical_headcount": {
+     "latest_snapshot_date": "2026-01-01",
+     "snapshots": [
+      {
+       "date": "2022-10-01",
+       "employees": 63
+      },
+      {
+       "date": "2022-12-01",
+       "employees": 65
+      },
+      {
+       "date": "2023-01-01",
+       "employees": 77
+      },
+      {
+       "date": "2023-02-01",
+       "employees": 81
+      },
+      {
+       "date": "2023-03-01",
+       "employees": 83
+      },
+      {
+       "date": "2023-04-01",
+       "employees": 89
+      },
+      {
+       "date": "2023-05-01",
+       "employees": 95
+      },
+      {
+       "date": "2023-06-01",
+       "employees": 101
+      },
+      {
+       "date": "2023-07-01",
+       "employees": 103
+      },
+      {
+       "date": "2023-08-01",
+       "employees": 108
+      },
+      {
+       "date": "2023-09-01",
+       "employees": 114
+      },
+      {
+       "date": "2023-10-01",
+       "employees": 118
+      },
+      {
+       "date": "2023-11-01",
+       "employees": 118
+      },
+      {
+       "date": "2023-12-01",
+       "employees": 120
+      },
+      {
+       "date": "2024-01-01",
+       "employees": 114
+      },
+      {
+       "date": "2024-02-01",
+       "employees": 112
+      },
+      {
+       "date": "2024-03-01",
+       "employees": 112
+      },
+      {
+       "date": "2024-04-01",
+       "employees": 116
+      },
+      {
+       "date": "2024-05-01",
+       "employees": 122
+      },
+      {
+       "date": "2024-06-01",
+       "employees": 126
+      },
+      {
+       "date": "2024-08-01",
+       "employees": 130
+      },
+      {
+       "date": "2024-09-01",
+       "employees": 134
+      },
+      {
+       "date": "2024-10-01",
+       "employees": 144
+      },
+      {
+       "date": "2024-11-01",
+       "employees": 146
+      },
+      {
+       "date": "2024-12-01",
+       "employees": 150
+      },
+      {
+       "date": "2025-01-01",
+       "employees": 154
+      },
+      {
+       "date": "2025-03-01",
+       "employees": 160
+      },
+      {
+       "date": "2025-04-01",
+       "employees": 160
+      },
+      {
+       "date": "2025-05-01",
+       "employees": 164
+      },
+      {
+       "date": "2025-06-01",
+       "employees": 174
+      },
+      {
+       "date": "2025-07-01",
+       "employees": 181
+      },
+      {
+       "date": "2025-08-01",
+       "employees": 189
+      },
+      {
+       "date": "2025-09-01",
+       "employees": 199
+      },
+      {
+       "date": "2025-10-01",
+       "employees": 203
+      },
+      {
+       "date": "2025-11-01",
+       "employees": 209
+      },
+      {
+       "date": "2025-12-01",
+       "employees": 213
+      },
+      {
+       "date": "2026-01-01",
+       "employees": 215
+      }
+     ],
+     "growth": {
+      "1m": {
+       "percent": 0.00939,
+       "quantity": 2
+      },
+      "2m": {
+       "percent": 0.02871,
+       "quantity": 6
+      },
+      "3m": {
+       "percent": 0.05911,
+       "quantity": 12
+      },
+      "6m": {
+       "percent": 0.18785,
+       "quantity": 34
+      },
+      "12m": {
+       "percent": 0.3961,
+       "quantity": 61
+      },
+      "18m": {
+       "percent": 0.70635,
+       "quantity": 89
+      },
+      "24m": {
+       "percent": 0.88596,
+       "quantity": 101
+      },
+      "36m": {
+       "percent": 1.79221,
+       "quantity": 138
+      }
+     }
+    },
+    "li_job_posts_stats": {
+     "total_count": 1,
+     "seniority_stats": {
+      "Mid-Senior level": {
+       "count": 1,
+       "fraction": 1
+      }
+     },
+     "employment_type_stats": {
+      "Full-time": {
+       "count": 1,
+       "fraction": 1
+      }
+     },
+     "country_location_stats": {
+      "FIN": {
+       "count": 1,
+       "fraction": 1
+      }
+     },
+     "puree_job_functions_stats": {
+      "Analyst": {
+       "count": 1,
+       "fraction": 1
+      }
+     },
+     "standard_industries_stats": {
+      "Software": {
+       "count": 1,
+       "fraction": 1
+      }
+     },
+     "job_location_type_stats": null
+    },
+    "technologies_used": [
+     {
+      "name": "slack"
+     },
+     {
+      "name": "intercom"
+     }
+    ],
+    "platforms": {
+     "ecommerce": null,
+     "cms": [
+      "Atlassian Cloud",
+      "Rippling",
+      "Sanity"
+     ],
+     "crm": null,
+     "marketing": null,
+     "payment": [
+      "Klarna",
+      "Stripe"
+     ]
+    },
+    "li_industries": [
+     {
+      "id": "4",
+      "name": "Software Development",
+      "primary": true
+     }
+    ],
+    "alt_keywords": [
+     "information technology & services",
+     "software development",
+     "product development",
+     "issue tracking",
+     "project management",
+     "workflow automation",
+     "team collaboration",
+     "feature requests",
+     "customer feedback",
+     "cycle planning",
+     "task management",
+     "sprint planning",
+     "visual planning tools",
+     "analytics & insights",
+     "integration capabilities",
+     "remote team management",
+     "software craftsmanship",
+     "agile practices",
+     "kanban boards",
+     "custom workflows",
+     "real-time collaboration",
+     "deployment planning",
+     "project roadmaps",
+     "status updates",
+     "team alignment",
+     "ai integration",
+     "git workflows",
+     "security compliance",
+     "mobile access",
+     "notification system",
+     "api integrations",
+     "performance tracking",
+     "document collaboration",
+     "customer-centric development",
+     "automation tools",
+     "issue prioritization",
+     "milestone tracking",
+     "dependency management",
+     "user experience design",
+     "product strategy",
+     "enhanced visibility",
+     "multi-team collaboration",
+     "rapid execution",
+     "bi-directional sync",
+     "cloud-based software",
+     "enterprise solutions",
+     "task hierarchy",
+     "resource allocation",
+     "agile methodologies",
+     "product roadmaps",
+     "analytics",
+     "integrations",
+     "user-friendly",
+     "modern ui",
+     "productivity",
+     "collaboration",
+     "security",
+     "small to medium-sized startups",
+     "developer tools",
+     "real-time data",
+     "customizable workflows",
+     "tech-savvy audience",
+     "streamlined processes",
+     "performance optimization",
+     "innovative startups",
+     "intuitive design",
+     "seamless experience",
+     "lightweight tool",
+     "customer requests",
+     "workplace requests",
+     "mobile accessibility",
+     "api integration",
+     "competitive alternative",
+     "user-centric design",
+     "enterprise software",
+     "enterprises",
+     "computer software",
+     "b2b"
+    ]
+   }
+  ]
+ },
+ "chargeInfo": {
+  "method": "charged-now",
+  "creditsCharged": 2
+ },
+ "advice": [
+  "Found 1 matching company."
+ ]
+}

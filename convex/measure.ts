@@ -109,6 +109,37 @@ export function buildCandidatePool(
   return pool;
 }
 
+/** Max Fiber-discovered battlefield companies to fold into a measurement pool. */
+const BATTLEFIELD_POOL_CAP = 20;
+
+/**
+ * Candidate pool for a sweep, PREFERRING the discovered battlefield when present.
+ * The customer + typed competitors are always in (the precision core); every
+ * Fiber-discovered `battlefield` company is added on top (deduped, capped) so the
+ * gut-punch ranks the customer against the REAL competitive set — that's where the
+ * Fiber integration shows on the board. Falls back to the own+typed thin slice when
+ * no companies have been sourced yet (preserves the key-free seed/test behavior).
+ */
+export function buildPoolFromCompanies(
+  ownDomain: string,
+  competitorDomains: ReadonlyArray<string>,
+  companies: ReadonlyArray<{ domain: string; role: string }>,
+  cap: number = BATTLEFIELD_POOL_CAP,
+): CandidatePage[] {
+  const base = buildCandidatePool(ownDomain, competitorDomains);
+  if (companies.length === 0) return base;
+  const seen = new Set(base.map((p) => p.company_domain));
+  const pool = [...base];
+  let added = 0;
+  for (const c of companies) {
+    if (c.role !== "battlefield" || !c.domain || seen.has(c.domain)) continue;
+    seen.add(c.domain);
+    pool.push({ company_domain: c.domain, url: c.domain, role: "candidate" });
+    if (++added >= cap) break;
+  }
+  return pool;
+}
+
 /**
  * Candidate pool from a set of page URLs (used by the post-window re-measure: the
  * experiment's treatment/control pages). De-dupes; keys company_domain on the
@@ -284,7 +315,13 @@ export const measureWorkspace = action({
     });
     if (!ws) throw new Error("workspace not found");
 
-    const pool = buildCandidatePool(ws.own_domain, ws.competitor_domains);
+    // Rank against the DISCOVERED battlefield when it exists (Fiber sourcing ran
+    // first); otherwise the own+typed thin slice. board.battlefield returns the
+    // workspace's company rows.
+    const companies = await ctx.runQuery(api.board.battlefield, {
+      workspaceId: args.workspaceId,
+    });
+    const pool = buildPoolFromCompanies(ws.own_domain, ws.competitor_domains, companies);
     return await runMeasurementSweep(ctx, {
       workspaceId: args.workspaceId,
       vertical: ws.vertical,

@@ -45,11 +45,18 @@ export const createWorkspace = mutation({
       query_pack_id: args.query_pack_id,
       owner,
     });
-    // Onboarding → live measurement: schedule the OpenAI sweep so the board's
-    // gut-punch fills with REAL "you N/M vs competitor" data. Scheduled (not
-    // awaited) so onboarding returns instantly; the board streams in reactively.
+    // Onboarding → live pipeline: schedule the Fiber battlefield build FIRST, which
+    // tail-schedules the OpenAI measurement once the discovered companies + their
+    // firmographics are written (architecture rule: battlefield before measure). The
+    // gut-punch then ranks the customer against the DISCOVERED set, not just the
+    // typed competitors. Scheduled (not awaited) so onboarding returns instantly; the
+    // board streams in reactively. Without FIBER_API_KEY, buildBattlefield degrades
+    // to the thin slice and still chains the measurement.
     if (args.measure_on_create) {
-      await ctx.scheduler.runAfter(0, api.measure.measureWorkspace, { workspaceId });
+      await ctx.scheduler.runAfter(0, api.sourcing.buildBattlefield, {
+        workspaceId,
+        thenMeasure: true,
+      });
     }
     return workspaceId;
   },
