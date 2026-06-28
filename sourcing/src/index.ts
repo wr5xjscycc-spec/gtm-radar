@@ -4,3 +4,5 @@ export * from "./domain";
 export * from "./types";
 export * from "./fiber";
 export * from "./battlefield";
+export * from "./understanding";
+export * from "./firmographics";
