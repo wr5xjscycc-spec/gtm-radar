@@ -1,0 +1,75 @@
+{
+  "search": {
+    "results": [
+      { "title": "Asana — Project Management", "link": "https://asana.com", "displayed_link": "asana.com" },
+      { "title": "Asana Pricing", "link": "https://asana.com/pricing", "displayed_link": "asana.com/pricing" },
+      { "title": "Asana About", "link": "https://asana.com/about", "displayed_link": "asana.com/about" }
+    ],
+    "pagination": {
+      "currentPage": 1,
+      "totalPages": 1,
+      "totalResults": 3,
+      "resultsPerPage": 10,
+      "hasNextPage": false
+    }
+  },
+  "scrapes": {
+    "https://asana.com": {
+      "markdown": "# Asana\n\nAsana is a project management platform.\n\n## Features\n- Timeline\n- Boards\n- Goals\n- Reporting\n\n[Get started](https://asana.com/signup)",
+      "data": [
+        { "markdown": "# Asana\n\nAsana is a project management platform.", "links": ["https://asana.com/signup"] }
+      ],
+      "socialUrls": {
+        "emailGeneral": [],
+        "facebookProfile": [],
+        "facebookProfileById": [],
+        "instagramProfile": [],
+        "twitterUser": [],
+        "twitterStatus": [],
+        "youtubeChannel": [],
+        "youtubeUser": [],
+        "youtubeVideo": [],
+        "tiktokProfile": [],
+        "tiktokVideo": []
+      }
+    },
+    "https://asana.com/pricing": {
+      "markdown": "# Pricing\n\nFree: $0\nPremium: $10.99\nBusiness: $24.99\n\nEnterprise: Contact sales.\n\n| Plan | Price |\n|------|-------|\n| Free | $0 |\n| Premium | $10.99 |\n| Business | $24.99 |",
+      "data": [
+        { "markdown": "# Pricing", "links": [] }
+      ],
+      "socialUrls": {
+        "emailGeneral": [],
+        "facebookProfile": [],
+        "facebookProfileById": [],
+        "instagramProfile": [],
+        "twitterUser": [],
+        "twitterStatus": [],
+        "youtubeChannel": [],
+        "youtubeUser": [],
+        "youtubeVideo": [],
+        "tiktokProfile": [],
+        "tiktokVideo": []
+      }
+    },
+    "https://asana.com/about": {
+      "markdown": "# About Asana\n\nAsana helps teams orchestrate their work, from daily tasks to strategic initiatives.\n\n## Mission\nTo help humanity thrive by enabling the world's teams to work together effortlessly.",
+      "data": [
+        { "markdown": "# About Asana\n\nAsana helps teams orchestrate their work.", "links": ["https://asana.com/learn"] }
+      ],
+      "socialUrls": {
+        "emailGeneral": [],
+        "facebookProfile": [],
+        "facebookProfileById": [],
+        "instagramProfile": [],
+        "twitterUser": [],
+        "twitterStatus": [],
+        "youtubeChannel": [],
+        "youtubeUser": [],
+        "youtubeVideo": [],
+        "tiktokProfile": [],
+        "tiktokVideo": []
+      }
+    }
+  }
+}

@@ -5,5 +5,8 @@
   "description": "P3 — battlefield (Fiber), content + off-page enrichment, query generation, feature extraction, caching, vertical pack.",
   "scripts": {
     "test": "vitest run"
+  },
+  "dependencies": {
+    "orangeslice": "^2.6.0"
   }
 }

@@ -11,7 +11,8 @@
   ],
   "scripts": {
     "test": "npm test --workspaces --if-present",
-    "test:py": "pytest analysis"
+    "test:py": "pytest analysis",
+    "enrich:smoke": "tsx scripts/enrich-pages.ts"
   },
   "dependencies": {
     "convex": "^1.16.0"
