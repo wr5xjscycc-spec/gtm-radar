@@ -1,0 +1,18 @@
+[
+  {
+    "id": "qry_seed_001",
+    "customer_id": "ws_seed_001",
+    "vertical": "ai-sales-tools",
+    "text": "best ai sdr tools for b2b saas",
+    "seed_source": "paa",
+    "target_engines": ["openai", "perplexity"]
+  },
+  {
+    "id": "qry_seed_002",
+    "customer_id": "ws_seed_001",
+    "vertical": "ai-sales-tools",
+    "text": "ai sales engagement platform comparison",
+    "seed_source": "keyword",
+    "target_engines": ["openai", "perplexity", "gemini"]
+  }
+]

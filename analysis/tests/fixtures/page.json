@@ -1,0 +1,128 @@
+[
+  {
+    "company_domain": "acme.example",
+    "url": "https://acme.example/compare",
+    "role": "customer",
+    "content_features": {
+      "schema_markup": 1,
+      "comparison_table": 1,
+      "word_count": 1850,
+      "heading_structure": 14,
+      "freshness_days": 12,
+      "query_term_coverage": 0.82,
+      "direct_answer_first": 1,
+      "stats_density": 0.045,
+      "citation_density": 0.031,
+      "quote_density": 0.012,
+      "listicle_vs_prose": 0.65
+    },
+    "extractor_version": "ext-v1",
+    "scraped_at": "2026-06-20T08:15:00Z",
+    "cache_key": "acme-compare-2026w25"
+  },
+  {
+    "company_domain": "acme.example",
+    "url": "https://acme.example/blog/guide",
+    "role": "candidate",
+    "content_features": {
+      "schema_markup": 0,
+      "comparison_table": 0,
+      "word_count": 640,
+      "heading_structure": 4,
+      "freshness_days": 410,
+      "query_term_coverage": 0.24,
+      "direct_answer_first": 0,
+      "stats_density": 0.006,
+      "citation_density": 0.0,
+      "quote_density": 0.0,
+      "listicle_vs_prose": 0.12
+    },
+    "extractor_version": "ext-v1",
+    "scraped_at": "2026-06-20T08:16:00Z",
+    "cache_key": "acme-blogguide-2026w25"
+  },
+  {
+    "company_domain": "globex.example",
+    "url": "https://globex.example/product",
+    "role": "competitor",
+    "content_features": {
+      "schema_markup": 1,
+      "comparison_table": 1,
+      "word_count": 2230,
+      "heading_structure": 17,
+      "freshness_days": 28,
+      "query_term_coverage": 0.78,
+      "direct_answer_first": 1,
+      "stats_density": 0.052,
+      "citation_density": 0.024,
+      "quote_density": 0.018,
+      "listicle_vs_prose": 0.58
+    },
+    "extractor_version": "ext-v1",
+    "scraped_at": "2026-06-20T08:17:00Z",
+    "cache_key": "globex-product-2026w25"
+  },
+  {
+    "company_domain": "globex.example",
+    "url": "https://globex.example/news/update",
+    "role": "candidate",
+    "content_features": {
+      "schema_markup": 0,
+      "comparison_table": 0,
+      "word_count": 480,
+      "heading_structure": 3,
+      "freshness_days": 95,
+      "query_term_coverage": 0.31,
+      "direct_answer_first": 0,
+      "stats_density": 0.009,
+      "citation_density": 0.004,
+      "quote_density": 0.0,
+      "listicle_vs_prose": 0.2
+    },
+    "extractor_version": "ext-v1",
+    "scraped_at": "2026-06-20T08:18:00Z",
+    "cache_key": "globex-newsupdate-2026w25"
+  },
+  {
+    "company_domain": "initech.example",
+    "url": "https://initech.example/features",
+    "role": "competitor",
+    "content_features": {
+      "schema_markup": 1,
+      "comparison_table": 1,
+      "word_count": 1420,
+      "heading_structure": 11,
+      "freshness_days": 40,
+      "query_term_coverage": 0.69,
+      "direct_answer_first": 1,
+      "stats_density": 0.038,
+      "citation_density": 0.019,
+      "quote_density": 0.008,
+      "listicle_vs_prose": 0.61
+    },
+    "extractor_version": "ext-v1",
+    "scraped_at": "2026-06-20T08:19:00Z",
+    "cache_key": "initech-features-2026w25"
+  },
+  {
+    "company_domain": "initech.example",
+    "url": "https://initech.example/docs",
+    "role": "candidate",
+    "content_features": {
+      "schema_markup": 0,
+      "comparison_table": 0,
+      "word_count": 320,
+      "heading_structure": 2,
+      "freshness_days": 720,
+      "query_term_coverage": 0.18,
+      "direct_answer_first": 0,
+      "stats_density": 0.003,
+      "citation_density": 0.0,
+      "quote_density": 0.0,
+      "listicle_vs_prose": 0.08
+    },
+    "extractor_version": "ext-v1",
+    "scraped_at": "2026-06-20T08:20:00Z",
+    "cache_key": "initech-docs-2026w25"
+  }
+]

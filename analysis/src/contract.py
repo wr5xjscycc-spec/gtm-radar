@@ -108,6 +108,29 @@ class ModelFit(BaseModel):
     n_rows: int
 
 
+class BaselineMetrics(BaseModel):
+    """Metrics for the scikit-learn baseline *yardstick* (Phase 1, not shipped).
+
+    Additive helper model: it never feeds the wire ``model_fit`` contract, it only
+    sanity-checks that the assembly pipeline produces something a classifier can
+    chew on. ``inconclusive`` is deterministic (single outcome class or no
+    cross-validated AUC), so callers/tests assert the flag, not an accuracy number.
+    """
+
+    n_rows: int
+    n_companies: int = Field(..., description="effective N (distinct companies)")
+    n_features: int
+    in_sample_accuracy: float
+    cv_auc: Optional[float] = Field(
+        default=None, description="small cross-val ROC-AUC; None when N is too thin to estimate"
+    )
+    cv_folds: Optional[int] = None
+    inconclusive: bool = Field(
+        ..., description="True when the yardstick can claim nothing (single class / no CV AUC)"
+    )
+    note: str = ""
+
+
 class FitJob(BaseModel):
     """Async job envelope. Submit returns one of these (status ``queued``); poll
     returns it with ``result`` populated once ``status == "complete"``."""

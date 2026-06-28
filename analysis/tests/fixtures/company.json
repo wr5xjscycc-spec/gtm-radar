@@ -1,0 +1,89 @@
+[
+  {
+    "domain": "acme.example",
+    "name": "Acme AI",
+    "role": "customer",
+    "firmographics": {
+      "size": "mid-market",
+      "funding_stage": "series-b",
+      "headcount_growth": 0.34,
+      "hiring_velocity": 18,
+      "tech_stack": ["nextjs", "postgres", "stripe", "segment"]
+    },
+    "offpage": {
+      "thirdparty_mentions": 142,
+      "reddit_presence": true,
+      "g2_presence": true,
+      "wikipedia_presence": false,
+      "review_site_presence": true,
+      "brand_search_volume": 5400,
+      "backlink_density": 0.62,
+      "entity_cooccurrence": 0.48
+    },
+    "understanding": {
+      "category": "ai-sales-tools",
+      "icp": "RevOps leaders at 50-500 person B2B SaaS",
+      "positioning": "AI SDR that books meetings on autopilot"
+    },
+    "coverage_flags": {},
+    "source_versions": { "fiber": "v1" }
+  },
+  {
+    "domain": "globex.example",
+    "name": "Globex Outreach",
+    "role": "competitor",
+    "firmographics": {
+      "size": "enterprise",
+      "funding_stage": "series-d",
+      "headcount_growth": 0.12,
+      "hiring_velocity": 7,
+      "tech_stack": ["react", "mysql", "salesforce", "marketo"]
+    },
+    "offpage": {
+      "thirdparty_mentions": 310,
+      "reddit_presence": true,
+      "g2_presence": true,
+      "wikipedia_presence": true,
+      "review_site_presence": true,
+      "brand_search_volume": 18200,
+      "backlink_density": 0.81,
+      "entity_cooccurrence": 0.71
+    },
+    "understanding": {
+      "category": "ai-sales-tools",
+      "icp": "Enterprise sales orgs with 200+ reps",
+      "positioning": "Full-funnel sales engagement platform"
+    },
+    "coverage_flags": { "stale_firmographics": true },
+    "source_versions": { "fiber": "v1" }
+  },
+  {
+    "domain": "initech.example",
+    "name": "Initech Sell",
+    "role": "competitor",
+    "firmographics": {
+      "size": "startup",
+      "funding_stage": "seed",
+      "headcount_growth": 0.55,
+      "hiring_velocity": 4,
+      "tech_stack": ["vue", "sqlite", "paddle"]
+    },
+    "offpage": {
+      "thirdparty_mentions": 23,
+      "reddit_presence": false,
+      "g2_presence": false,
+      "wikipedia_presence": false,
+      "review_site_presence": false,
+      "brand_search_volume": 460,
+      "backlink_density": 0.14,
+      "entity_cooccurrence": 0.09
+    },
+    "understanding": {
+      "category": "ai-sales-tools",
+      "icp": "Early-stage founders doing their own sales",
+      "positioning": "Lightweight AI prospecting for solo founders"
+    },
+    "coverage_flags": {},
+    "source_versions": { "fiber": "v1" }
+  }
+]
