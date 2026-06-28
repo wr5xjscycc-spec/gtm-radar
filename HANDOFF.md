@@ -4,7 +4,7 @@ Read this at the start of a new session before touching any code.
 
 ## Where we are
 
-**Repo:** `C:\Users\raj_k\yc\gtm-radar` · **Working branch:** `p2/phase-4-label-quality`
+**Repo:** `C:\Users\raj_k\yc\gtm-radar` · **Working branch:** `p2/phase-6-cost-guards`
 
 Branches built so far (all local except P2·0):
 
@@ -13,12 +13,26 @@ Branches built so far (all local except P2·0):
 | `p2/phase-0-openai-citation` | ✅ pushed | P2·0 — OpenAI adapter + citation parser + row builder |
 | `p2/phase-2-dispatch-labeling` | ❌ local only | P2·1 cost constants + P2·2 dispatch / labeling / pipeline |
 | `p2/phase-3-statistics` | ❌ local only | P2·3 — Wilson CI, per-engine aggregation, adaptive-K + one-key 3-engine backing |
-| `p2/phase-4-label-quality` | ❌ local only | **P2·4 — flip-rate QA, label table, pool-composition (CURRENT)** |
+| `p2/phase-4-label-quality` | ❌ local only | P2·4 — flip-rate QA, label table, pool-composition |
+| `p2/phase-6-cost-guards` | ❌ local only | **P2·6 — retry/backoff, drift detection, budget guard, resumable sweep (CURRENT)** |
 | `p1/phase-0-thin-slice` | ❌ local only | Convex schema + seed (deprioritized — see below) |
 
-Stack order: `p2/phase-4-label-quality` → `p2/phase-3-statistics` → `p2/phase-2-dispatch-labeling` → `p2/phase-0-openai-citation`. `p1/phase-0-thin-slice` branches off P2·0 separately.
+Stack order: `p2/phase-6-cost-guards` → `p2/phase-4-label-quality` → `p2/phase-3-statistics` → `p2/phase-2-dispatch-labeling` → `p2/phase-0-openai-citation`. `p1/phase-0-thin-slice` branches off P2·0 separately. (P2·5 — experiment re-measurement — is SKIPPED for now: it depends on P4's `experiment` records, which don't exist yet.)
 
-`main` is the original scaffold. **CI has never run.** **144 measurement tests pass locally on Node 24** (typecheck clean).
+`main` is the original scaffold. **CI has never run** (stack is now 6 branches deep — pushing + CI is the highest-leverage next move). **184 measurement tests pass locally on Node 24** (typecheck clean).
+
+## What was built (P2·6) — `p2/phase-6-cost-guards`
+
+Spec: `docs/superpowers/specs/2026-06-28-p2-6-cost-guards-design.md`. Four modules (40 new tests) delivering the P2·6 DoD (sweep stays in budget, survives an engine failing, flags drift):
+
+| File | What |
+|---|---|
+| `reliability/retry.ts` | `withRetry(fn, opts)` — exp-backoff on retryable errors (429/5xx/network), injectable `sleep`, deterministic schedule `[500,1000,2000]`. |
+| `quality/drift.ts` | `detectModelDrift(rows)` — flags `(query,engine)` groups spanning >1 `model_version` (polluted aggregation) + per-engine versions across the sweep. |
+| `cost/budget.ts` | `makeBudgetGuard({ceilingUSD})` — live spend tracking + `canAfford` reservation (closure, no class) + `worstCaseCalls`. |
+| `sweep.ts` | `runSweep(...)` — resumable **PAUSE-THEN-CONTINUE** sweep (your chosen budget posture). Reserves worst-case (kMax) per query **before** starting, records actual (≤ reserve) after ⇒ ceiling **can't** be overrun. Pauses at a query boundary, returns a `checkpoint`; resume with a fresh window. Wraps registry in `withRetry`; reports coverage / spend / drift / query-tagged failures. |
+
+Budget posture = pause/checkpoint, **not** degrade — every persisted query is full-quality (full K, all engines). Per-engine never merged; all NaN-guarded. **Optional live capstone not run** — a tiny low-ceiling 2-query sweep would demo a real pause + resume (~$0.10–0.30, uses `OPENAI_API_KEY`).
 
 ## What was built (P2·4) — `p2/phase-4-label-quality`
 
