@@ -1,0 +1,9 @@
+{
+  "name": "@gtm-radar/sourcing",
+  "version": "0.0.0",
+  "private": true,
+  "description": "P3 — battlefield (Fiber), content + off-page enrichment, query generation, feature extraction, caching, vertical pack.",
+  "scripts": {
+    "test": "vitest run"
+  }
+}

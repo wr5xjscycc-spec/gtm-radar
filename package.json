@@ -1,0 +1,20 @@
+{
+  "name": "gtm-radar",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Measure AI-answer citation, hypothesize, run a randomized ship/hold experiment, report causal lift.",
+  "license": "MIT",
+  "workspaces": [
+    "platform",
+    "measurement",
+    "sourcing"
+  ],
+  "scripts": {
+    "test": "npm test --workspaces --if-present",
+    "test:py": "pytest analysis"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  }
+}

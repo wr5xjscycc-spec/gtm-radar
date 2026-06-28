@@ -1,0 +1,18 @@
+# Each lane reviews its own directory. Replace the placeholders with real GitHub handles.
+# P1 — Platform & Experience
+/platform/      @P1-OWNER
+/convex/        @P1-OWNER
+# P2 — Measurement Engine
+/measurement/   @P2-OWNER
+# P3 — Sourcing & Enrichment
+/sourcing/      @P3-OWNER
+# P4 — Intelligence & Loop
+/analysis/      @P4-OWNER
+
+# Shared surfaces — changes need broad review.
+# The data contract + schema are the cross-lane interface: ALL owners must approve.
+/docs/CONTRACT.md   @P1-OWNER @P2-OWNER @P3-OWNER @P4-OWNER
+/convex/schema*     @P1-OWNER @P2-OWNER @P3-OWNER @P4-OWNER
+/docs/              @P1-OWNER
+/.github/           @P1-OWNER
+/tests/integration/ @P1-OWNER @P2-OWNER @P3-OWNER @P4-OWNER

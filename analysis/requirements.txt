@@ -1,0 +1,10 @@
+# P4 analysis service — test + core stats deps.
+# CI installs these; heavy Bayesian deps are added when Phase 4 lands (kept out of CI base to stay fast).
+pytest>=8.0
+numpy>=1.26
+pandas>=2.2
+statsmodels>=0.14
+# Phase 4 (Bayesian hypothesis generator) — uncomment when implemented:
+# pymc>=5.10
+# Phase 5 (DiD) also uses:
+# linearmodels>=6.0

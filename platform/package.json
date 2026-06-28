@@ -1,0 +1,9 @@
+{
+  "name": "@gtm-radar/platform",
+  "version": "0.0.0",
+  "private": true,
+  "description": "P1 — Convex backend, data model, live board, reporting + claim-ladder gating, scheduling/compliance.",
+  "scripts": {
+    "test": "vitest run"
+  }
+}

@@ -1,0 +1,8 @@
+[project]
+name = "gtm-radar-analysis"
+version = "0.0.0"
+description = "P4 — Bayesian hypothesis generator + randomized-DiD experiment engine (the moat)."
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

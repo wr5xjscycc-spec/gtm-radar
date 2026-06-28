@@ -1,0 +1,9 @@
+{
+  "name": "@gtm-radar/measurement",
+  "version": "0.0.0",
+  "private": true,
+  "description": "P2 — answer-engine adapters, K-repeats, adaptive sampling, citation parsing, case-control labeling, cost guards.",
+  "scripts": {
+    "test": "vitest run"
+  }
+}

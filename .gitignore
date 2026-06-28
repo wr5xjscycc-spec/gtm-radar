@@ -1,0 +1,28 @@
+# Internal strategy (not for the public/shared repo by default — see ORCHESTRATION.md)
+docs/internal/
+
+# Node
+node_modules/
+dist/
+*.log
+.env
+.env.*
+!.env.example
+
+# Convex
+.convex/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
