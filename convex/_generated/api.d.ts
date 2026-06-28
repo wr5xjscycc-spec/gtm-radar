@@ -17,7 +17,9 @@ import type * as experiments from "../experiments.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_compliance from "../lib/compliance.js";
 import type * as lib_domain from "../lib/domain.js";
+import type * as measure from "../measure.js";
 import type * as records from "../records.js";
+import type * as sourcing from "../sourcing.js";
 
 import type {
   ApiFromModules,
@@ -35,7 +37,9 @@ declare const fullApi: ApiFromModules<{
   "lib/auth": typeof lib_auth;
   "lib/compliance": typeof lib_compliance;
   "lib/domain": typeof lib_domain;
+  measure: typeof measure;
   records: typeof records;
+  sourcing: typeof sourcing;
 }>;
 
 /**
