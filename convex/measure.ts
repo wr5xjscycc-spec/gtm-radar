@@ -38,7 +38,7 @@ import type { Engine, WindowTag } from "../measurement/src/types";
 /** gpt-5-mini: works with web_search, fastest measurement-volume tier (~31s/query). */
 const DEFAULT_MODEL = "gpt-5-mini";
 /** A hung query would otherwise burn the whole action — bound every call. */
-const QUERY_TIMEOUT_MS = 45_000;
+const QUERY_TIMEOUT_MS = 90_000; // gpt-5-mini + web_search can take 30-90s; parallel, so wall-clock ~= slowest
 const DEFAULT_N_QUERIES = 6;
 const MAX_N_QUERIES = 8; // cost guard (see plan §7: cap queries at 8)
 
