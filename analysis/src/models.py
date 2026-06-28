@@ -41,6 +41,23 @@ class HealthResponse(BaseModel):
     status: str
 
 
+class PageMatchInput(BaseModel):
+    page_url: str
+    cluster_id: str
+    topical_cluster: str
+    P_cited: Optional[float] = None
+    content_features: dict[str, float]
+
+
+class MatchPair(BaseModel):
+    page_treatment: str
+    page_control: str
+    topical_cluster_treatment: str
+    topical_cluster_control: str
+    distance: float
+    match_covars: dict[str, float]
+
+
 class BaselineMetrics(BaseModel):
     accuracy: float
     n_features: int

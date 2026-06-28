@@ -102,3 +102,71 @@ class TestBuildFitRequestsFromFixture:
 
         keys = [(r.customer_id, r.category, r.engine) for r in reqs]
         assert ("ws_acme", "GTM analytics", "openai") in keys
+
+
+class TestCompanyInheritance:
+    """Company-level (offpage) features must be identical across page rows
+    from the same company, confirming per-company context inheritance."""
+
+    def _loaded(self):
+        import json
+        measurements = json.loads((FIXTURES / "measurements.json").read_text())
+        pages = json.loads((FIXTURES / "pages.json").read_text())
+        companies = json.loads((FIXTURES / "companies.json").read_text())
+        # Add a second page for acme.com to test inheritance
+        pages.append({
+            "_id": "pg_acme_about",
+            "workspaceId": "ws_acme",
+            "company_domain": "acme.com",
+            "url": "https://acme.com/about",
+            "role": "candidate",
+            "content_features": {
+                "schema_markup": False, "comparison_table": False,
+                "word_count": 320, "heading_structure": 2,
+                "freshness_days": 90, "query_term_coverage": 0.3,
+                "direct_answer_first": False, "stats_density": 0.0,
+                "citation_density": 0.0, "listicle_vs_prose": 0.1,
+            },
+            "extractor_version": "orangeslice-2026.06",
+            "scraped_at": 1750000000000,
+            "cache_key": "acme.com/about@2026.06",
+        })
+        measurements.append({
+            "_id": "ms_acme_about_openai",
+            "workspaceId": "ws_acme",
+            "query_id": "qry_best_gtm",
+            "page_url": "https://acme.com/about",
+            "engine": "openai",
+            "model_version": "responses-2026.06",
+            "run_idx": 0, "appeared": False, "cited": False,
+            "position": None, "source_urls": [],
+            "ts": 1750000100000, "window_tag": "baseline",
+            "P_cited": 0.1, "ci_low": 0.0, "ci_high": 0.3, "position_weight": 0.1,
+        })
+        return measurements, pages, companies
+
+    def test_offpage_features_identical_across_same_company_pages(self):
+        measurements, pages, companies = self._loaded()
+        reqs = build_fit_requests(measurements, pages, companies)
+
+        acme_rows = [r for req in reqs for r in req.rows if r.cluster_id == "acme.com"]
+        assert len(acme_rows) >= 2
+
+        offpage_keys = [k for k in acme_rows[0].features if k.startswith("offpage.")]
+        for k in offpage_keys:
+            vals = {r.features[k] for r in acme_rows}
+            assert len(vals) == 1, (
+                f"offpage.{k} differs across same-company rows: {vals}"
+            )
+
+    def test_content_features_differ_across_same_company_pages(self):
+        measurements, pages, companies = self._loaded()
+        reqs = build_fit_requests(measurements, pages, companies)
+
+        acme_rows = [r for req in reqs for r in req.rows if r.cluster_id == "acme.com"]
+        assert len(acme_rows) >= 2
+
+        word_counts = {r.features.get("word_count") for r in acme_rows}
+        assert len(word_counts) > 1, (
+            "word_count should differ across pages from the same company"
+        )

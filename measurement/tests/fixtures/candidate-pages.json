@@ -1,0 +1,14 @@
+[
+  {
+    "company_domain": "acme.com",
+    "page_url": "https://acme.com/pricing"
+  },
+  {
+    "company_domain": "competitor.com",
+    "page_url": "https://competitor.com/pricing"
+  },
+  {
+    "company_domain": "rival.io",
+    "page_url": "https://rival.io/product"
+  }
+]
