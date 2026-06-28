@@ -39,8 +39,10 @@ import type { Engine, WindowTag } from "../measurement/src/types";
 const DEFAULT_MODEL = "gpt-5-mini";
 /** A hung query would otherwise burn the whole action — bound every call. */
 const QUERY_TIMEOUT_MS = 90_000; // gpt-5-mini + web_search can take 30-90s; parallel, so wall-clock ~= slowest
-const DEFAULT_N_QUERIES = 8;
-const MAX_N_QUERIES = 16; // cost guard (~$0.02/query; 16 ≈ $0.32/sweep). More queries = more distinct cited domains.
+// Max reach by default: 16 distinct buyer queries → ~60 unique cited domains live
+// (verified). ~$0.02/query ≈ $0.32/sweep, ~60-70s parallel. Dial down via nQueries.
+const DEFAULT_N_QUERIES = 16;
+const MAX_N_QUERIES = 16;
 /** "high" web_search depth surfaces more sources per query (more citations). */
 const SEARCH_CONTEXT_SIZE = "high" as const;
 

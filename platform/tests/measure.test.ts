@@ -107,15 +107,15 @@ describe("measureWorkspace — onboarding fires a real OpenAI measurement → gu
 });
 
 describe("pure helpers — buildSeedQueries + candidate pool", () => {
-  it("buildSeedQueries: defaults to 8, caps at 16, floors at 1, keyword-sourced, embeds vertical", () => {
+  it("buildSeedQueries: defaults to 16, caps at 16, floors at 1, keyword-sourced, embeds vertical", () => {
     const def = buildSeedQueries("AI SDR");
-    expect(def).toHaveLength(8);
+    expect(def).toHaveLength(16);
     expect(def.every((q) => q.seed_source === "keyword")).toBe(true);
     expect(def.every((q) => q.text.includes("AI SDR"))).toBe(true);
 
     expect(buildSeedQueries("v", 2)).toHaveLength(2);
     expect(buildSeedQueries("v", 100)).toHaveLength(16); // cap
-    expect(buildSeedQueries("v", 0)).toHaveLength(8); // 0 → default
+    expect(buildSeedQueries("v", 0)).toHaveLength(16); // 0 → default
     expect(buildSeedQueries("v", -5)).toHaveLength(1); // floor
     expect(buildSeedQueries("   ").every((q) => q.text.includes("software"))).toBe(true); // empty vertical fallback
   });

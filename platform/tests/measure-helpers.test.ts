@@ -13,9 +13,9 @@ import {
 } from "../../convex/measure";
 
 describe("buildSeedQueries", () => {
-  it("defaults to 8 keyword queries that embed the vertical", () => {
+  it("defaults to 16 keyword queries that embed the vertical", () => {
     const q = buildSeedQueries("AI SDR");
-    expect(q).toHaveLength(8);
+    expect(q).toHaveLength(16);
     expect(q.every((s) => s.seed_source === "keyword")).toBe(true);
     expect(q.every((s) => s.text.includes("AI SDR"))).toBe(true);
   });
@@ -26,8 +26,8 @@ describe("buildSeedQueries", () => {
     expect(buildSeedQueries("v", 100)).toHaveLength(16);
     expect(buildSeedQueries("v", 1)).toHaveLength(1);
     expect(buildSeedQueries("v", -3)).toHaveLength(1);
-    expect(buildSeedQueries("v", 0)).toHaveLength(8);
-    expect(buildSeedQueries("v", NaN)).toHaveLength(8);
+    expect(buildSeedQueries("v", 0)).toHaveLength(16);
+    expect(buildSeedQueries("v", NaN)).toHaveLength(16);
   });
 
   it("falls back to a generic vertical when blank", () => {
