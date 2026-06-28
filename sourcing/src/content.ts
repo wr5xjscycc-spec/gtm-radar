@@ -142,7 +142,7 @@ async function buildContentFeatures(
  * scored against DIFFERENT query packs yields different coverage, so it must not
  * collide on one cache entry. Order-independent (terms sorted) and case-folded.
  */
-function queryTermsHash(terms: string[] | undefined): string {
+export function queryTermsHash(terms: string[] | undefined): string {
   const norm = (terms ?? [])
     .map((t) => t.trim().toLowerCase())
     .filter((t) => t.length > 0)

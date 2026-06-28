@@ -52,4 +52,13 @@ Guarantees P4 gets correctly-joined, coverage-honest context. Reads `company`/`p
 - `src/coverage.ts` — `assessCompanyCoverage()` / `assessPageCoverage()` / `buildCoverageReport()` / `reconcileCompanyFlags()`: coverage judged from **actual data presence** (reconciles stale `coverage_flags` toward reality; a measured `0` counts as present). Low-coverage entities are **flagged and kept** in the report (never dropped) — the transparency guarantee.
 - Tests: `tests/join.test.ts`, `tests/coverage.test.ts`. Independent review (anchor-bias) caught a **Critical** (silent company-key collision mis-attributing off-page) + a **Major** (unjoinable companies vanishing) — both fixed before commit with new `duplicate_domains` / `unjoinable_companies` audit surfaces and tests.
 
+**Phase 5 — Category-level caching ✅ (cost lever)** (`p3/phase-5-caching`)
+Cuts per-customer cost by reusing competitor scrapes/features across customers in the same vertical (the #1 unit-economics risk). P3-internal; reads/writes `page` via the cache.
+
+- `src/cache.ts` — `PageCache` over a `CacheStore` port, keyed by `cache_key`. Cross-customer reuse via a **query-term-scoped reuse index** (`url + queryTermsHash + extractorVersion`) so a 2nd customer skips the expensive scrape + gpt-4o-mini extraction; hit/miss/reuse stats back the "measured cost drop." A different query pack can **never** resolve to another customer's feature vector.
+- `src/invalidation.ts` — pure validity policy: an entry is reusable only when **within the freshness window** (default 30d) **and** from the **current `extractor_version`**. Fail-safe: unparseable `scraped_at` → stale; future date → fresh (clamped). A stale / old-extractor entry is never served.
+- `src/caching.ts` — wires the real policy as the cache's default validator; `cacheContext(now, {extractorVersion, queryTerms})` hashes query terms exactly as `cache_key` does.
+- Tests: `tests/cache.test.ts`, `tests/invalidation.test.ts`, `tests/caching.integration.test.ts`. Independent review (anchor-bias) caught a **Critical** — the URL reuse path dropped the query-terms dimension and could serve customer B customer A's `query_term_coverage`. Fixed before commit (query-term-scoped reuse key + a dedicated cross-query-pack test).
+- Deferred (Minor): implausible far-future timestamps treated as fresh; lenient ISO parse; `expectedExtractorVersion` must be the effective (`+subj`) version or the cache silently no-ops (documented at `cacheContext`).
+
 Run: `npm test --workspace sourcing`.

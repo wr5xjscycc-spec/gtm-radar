@@ -301,3 +301,37 @@ export interface CoverageReport {
   /** Count of low-coverage entities (surfaced, never dropped). */
   low_coverage_count: number;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 5 — category-level caching (P3-INTERNAL cost lever, NOT a contract record).
+//
+// Battlefield competitors overlap heavily across customers in the same vertical,
+// so caching their scraped+extracted `page` features is the #1 unit-economics
+// lever. Entries are keyed on `cache_key` (normalized domain + content hash +
+// extractor_version — see content.ts). A cached entry is reused ONLY when it is
+// still VALID: within the freshness window AND from the current extractor
+// (a feature from an old extractor must never silently mix with new ones — the
+// extractor_version is already baked into cache_key, so a version change yields a
+// different key, but we also guard explicitly). The validity contract below is
+// the shared seam between the cache store and the invalidation policy.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Inputs that decide whether a cached `page` entry may still be reused. */
+export interface CacheValidityContext {
+  /** Current time as ISO-8601 (INJECTED — keeps decisions reproducible, no Date.now). */
+  now: string;
+  /** Max age in days before a cached entry is considered stale. */
+  freshnessDays: number;
+  /** The extractor version the caller expects; a mismatch invalidates the entry. */
+  expectedExtractorVersion: string;
+  /**
+   * Hash of the caller's query-term set (same hash baked into `cache_key`).
+   * `query_term_coverage` is CUSTOMER/query-pack-specific, so url-based reuse MUST
+   * be scoped by this — otherwise customer B would inherit customer A's coverage
+   * number for the same competitor page. See cache.ts `reuseKey`.
+   */
+  expectedQueryTermsHash: string;
+}
+
+/** Predicate deciding if a cached `page` is still valid (fresh + current extractor). */
+export type CacheValidator = (page: Page, ctx: CacheValidityContext) => boolean;

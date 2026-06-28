@@ -15,3 +15,6 @@ export * from "./candidates";
 export * from "./agreement";
 export * from "./join";
 export * from "./coverage";
+export * from "./cache";
+export * from "./invalidation";
+export * from "./caching";
