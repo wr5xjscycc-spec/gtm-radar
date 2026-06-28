@@ -1,0 +1,19 @@
+{
+  "id": "pplx-xyz789ghi012",
+  "model": "sonar",
+  "citations": [],
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "I don't have specific information about that topic in my knowledge base."
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 20,
+    "completion_tokens": 15,
+    "total_tokens": 35
+  }
+}

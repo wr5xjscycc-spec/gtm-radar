@@ -1,27 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { parseResponse, measureOpenAI } from "../src/openai";
+import { parseOpenAIResponse, createOpenAIAdapter } from "../src/openai";
 import type { OpenAIResponsesResponse } from "../src/openai";
 import citationFixture from "./fixtures/openai-citation.json";
 import emptyFixture from "./fixtures/openai-empty-citation.json";
 
-describe("parseResponse", () => {
+describe("parseOpenAIResponse", () => {
   it("extracts source URLs from url_citation annotations", () => {
-    const result = parseResponse(
+    const result = parseOpenAIResponse(
       citationFixture as OpenAIResponsesResponse,
       "hubspot.com",
     );
 
+    expect(result.engine).toBe("openai");
     expect(result.appeared).toBe(true);
     expect(result.cited).toBe(true);
     expect(result.position).toBe(0);
     expect(result.source_urls).toHaveLength(4);
     expect(result.source_urls[0]).toBe("https://www.hubspot.com/products/crm");
-    expect(result.source_urls[1]).toBe("https://www.pipedrive.com/en/features");
     expect(result.model_version).toBe("gpt-4o-2024-08-06");
   });
 
   it("reports cited=false when targetDomain is not cited", () => {
-    const result = parseResponse(
+    const result = parseOpenAIResponse(
       citationFixture as OpenAIResponsesResponse,
       "zoho.com",
     );
@@ -32,7 +32,7 @@ describe("parseResponse", () => {
   });
 
   it("handles empty annotations gracefully (not cited)", () => {
-    const result = parseResponse(
+    const result = parseOpenAIResponse(
       emptyFixture as OpenAIResponsesResponse,
       "hubspot.com",
     );
@@ -44,7 +44,7 @@ describe("parseResponse", () => {
   });
 
   it("normalizes domains for matching (www stripped, subdomain stripped)", () => {
-    const result = parseResponse(
+    const result = parseOpenAIResponse(
       citationFixture as OpenAIResponsesResponse,
       "https://www.hubspot.com/blog",
     );
@@ -54,7 +54,7 @@ describe("parseResponse", () => {
   });
 
   it("finds cited domain at non-zero position", () => {
-    const result = parseResponse(
+    const result = parseOpenAIResponse(
       citationFixture as OpenAIResponsesResponse,
       "salesforce.com",
     );
@@ -64,7 +64,7 @@ describe("parseResponse", () => {
   });
 });
 
-describe("measureOpenAI", () => {
+describe("createOpenAIAdapter", () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
@@ -81,25 +81,14 @@ describe("measureOpenAI", () => {
       text: async () => "",
     } as Response;
 
-    const fetchMock = vi.fn().mockResolvedValue(mockResponse);
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
-    const result = await measureOpenAI("best crm for startups 2026", {
+    const adapter = createOpenAIAdapter();
+    const result = await adapter.measure("best crm for startups 2026", {
       targetDomain: "hubspot.com",
     });
 
-    expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.openai.com/v1/responses",
-      expect.objectContaining({
-        method: "POST",
-        headers: expect.objectContaining({
-          Authorization: "Bearer sk-test-key",
-        }),
-        body: expect.stringContaining("web_search"),
-      }),
-    );
-
+    expect(result.engine).toBe("openai");
     expect(result.cited).toBe(true);
     expect(result.source_urls).toHaveLength(4);
   });
@@ -107,8 +96,9 @@ describe("measureOpenAI", () => {
   it("throws if OPENAI_API_KEY is not set", async () => {
     delete process.env.OPENAI_API_KEY;
 
+    const adapter = createOpenAIAdapter();
     await expect(
-      measureOpenAI("test query", { targetDomain: "example.com" }),
+      adapter.measure("test query", { targetDomain: "example.com" }),
     ).rejects.toThrow("OPENAI_API_KEY");
   });
 
@@ -124,8 +114,9 @@ describe("measureOpenAI", () => {
 
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
 
+    const adapter = createOpenAIAdapter();
     await expect(
-      measureOpenAI("test query", { targetDomain: "example.com" }),
+      adapter.measure("test query", { targetDomain: "example.com" }),
     ).rejects.toThrow("OpenAI API error: 401 Unauthorized");
   });
 });

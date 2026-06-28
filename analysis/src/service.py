@@ -1,7 +1,9 @@
 from fastapi import FastAPI
-from src.models import FitJobRequest, FitJobResponse, Coefficient, HealthResponse
 
-app = FastAPI(title="gtm-radar-analysis", version="0.0.0")
+from src.models import FitJobRequest, FitJobResponse, HealthResponse
+from src.baseline import fit_baseline
+
+app = FastAPI(title="gtm-radar-analysis", version="0.1.0")
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -16,22 +18,14 @@ async def fit(req: FitJobRequest):
     n_companies = len(cluster_ids)
     n_rows = len(rows)
 
-    features = sorted({k for r in rows for k in r.features})
-    coefficients = [
-        Coefficient(
-            feature=f,
-            posterior_median=0.0,
-            ci_low=0.0,
-            ci_high=0.0,
-            noise_flag=True,
-        )
-        for f in features
-    ]
+    coefficients, top_hypotheses, _metrics = fit_baseline(
+        rows, prior_version="baseline-ridge-0.1.0"
+    )
 
     return FitJobResponse(
         coefficients=coefficients,
-        prior_version="dummy-0.0.0",
-        top_hypotheses=[],
+        prior_version="baseline-ridge-0.1.0",
+        top_hypotheses=top_hypotheses,
         n_companies=n_companies,
         n_rows=n_rows,
     )

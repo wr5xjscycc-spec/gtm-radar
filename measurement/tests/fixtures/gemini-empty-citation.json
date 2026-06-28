@@ -1,0 +1,20 @@
+{
+  "candidates": [
+    {
+      "index": 0,
+      "content": {
+        "role": "model",
+        "parts": [
+          {
+            "text": "I don't have specific information about that topic in my knowledge base."
+          }
+        ]
+      }
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 20,
+    "candidatesTokenCount": 15,
+    "totalTokenCount": 35
+  }
+}

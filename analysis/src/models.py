@@ -5,6 +5,7 @@ from typing import Optional
 class FitRow(BaseModel):
     page_url: str
     cluster_id: str
+    P_cited: Optional[float] = None
     features: dict[str, float]
 
 
@@ -38,3 +39,10 @@ class AsyncFitJobStatus(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
+
+
+class BaselineMetrics(BaseModel):
+    accuracy: float
+    n_features: int
+    n_rows: int
+    n_companies: int

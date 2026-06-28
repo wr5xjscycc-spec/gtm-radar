@@ -1,0 +1,24 @@
+{
+  "id": "pplx-abc123def456",
+  "model": "sonar",
+  "citations": [
+    "https://www.hubspot.com/products/crm",
+    "https://www.pipedrive.com/en/features",
+    "https://www.salesforce.com/products/starter",
+    "https://close.com/features"
+  ],
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "For startups looking for a CRM in 2026, HubSpot offers a free tier with robust features. Pipedrive is excellent for sales pipeline visualization, while Salesforce Starter provides enterprise-grade power. For lean teams, Close.com offers built-in calling and email sequencing."
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 45,
+    "completion_tokens": 320,
+    "total_tokens": 365
+  }
+}
