@@ -3,6 +3,12 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { companyCardState, battlefieldProgress } from "./companyCard";
+import {
+  llmExpandRatio,
+  seedSourceBreakdown,
+  coverageSummary,
+  featureVectorView,
+} from "./enrichmentReview";
 
 /**
  * Phase-0 live board (owner: P1) — minimal but real. Proves the DoD: write any
@@ -55,6 +61,8 @@ function Board({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
   const summary = useQuery(api.board.summary, { workspaceId });
   const battlefield = useQuery(api.board.battlefield, { workspaceId }) ?? [];
   const citations = useQuery(api.board.citationBoard, { workspaceId });
+  const pages = useQuery(api.board.pages, { workspaceId }) ?? [];
+  const queries = useQuery(api.board.queries, { workspaceId }) ?? [];
 
   const customer = battlefield.find((c) => c.role === "customer");
   const bf = battlefieldProgress(battlefield);
@@ -88,7 +96,72 @@ function Board({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
           </p>
         ))}
       <small>{citations?.note}</small>
+
+      <EnrichmentReview pages={pages} queries={queries} companies={battlefield} />
     </section>
+  );
+}
+
+// P1·2: makes P3's supply auditable. SURFACES (never hides) low off-page
+// coverage + an llm_expand-heavy query set — the two red-team holes.
+function EnrichmentReview({
+  pages,
+  queries,
+  companies,
+}: {
+  pages: any[];
+  queries: any[];
+  companies: any[];
+}) {
+  const grounding = llmExpandRatio(queries);
+  const breakdown = seedSourceBreakdown(queries);
+  return (
+    <div style={{ marginTop: 24 }}>
+      <h3>Query set review ({grounding.total})</h3>
+      <p style={{ color: grounding.tooHigh ? "#b00" : "#070" }}>
+        llm_expand: {(grounding.ratio * 100).toFixed(0)}%{" "}
+        {grounding.tooHigh ? "⚠ ungrounded — needs more real seeds" : "✓ grounded"}
+      </p>
+      <small>
+        {Object.entries(breakdown)
+          .filter(([, n]) => (n as number) > 0)
+          .map(([k, n]) => `${k}:${n}`)
+          .join(" · ")}
+      </small>
+
+      <h3>Off-page coverage</h3>
+      {companies.map((c) => {
+        const cov = coverageSummary(c);
+        return (
+          <p key={c._id}>
+            {c.domain}: {(cov.coverage * 100).toFixed(0)}% covered
+            {cov.missing.length > 0 && (
+              <span style={{ color: "#b00" }}> — missing: {cov.missing.join(", ")}</span>
+            )}
+            {cov.flags.map((f) => (
+              <span key={f} style={{ color: "#b80" }}> [{f}]</span>
+            ))}
+          </p>
+        );
+      })}
+
+      <h3>Feature vectors ({pages.length} pages)</h3>
+      {pages.map((p) => {
+        const v = featureVectorView(p);
+        return (
+          <details key={p._id}>
+            <summary>{p.url} — {v.extractor_version}</summary>
+            <ul>
+              {v.fields.map((f) => (
+                <li key={f.key} style={{ color: f.present ? "inherit" : "#999" }}>
+                  {f.key}: {f.present ? String(f.value) : "—"}
+                </li>
+              ))}
+            </ul>
+          </details>
+        );
+      })}
+    </div>
   );
 }
 

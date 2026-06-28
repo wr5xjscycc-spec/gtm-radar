@@ -68,6 +68,30 @@ export const citationBoard = query({
   },
 });
 
+/** Pages + their content_features (for the feature-vector inspector, P1·2). */
+export const pages = query({
+  args: { workspaceId: v.id("workspaces") },
+  handler: async (ctx, { workspaceId }) => {
+    await requireWorkspace(ctx, workspaceId);
+    return await ctx.db
+      .query("pages")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
+      .collect();
+  },
+});
+
+/** Query set (for the query-review view with seed_source tags, P1·2). */
+export const queries = query({
+  args: { workspaceId: v.id("workspaces") },
+  handler: async (ctx, { workspaceId }) => {
+    await requireWorkspace(ctx, workspaceId);
+    return await ctx.db
+      .query("queries")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
+      .collect();
+  },
+});
+
 /** Hypotheses (model_fit) — rendered with uncertainty + noise flags, never causal. */
 export const modelFits = query({
   args: { workspaceId: v.id("workspaces") },
