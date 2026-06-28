@@ -348,6 +348,33 @@ function LiveBadge() {
   );
 }
 
+// The wordmark, clickable → home (the wizard landing). Styled to read as the
+// brand text; the global button:hover/focus-visible rules give it affordance.
+function RadarBrand({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Radar — go home"
+      title="Go home"
+      style={{
+        fontWeight: 800,
+        fontSize: 16,
+        color: T.ink,
+        letterSpacing: "-.02em",
+        fontFamily: FONT,
+        background: "none",
+        border: "none",
+        padding: 0,
+        cursor: "pointer",
+        lineHeight: 1,
+      }}
+    >
+      Radar
+    </button>
+  );
+}
+
 function Nav({ children }: { children: ReactNode }) {
   return (
     <div
@@ -673,16 +700,7 @@ function WizardScreen({
   return (
     <div style={{ minHeight: "100vh", background: T.pageBg }}>
       <Nav>
-        <span
-          style={{
-            fontWeight: 800,
-            fontSize: 16,
-            color: T.ink,
-            letterSpacing: "-.02em",
-          }}
-        >
-          Radar
-        </span>
+        <RadarBrand onClick={() => navigate({ screen: "wizard" })} />
         <LiveBadge />
       </Nav>
 
@@ -2751,16 +2769,7 @@ function AssetScreen({
     <div style={{ minHeight: "100vh", background: T.pageBg }}>
       <Nav>
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <span
-            style={{
-              fontWeight: 800,
-              fontSize: 16,
-              color: T.ink,
-              letterSpacing: "-.02em",
-            }}
-          >
-            Radar
-          </span>
+          <RadarBrand onClick={() => navigate({ screen: "wizard" })} />
           <span style={{ color: T.border }}>|</span>
           <button
             style={navLink}
@@ -3305,16 +3314,7 @@ function AssetGate({
   return (
     <div style={{ minHeight: "100vh", background: T.pageBg }}>
       <Nav>
-        <span
-          style={{
-            fontWeight: 800,
-            fontSize: 16,
-            color: T.ink,
-            letterSpacing: "-.02em",
-          }}
-        >
-          Radar
-        </span>
+        <RadarBrand onClick={() => navigate({ screen: "wizard" })} />
         <LiveBadge />
       </Nav>
       <div
@@ -3495,16 +3495,7 @@ function LiftScreen({
   const nav = (
     <Nav>
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-        <span
-          style={{
-            fontWeight: 800,
-            fontSize: 16,
-            color: T.ink,
-            letterSpacing: "-.02em",
-          }}
-        >
-          Radar
-        </span>
+        <RadarBrand onClick={() => navigate({ screen: "wizard" })} />
         <span style={{ color: T.border }}>|</span>
         <button
           style={navLink}
