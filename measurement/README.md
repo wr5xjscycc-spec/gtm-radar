@@ -19,6 +19,7 @@ src/
   dispatch.ts           # query→engine dispatch harness (fans QueryRecord to adapters per target_engines)
   labeling.ts           # citation→page mapping + CASE-CONTROL labeling (losers come only from the pool)
   measurement.ts        # deriveEngineResult() + buildMeasurementRow() (contract-shaped rows)
+  pipeline.ts           # buildLabeledRows(): query + engineResult + pool → case-control-labeled rows
 scripts/
   p0-smoke.ts           # live "one engine, one citation" run (NOT in CI)
 tests/
@@ -67,6 +68,7 @@ Scoped to the OpenAI-only decision, so the multi-engine provisioning collapses i
 - **Dispatch harness** (`src/dispatch.ts`) — `dispatchQuery(query, {apiKeys, registry, …})` fans a `QueryRecord` to its `target_engines` via an injectable engine registry (`DEFAULT_REGISTRY = { openai }`). Engines run concurrently with **per-engine isolation** (`Promise.allSettled`); outcomes partition into `results` / `skipped` (no adapter or no key) / `failures` (attempted, threw). Never throws on a per-engine failure.
 - **Citation→page mapping** (`src/labeling.ts` `mapCitationsToPages`) — maps cited domains back to candidate pages (cited? at what position?), keyed on normalized domain.
 - **Case-control labeling** (`src/labeling.ts` `labelCaseControl(citedDomains, candidatePool)`) — winners/losers are drawn **only** from the candidate pool: a loser is a pool page that wasn't cited, **never an arbitrary uncited page** (the selection-bias non-negotiable). A dedicated test asserts a page outside the pool is never labeled a loser.
+- **Composition / DoD** (`src/pipeline.ts` `buildLabeledRows(query, engineResult, candidatePool, …)`) — threads the units into the actual deliverable: one case-control-labeled `measurement` row per candidate page (`cited` = winner/loser), rows produced **only** for pool pages. An integration test (`tests/pipeline.test.ts`) runs the full chain `queries.json → dispatchQuery (real adapter, fetch mocked to the captured response) → buildLabeledRows` and asserts the labels (seraleads = winner @ position 1; syncgtm/salesmotion/apollo/outreach = losers).
 
 ### Assumptions noted (P2·2)
 - The **candidate pool is an explicit parameter**, not assembled here — the query→pool mapping (retrieved/considered + classic-search rank) is **P3·3**'s job and isn't pinned in the contract yet. `tests/fixtures/{queries,candidate-pool}.json` are lane-local mirrors of P3/P1 contract shapes for development; swap in real P3 data when it lands.
