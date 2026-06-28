@@ -22,6 +22,29 @@ const engine = v.union(
   v.literal("gemini"),
 );
 
+/**
+ * pingAnalysis — smallest possible reachability probe (no DB writes). Confirms the
+ * deployed Convex runtime can reach the Python analysis service through whatever
+ * ANALYSIS_SERVICE_URL points at (localhost in dev, cloudflared tunnel in demo).
+ * Isolates the network link before the full /fit and /estimate-lift round-trips.
+ */
+export const pingAnalysis = action({
+  args: {},
+  handler: async () => {
+    const baseUrl = process.env.ANALYSIS_SERVICE_URL || "http://localhost:8000";
+    const started = Date.now();
+    const res = await fetch(`${baseUrl}/health`);
+    const body = await res.text();
+    return {
+      baseUrl,
+      ok: res.ok,
+      status: res.status,
+      body,
+      latencyMs: Date.now() - started,
+    };
+  },
+});
+
 export const runFit = action({
   args: {
     workspaceId: v.id("workspaces"),
@@ -207,5 +230,194 @@ export const runFit = action({
     });
 
     return { jobId: serviceJobId, fitId: mf.id ?? null };
+  },
+});
+
+/**
+ * runLift — Convex → Python difference-in-differences round-trip (the causal layer).
+ *
+ * Mirrors {@link runFit}: POSTs a lift request to the Python analysis service's
+ * ``/estimate-lift`` endpoint, polls until the async job completes, and writes the
+ * result as a ``lift_result`` record via the sanctioned mutation
+ * (``api.records.insertLiftResult``). A ``lift_result`` is the ONLY record allowed to
+ * carry causal (claim_rung=2) language — it is earned solely from this randomized
+ * matched-pair DiD path, never from observational ``model_fit`` coefficients.
+ *
+ * The same SSRF hardening as runFit applies: the service-supplied ``job_id`` is
+ * validated against ``^[A-Za-z0-9_-]+$`` and ``encodeURIComponent``-escaped before it
+ * is ever interpolated into the poll URL.
+ *
+ * Required env config: ANALYSIS_SERVICE_URL (default http://localhost:8000).
+ */
+export const runLift = action({
+  args: {
+    workspaceId: v.id("workspaces"),
+    experiment_id: v.id("experiments"),
+    experiment: v.object({
+      id: v.string(),
+      customer_id: v.string(),
+      pairs: v.array(
+        v.object({
+          treatment_page: v.string(),
+          control_page: v.string(),
+          match_covars: v.optional(
+            v.record(v.string(), v.union(v.number(), v.string())),
+          ),
+        }),
+      ),
+      baseline_window: v.string(),
+      post_window: v.string(),
+      status: v.optional(v.string()),
+      publish_event_ts: v.optional(v.string()),
+    }),
+    // Windowed (baseline + post) measurement rows for the experiment's pages.
+    // Passed through as-is to the DiD estimator (it filters by engine + page itself).
+    measurements: v.array(v.any()),
+    engine: v.optional(engine),
+    computed_at: v.optional(v.string()),
+    lift_id: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const baseUrl = process.env.ANALYSIS_SERVICE_URL || "http://localhost:8000";
+
+    // Capture one timestamp: send its ISO form to the service (echoed onto the
+    // LiftResult), persist its numeric form to the DB (the schema wants a number).
+    const now = Date.now();
+    const computedAtIso = new Date(now).toISOString();
+
+    const liftRequest = {
+      experiment: {
+        id: args.experiment.id,
+        customer_id: args.experiment.customer_id,
+        pairs: args.experiment.pairs.map((p) => ({
+          treatment_page: p.treatment_page,
+          control_page: p.control_page,
+          ...(p.match_covars !== undefined
+            ? { match_covars: p.match_covars }
+            : {}),
+        })),
+        baseline_window: args.experiment.baseline_window,
+        post_window: args.experiment.post_window,
+        ...(args.experiment.status !== undefined
+          ? { status: args.experiment.status }
+          : {}),
+        ...(args.experiment.publish_event_ts !== undefined
+          ? { publish_event_ts: args.experiment.publish_event_ts }
+          : {}),
+      },
+      measurements: args.measurements,
+      engine: args.engine ?? "openai",
+      computed_at: args.computed_at ?? computedAtIso,
+      lift_id: args.lift_id ?? `lift_${now}`,
+    };
+
+    // 1) POST the lift request to the Python service.
+    let serviceJobId: string;
+    try {
+      const res = await fetch(`${baseUrl}/estimate-lift`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(liftRequest),
+      });
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`POST /estimate-lift returned ${res.status}: ${body}`);
+      }
+      const liftJob: { job_id: string; status: string } = await res.json();
+      // Guard the downstream poll path: never interpolate an unvalidated
+      // service-supplied id into a URL (path-traversal / SSRF hardening).
+      if (!/^[A-Za-z0-9_-]+$/.test(liftJob.job_id ?? "")) {
+        throw new Error(
+          `service returned an invalid job_id: ${JSON.stringify(liftJob.job_id)}`,
+        );
+      }
+      serviceJobId = liftJob.job_id;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(`lift submit failed: ${msg}`);
+    }
+
+    // 2) Poll until the job is complete or failed.
+    const pollDelayMs = 2000;
+    const maxPolls = 150; // 5 min
+    let result: unknown = null;
+    let pollError: string | undefined;
+    let completed = false;
+
+    for (let i = 0; i < maxPolls; i++) {
+      await new Promise((resolve) => setTimeout(resolve, pollDelayMs));
+      try {
+        const pollRes = await fetch(
+          `${baseUrl}/estimate-lift/${encodeURIComponent(serviceJobId)}`,
+        );
+        if (!pollRes.ok) {
+          const body = await pollRes.text();
+          throw new Error(
+            `GET /estimate-lift/${serviceJobId} returned ${pollRes.status}: ${body}`,
+          );
+        }
+        const job: { status: string; result?: unknown; error?: string } =
+          await pollRes.json();
+
+        if (job.status === "complete") {
+          result = job.result ?? null;
+          completed = true;
+          break;
+        }
+        if (job.status === "failed") {
+          pollError = job.error ?? "lift job failed without an error message";
+          completed = true;
+          break;
+        }
+        // still queued / running — keep polling
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        pollError = `poll error: ${msg}`;
+        completed = true;
+        break;
+      }
+    }
+
+    if (!completed) {
+      pollError = "lift job did not complete within the polling timeout";
+    }
+    if (pollError) {
+      throw new Error(pollError);
+    }
+
+    // 3) Write the lift_result record.
+    const lr = result as {
+      id?: string;
+      experiment_id: string;
+      estimate: number;
+      ci_low: number;
+      ci_high: number;
+      p_value?: number | null;
+      verdict: "worked" | "no_effect" | "inconclusive";
+      claim_rung?: number;
+      computed_at: string;
+    };
+
+    await ctx.runMutation(api.records.insertLiftResult, {
+      workspaceId: args.workspaceId,
+      // Use the Convex experiment id, never the Python-echoed experiment.id.
+      experiment_id: args.experiment_id,
+      estimate: lr.estimate,
+      ci_low: lr.ci_low,
+      ci_high: lr.ci_high,
+      // p_value is Optional on the LiftResult (null at degenerate N) but the record
+      // requires a number; 1.0 == "no significance" is the honest fill for null.
+      p_value: lr.p_value ?? 1.0,
+      verdict: lr.verdict,
+      claim_rung: lr.claim_rung ?? 2,
+      // Persist the numeric timestamp (schema wants a number, not the ISO string).
+      computed_at: now,
+    });
+
+    return {
+      jobId: serviceJobId,
+      liftId: lr.id ?? null,
+      verdict: lr.verdict,
+    };
   },
 });

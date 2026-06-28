@@ -1,0 +1,1095 @@
+{
+ "output": {
+  "data": [
+   {
+    "domains": [
+     "slack.com"
+    ],
+    "websites": [
+     "slack.com"
+    ],
+    "preferred_name": "Slack",
+    "names": [
+     "Slack Technologies, Inc.",
+     "Slack",
+     "Tiny Speck"
+    ],
+    "standard_industries": [
+     "Information Technology",
+     "Software",
+     "Artificial Intelligence"
+    ],
+    "short_description": "Slack is a cloud-based communication and collaboration platform for teams.",
+    "employee_count_consensus": {
+     "gte": 2657,
+     "lte": 2657
+    },
+    "funding_stage": "acquired",
+    "historical_headcount": {
+     "latest_snapshot_date": "2025-12-01",
+     "snapshots": [
+      {
+       "date": "2022-12-01",
+       "employees": 13771
+      },
+      {
+       "date": "2023-01-01",
+       "employees": 13421
+      },
+      {
+       "date": "2023-02-01",
+       "employees": 13304
+      },
+      {
+       "date": "2023-03-01",
+       "employees": 12715
+      },
+      {
+       "date": "2023-04-01",
+       "employees": 12248
+      },
+      {
+       "date": "2023-05-01",
+       "employees": 11980
+      },
+      {
+       "date": "2023-06-01",
+       "employees": 11821
+      },
+      {
+       "date": "2023-07-01",
+       "employees": 11645
+      },
+      {
+       "date": "2023-08-01",
+       "employees": 11549
+      },
+      {
+       "date": "2023-09-01",
+       "employees": 11351
+      },
+      {
+       "date": "2023-10-01",
+       "employees": 11273
+      },
+      {
+       "date": "2023-11-01",
+       "employees": 11277
+      },
+      {
+       "date": "2023-12-01",
+       "employees": 11248
+      },
+      {
+       "date": "2024-01-01",
+       "employees": 11056
+      },
+      {
+       "date": "2024-02-01",
+       "employees": 11145
+      },
+      {
+       "date": "2024-03-01",
+       "employees": 11064
+      },
+      {
+       "date": "2024-04-01",
+       "employees": 10998
+      },
+      {
+       "date": "2024-05-01",
+       "employees": 10920
+      },
+      {
+       "date": "2024-06-01",
+       "employees": 10887
+      },
+      {
+       "date": "2024-07-01",
+       "employees": 10781
+      },
+      {
+       "date": "2024-08-01",
+       "employees": 10751
+      },
+      {
+       "date": "2024-09-01",
+       "employees": 10633
+      },
+      {
+       "date": "2024-10-01",
+       "employees": 10486
+      },
+      {
+       "date": "2024-11-01",
+       "employees": 10431
+      },
+      {
+       "date": "2024-12-01",
+       "employees": 10369
+      },
+      {
+       "date": "2025-01-01",
+       "employees": 10218
+      },
+      {
+       "date": "2025-02-01",
+       "employees": 10096
+      },
+      {
+       "date": "2025-03-01",
+       "employees": 10019
+      },
+      {
+       "date": "2025-04-01",
+       "employees": 9868
+      },
+      {
+       "date": "2025-05-01",
+       "employees": 9810
+      },
+      {
+       "date": "2025-06-01",
+       "employees": 9810
+      },
+      {
+       "date": "2025-07-01",
+       "employees": 9696
+      },
+      {
+       "date": "2025-08-01",
+       "employees": 9615
+      },
+      {
+       "date": "2025-09-01",
+       "employees": 9626
+      },
+      {
+       "date": "2025-10-01",
+       "employees": 9556
+      },
+      {
+       "date": "2025-11-01",
+       "employees": 9534
+      },
+      {
+       "date": "2025-12-01",
+       "employees": 9530
+      }
+     ],
+     "growth": {
+      "1m": {
+       "percent": -0.00042,
+       "quantity": -4
+      },
+      "2m": {
+       "percent": -0.00272,
+       "quantity": -26
+      },
+      "3m": {
+       "percent": -0.00997,
+       "quantity": -96
+      },
+      "6m": {
+       "percent": -0.02854,
+       "quantity": -280
+      },
+      "12m": {
+       "percent": -0.08091,
+       "quantity": -839
+      },
+      "18m": {
+       "percent": -0.12464,
+       "quantity": -1357
+      },
+      "24m": {
+       "percent": -0.15274,
+       "quantity": -1718
+      },
+      "36m": {
+       "percent": -0.30797,
+       "quantity": -4241
+      }
+     }
+    },
+    "li_job_posts_stats": {
+     "total_count": 431,
+     "seniority_stats": {
+      "Associate": {
+       "count": 5,
+       "fraction": 0.01160092807424594
+      },
+      "Director": {
+       "count": 18,
+       "fraction": 0.04176334106728538
+      },
+      "Mid-Senior level": {
+       "count": 408,
+       "fraction": 0.9466357308584686
+      }
+     },
+     "employment_type_stats": {
+      "Full-time": {
+       "count": 431,
+       "fraction": 1
+      }
+     },
+     "country_location_stats": {
+      "AUS": {
+       "count": 3,
+       "fraction": 0.0069605568445475635
+      },
+      "CAN": {
+       "count": 4,
+       "fraction": 0.009280742459396751
+      },
+      "CHE": {
+       "count": 1,
+       "fraction": 0.002320185614849188
+      },
+      "FIN": {
+       "count": 1,
+       "fraction": 0.002320185614849188
+      },
+      "GBR": {
+       "count": 5,
+       "fraction": 0.01160092807424594
+      },
+      "IRL": {
+       "count": 13,
+       "fraction": 0.030162412993039442
+      },
+      "ISR": {
+       "count": 1,
+       "fraction": 0.002320185614849188
+      },
+      "JPN": {
+       "count": 1,
+       "fraction": 0.002320185614849188
+      },
+      "MEX": {
+       "count": 1,
+       "fraction": 0.002320185614849188
+      },
+      "NLD": {
+       "count": 1,
+       "fraction": 0.002320185614849188
+      },
+      "NOR": {
+       "count": 1,
+       "fraction": 0.002320185614849188
+      },
+      "SWE": {
+       "count": 1,
+       "fraction": 0.002320185614849188
+      },
+      "USA": {
+       "count": 398,
+       "fraction": 0.9234338747099768
+      }
+     },
+     "puree_job_functions_stats": {
+      "Analyst": {
+       "count": 40,
+       "fraction": 0.09280742459396751
+      },
+      "Art / Creative": {
+       "count": 2,
+       "fraction": 0.004640371229698376
+      },
+      "Business Development": {
+       "count": 14,
+       "fraction": 0.03248259860788863
+      },
+      "Customer Service": {
+       "count": 2,
+       "fraction": 0.004640371229698376
+      },
+      "Design": {
+       "count": 20,
+       "fraction": 0.04640371229698376
+      },
+      "Engineering": {
+       "count": 331,
+       "fraction": 0.7679814385150812
+      },
+      "Information Technology": {
+       "count": 328,
+       "fraction": 0.7610208816705336
+      },
+      "Management": {
+       "count": 2,
+       "fraction": 0.004640371229698376
+      },
+      "Manufacturing": {
+       "count": 2,
+       "fraction": 0.004640371229698376
+      },
+      "Marketing": {
+       "count": 18,
+       "fraction": 0.04176334106728538
+      },
+      "Product Management": {
+       "count": 17,
+       "fraction": 0.03944315545243619
+      },
+      "Project Management": {
+       "count": 1,
+       "fraction": 0.002320185614849188
+      },
+      "Research": {
+       "count": 40,
+       "fraction": 0.09280742459396751
+      },
+      "Sales": {
+       "count": 17,
+       "fraction": 0.03944315545243619
+      }
+     },
+     "standard_industries_stats": {
+      "Information Technology": {
+       "count": 431,
+       "fraction": 1
+      }
+     },
+     "job_location_type_stats": {
+      "On-site": {
+       "count": 282,
+       "fraction": 0.654292343387471
+      },
+      "Remote": {
+       "count": 15,
+       "fraction": 0.03480278422273782
+      }
+     }
+    },
+    "li_industries": [
+     {
+      "id": "synth-Software & SaaS",
+      "name": "Software & SaaS"
+     }
+    ],
+    "alt_keywords": [
+     "enterprise software",
+     "unified communication",
+     "software",
+     "information technology",
+     "information technology & services",
+     "technology, information & internet",
+     "collaboration",
+     "productivity",
+     "team communication",
+     "cloud-based platform",
+     "channels",
+     "integrations",
+     "real-time messaging",
+     "project management",
+     "remote work",
+     "ai tools",
+     "automation",
+     "security",
+     "compliance",
+     "freemium model",
+     "user-friendly interface",
+     "enterprise solutions",
+     "customer support",
+     "workflow automation",
+     "digital ecosystem",
+     "task management",
+     "video conferencing",
+     "audio messaging",
+     "cross-platform accessibility",
+     "organizational efficiency",
+     "integration capabilities",
+     "diverse industries",
+     "scalable solutions",
+     "customer engagement",
+     "information sharing",
+     "team alignment",
+     "remote teams",
+     "business communication",
+     "digital collaboration",
+     "employee engagement",
+     "agile workflows",
+     "customizable platform",
+     "data security",
+     "incident response",
+     "information overload",
+     "user experience",
+     "customer feedback",
+     "value realization",
+     "business productivity",
+     "communication tools",
+     "software integration",
+     "team collaboration",
+     "workplace efficiency",
+     "enterprises",
+     "computer software",
+     "b2b",
+     "computer & network security",
+     "ux"
+    ]
+   },
+   {
+    "domains": [
+     "gitlab.com",
+     "about.gitlab.com"
+    ],
+    "websites": [
+     "about.gitlab.com"
+    ],
+    "preferred_name": "GitLab",
+    "names": [
+     "GitLab",
+     "GitLab Inc."
+    ],
+    "standard_industries": [
+     "Information Technology",
+     "Software",
+     "Security"
+    ],
+    "short_description": "GitLab is a web-based Git repository manager that offers a variety of features for software development teams.",
+    "employee_count_consensus": {
+     "gte": 3409,
+     "lte": 3409
+    },
+    "funding_stage": "public",
+    "historical_headcount": {
+     "latest_snapshot_date": "2025-12-01",
+     "snapshots": [
+      {
+       "date": "2022-12-01",
+       "employees": 4671
+      },
+      {
+       "date": "2023-01-01",
+       "employees": 4653
+      },
+      {
+       "date": "2023-02-01",
+       "employees": 4496
+      },
+      {
+       "date": "2023-03-01",
+       "employees": 4448
+      },
+      {
+       "date": "2023-04-01",
+       "employees": 4419
+      },
+      {
+       "date": "2023-05-01",
+       "employees": 4479
+      },
+      {
+       "date": "2023-06-01",
+       "employees": 4479
+      },
+      {
+       "date": "2023-07-01",
+       "employees": 4502
+      },
+      {
+       "date": "2023-08-01",
+       "employees": 4570
+      },
+      {
+       "date": "2023-09-01",
+       "employees": 4593
+      },
+      {
+       "date": "2023-10-01",
+       "employees": 4603
+      },
+      {
+       "date": "2023-11-01",
+       "employees": 4657
+      },
+      {
+       "date": "2023-12-01",
+       "employees": 4640
+      },
+      {
+       "date": "2024-01-01",
+       "employees": 4661
+      },
+      {
+       "date": "2024-02-01",
+       "employees": 4787
+      },
+      {
+       "date": "2024-03-01",
+       "employees": 4820
+      },
+      {
+       "date": "2024-04-01",
+       "employees": 4872
+      },
+      {
+       "date": "2024-05-01",
+       "employees": 4913
+      },
+      {
+       "date": "2024-06-01",
+       "employees": 4979
+      },
+      {
+       "date": "2024-07-01",
+       "employees": 4971
+      },
+      {
+       "date": "2024-08-01",
+       "employees": 5041
+      },
+      {
+       "date": "2024-09-01",
+       "employees": 5068
+      },
+      {
+       "date": "2024-10-01",
+       "employees": 5099
+      },
+      {
+       "date": "2024-11-01",
+       "employees": 5114
+      },
+      {
+       "date": "2024-12-01",
+       "employees": 5157
+      },
+      {
+       "date": "2025-01-01",
+       "employees": 5149
+      },
+      {
+       "date": "2025-02-01",
+       "employees": 5285
+      },
+      {
+       "date": "2025-03-01",
+       "employees": 5380
+      },
+      {
+       "date": "2025-04-01",
+       "employees": 5442
+      },
+      {
+       "date": "2025-05-01",
+       "employees": 5484
+      },
+      {
+       "date": "2025-06-01",
+       "employees": 5525
+      },
+      {
+       "date": "2025-07-01",
+       "employees": 5604
+      },
+      {
+       "date": "2025-08-01",
+       "employees": 5637
+      },
+      {
+       "date": "2025-09-01",
+       "employees": 5666
+      },
+      {
+       "date": "2025-10-01",
+       "employees": 5678
+      },
+      {
+       "date": "2025-11-01",
+       "employees": 5705
+      },
+      {
+       "date": "2025-12-01",
+       "employees": 5707
+      }
+     ],
+     "growth": {
+      "1m": {
+       "percent": 0.00035,
+       "quantity": 2
+      },
+      "2m": {
+       "percent": 0.00511,
+       "quantity": 29
+      },
+      "3m": {
+       "percent": 0.00724,
+       "quantity": 41
+      },
+      "6m": {
+       "percent": 0.03294,
+       "quantity": 182
+      },
+      "12m": {
+       "percent": 0.10665,
+       "quantity": 550
+      },
+      "18m": {
+       "percent": 0.14621,
+       "quantity": 728
+      },
+      "24m": {
+       "percent": 0.22996,
+       "quantity": 1067
+      },
+      "36m": {
+       "percent": 0.22179,
+       "quantity": 1036
+      }
+     }
+    },
+    "li_job_posts_stats": {
+     "total_count": 3228,
+     "seniority_stats": {
+      "Associate": {
+       "count": 306,
+       "fraction": 0.09479553903345725
+      },
+      "Director": {
+       "count": 157,
+       "fraction": 0.04863692688971499
+      },
+      "Executive": {
+       "count": 4,
+       "fraction": 0.0012391573729863693
+      },
+      "Internship": {
+       "count": 7,
+       "fraction": 0.0021685254027261464
+      },
+      "Mid-Senior level": {
+       "count": 2753,
+       "fraction": 0.8528500619578686
+      }
+     },
+     "employment_type_stats": {
+      "Contract": {
+       "count": 54,
+       "fraction": 0.016728624535315983
+      },
+      "Full-time": {
+       "count": 3095,
+       "fraction": 0.9587980173482032
+      },
+      "Internship": {
+       "count": 78,
+       "fraction": 0.024163568773234202
+      }
+     },
+     "country_location_stats": {
+      "ARE": {
+       "count": 19,
+       "fraction": 0.005885997521685254
+      },
+      "AUS": {
+       "count": 171,
+       "fraction": 0.05297397769516728
+      },
+      "AUT": {
+       "count": 4,
+       "fraction": 0.0012391573729863693
+      },
+      "BEL": {
+       "count": 54,
+       "fraction": 0.016728624535315983
+      },
+      "BRA": {
+       "count": 50,
+       "fraction": 0.015489467162329617
+      },
+      "CAN": {
+       "count": 494,
+       "fraction": 0.15303593556381662
+      },
+      "CHE": {
+       "count": 1,
+       "fraction": 0.0003097893432465923
+      },
+      "CHL": {
+       "count": 40,
+       "fraction": 0.012391573729863693
+      },
+      "CRI": {
+       "count": 44,
+       "fraction": 0.013630731102850062
+      },
+      "DEU": {
+       "count": 140,
+       "fraction": 0.04337050805452292
+      },
+      "ESP": {
+       "count": 22,
+       "fraction": 0.006815365551425031
+      },
+      "FRA": {
+       "count": 50,
+       "fraction": 0.015489467162329617
+      },
+      "GBR": {
+       "count": 308,
+       "fraction": 0.09541511771995044
+      },
+      "IDN": {
+       "count": 45,
+       "fraction": 0.013940520446096654
+      },
+      "IND": {
+       "count": 298,
+       "fraction": 0.09231722428748451
+      },
+      "IRL": {
+       "count": 150,
+       "fraction": 0.046468401486988845
+      },
+      "ISR": {
+       "count": 10,
+       "fraction": 0.0030978934324659233
+      },
+      "ITA": {
+       "count": 9,
+       "fraction": 0.0027881040892193307
+      },
+      "JPN": {
+       "count": 41,
+       "fraction": 0.012701363073110285
+      },
+      "KOR": {
+       "count": 20,
+       "fraction": 0.006195786864931847
+      },
+      "LVA": {
+       "count": 2,
+       "fraction": 0.0006195786864931846
+      },
+      "MEX": {
+       "count": 41,
+       "fraction": 0.012701363073110285
+      },
+      "NLD": {
+       "count": 252,
+       "fraction": 0.07806691449814127
+      },
+      "NZL": {
+       "count": 25,
+       "fraction": 0.007744733581164808
+      },
+      "PER": {
+       "count": 35,
+       "fraction": 0.01084262701363073
+      },
+      "PHL": {
+       "count": 18,
+       "fraction": 0.0055762081784386614
+      },
+      "SGP": {
+       "count": 55,
+       "fraction": 0.01703841387856258
+      },
+      "SWE": {
+       "count": 6,
+       "fraction": 0.0018587360594795538
+      },
+      "TZA": {
+       "count": 2,
+       "fraction": 0.0006195786864931846
+      },
+      "USA": {
+       "count": 783,
+       "fraction": 0.2425650557620818
+      },
+      "ZAF": {
+       "count": 39,
+       "fraction": 0.012081784386617101
+      }
+     },
+     "puree_job_functions_stats": {
+      "Accounting": {
+       "count": 63,
+       "fraction": 0.019516728624535316
+      },
+      "Administrative": {
+       "count": 15,
+       "fraction": 0.004646840148698885
+      },
+      "Analyst": {
+       "count": 19,
+       "fraction": 0.005885997521685254
+      },
+      "Art / Creative": {
+       "count": 93,
+       "fraction": 0.028810408921933085
+      },
+      "Business Development": {
+       "count": 760,
+       "fraction": 0.23543990086741015
+      },
+      "Consulting": {
+       "count": 5,
+       "fraction": 0.0015489467162329617
+      },
+      "Design": {
+       "count": 93,
+       "fraction": 0.028810408921933085
+      },
+      "Education": {
+       "count": 7,
+       "fraction": 0.0021685254027261464
+      },
+      "Engineering": {
+       "count": 1082,
+       "fraction": 0.3351920693928129
+      },
+      "Finance": {
+       "count": 107,
+       "fraction": 0.03314745972738538
+      },
+      "Human Resources": {
+       "count": 80,
+       "fraction": 0.024783147459727387
+      },
+      "Information Technology": {
+       "count": 1704,
+       "fraction": 0.5278810408921933
+      },
+      "Legal": {
+       "count": 43,
+       "fraction": 0.01332094175960347
+      },
+      "Management": {
+       "count": 210,
+       "fraction": 0.06505576208178439
+      },
+      "Manufacturing": {
+       "count": 208,
+       "fraction": 0.0644361833952912
+      },
+      "Marketing": {
+       "count": 170,
+       "fraction": 0.052664188351920695
+      },
+      "Product Management": {
+       "count": 84,
+       "fraction": 0.026022304832713755
+      },
+      "Project Management": {
+       "count": 68,
+       "fraction": 0.021065675340768277
+      },
+      "Public Relations": {
+       "count": 14,
+       "fraction": 0.004337050805452293
+      },
+      "Purchasing": {
+       "count": 3,
+       "fraction": 0.0009293680297397769
+      },
+      "Research": {
+       "count": 19,
+       "fraction": 0.005885997521685254
+      },
+      "Sales": {
+       "count": 881,
+       "fraction": 0.2729244114002478
+      },
+      "Supply Chain": {
+       "count": 3,
+       "fraction": 0.0009293680297397769
+      },
+      "Training": {
+       "count": 7,
+       "fraction": 0.0021685254027261464
+      },
+      "Writing / Editing": {
+       "count": 14,
+       "fraction": 0.004337050805452293
+      }
+     },
+     "standard_industries_stats": {
+      "Government": {
+       "count": 20,
+       "fraction": 0.006195786864931847
+      },
+      "Healthcare": {
+       "count": 20,
+       "fraction": 0.006195786864931847
+      },
+      "Information Technology": {
+       "count": 3207,
+       "fraction": 0.9934944237918215
+      },
+      "Nonprofit": {
+       "count": 20,
+       "fraction": 0.006195786864931847
+      },
+      "Software": {
+       "count": 3205,
+       "fraction": 0.9928748451053284
+      }
+     },
+     "job_location_type_stats": {
+      "On-site": {
+       "count": 4,
+       "fraction": 0.0012391573729863693
+      },
+      "Remote": {
+       "count": 1869,
+       "fraction": 0.578996282527881
+      }
+     }
+    },
+    "li_industries": [
+     {
+      "id": "96",
+      "name": "IT Services and IT Consulting",
+      "primary": true
+     }
+    ],
+    "alt_keywords": [
+     "saas",
+     "web development",
+     "developer tools",
+     "open source",
+     "software",
+     "enterprise software",
+     "information technology",
+     "information technology & services",
+     "computer software: prepackaged software",
+     "technology",
+     "it services & it consulting",
+     "devsecops",
+     "ai-powered software",
+     "automated software delivery",
+     "continuous integration",
+     "source code management",
+     "security compliance",
+     "cloud native deployment",
+     "kubernetes integration",
+     "machine learning development",
+     "multi-cloud compatibility",
+     "vulnerability management",
+     "dependency scanning",
+     "gdpr compliance",
+     "software supply chain security",
+     "automated testing",
+     "message routing",
+     "git repository management",
+     "performance metrics",
+     "issue tracking",
+     "dev tools integration",
+     "agile development",
+     "security as code",
+     "collaboration platform",
+     "team productivity",
+     "software development lifecycle",
+     "open source devsecops",
+     "ci/cd pipeline automation",
+     "code suggestions",
+     "code refactoring tools",
+     "root cause analysis",
+     "security automation",
+     "enterprise-grade compliance",
+     "real-time analytics",
+     "devops tools consolidation",
+     "privacy-first ai",
+     "secure coding practices",
+     "integrated testing",
+     "ai-driven development",
+     "value stream management",
+     "cloud infrastructure management",
+     "developer experience enhancements",
+     "automated merge requests",
+     "test generation",
+     "analytics dashboard",
+     "software artifact management",
+     "api security",
+     "software vulnerability remediation",
+     "agile performance metrics",
+     "cloud service deployment options",
+     "visibility across teams",
+     "version control",
+     "ci/cd pipelines",
+     "project management",
+     "collaboration",
+     "automation",
+     "open-source",
+     "cloud-native",
+     "scalability",
+     "enterprise readiness",
+     "agile methodologies",
+     "customer success",
+     "training & education",
+     "integration",
+     "transparency",
+     "productivity",
+     "innovation",
+     "software delivery",
+     "remote work",
+     "community collaboration",
+     "software excellence",
+     "customer focus",
+     "pain points",
+     "industry verticals",
+     "technology services",
+     "financial services",
+     "healthcare",
+     "automotive",
+     "it services",
+     "competitive advantage",
+     "unified platform",
+     "cost reduction",
+     "faster time to market",
+     "enhanced security",
+     "customer demographics",
+     "market segments",
+     "small business",
+     "mid-market",
+     "large enterprises",
+     "global reach",
+     "user engagement",
+     "software tools",
+     "developer experience",
+     "continuous improvement",
+     "computer software",
+     "enterprises",
+     "b2b",
+     "health care",
+     "health, wellness & fitness",
+     "hospital & health care"
+    ]
+   },
+   {
+    "domains": [
+     "linear.app"
+    ],
+    "preferred_name": "Linear",
+    "standard_industries": [
+     "Information Technology",
+     "Software"
+    ]
+   },
+   {
+    "domains": [
+     "bigmining.com"
+    ],
+    "preferred_name": "Big Mining Co",
+    "standard_industries": [
+     "Mining"
+    ],
+    "employee_count_consensus": {
+     "gte": 40000,
+     "lte": 40000
+    }
+   }
+  ]
+ },
+ "chargeInfo": {
+  "method": "charged-now",
+  "creditsCharged": 0
+ },
+ "advice": [
+  "Your search returned companies."
+ ]
+}

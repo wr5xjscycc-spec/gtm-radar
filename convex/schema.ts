@@ -196,6 +196,12 @@ export default defineSchema({
     ),
     baseline_window: v.optional(v.string()),
     post_window: v.optional(v.string()),
+    // The single feature the treatment arm changed (e.g. "comparison_table") and
+    // the category it sits in — set at design time, carried straight onto the
+    // `intervention` moat row when the lift resolves. Optional: pre-design and
+    // hand-seeded experiments may omit them.
+    feature_changed: v.optional(v.string()),
+    category: v.optional(v.string()),
     status: v.union(
       v.literal("designing"),
       v.literal("awaiting_publish"),

@@ -76,6 +76,9 @@ export function App() {
       vertical: v.vertical,
       own_domain: v.own_domain,
       competitor_domains: v.competitors,
+      // Onboarding fires the live OpenAI baseline sweep so the board fills with
+      // real "you N/M vs competitor" data (Card A trigger).
+      measure_on_create: true,
     });
 
   return (
@@ -520,7 +523,10 @@ function CausalBlock({ liftResults }: { liftResults: any[] }) {
 // per engine, live. The demo's emotional core. Shows a measurement (not a model).
 function GutPunchBoard({ gut, measurements }: { gut: any; measurements: any[] }) {
   const prog = measurementProgress(measurements);
-  if (!gut) {
+  // Show the "measuring…" skeleton until the first real rows land — `gut` is a
+  // non-null object with an empty `perEngine` during the ~30–60s live sweep, so
+  // gate on perEngine being non-empty, not just on `gut` existing.
+  if (!gut || Object.keys(gut.perEngine).length === 0) {
     return (
       <>
         <div className="gut__head">
