@@ -37,4 +37,12 @@ Everything the model consumes: both feature families + the grounded query set. W
 - Tests: `tests/parsers.test.ts`, `tests/features.test.ts`, `tests/content.test.ts`, `tests/offpage.test.ts`, `tests/queries.test.ts` (all vendors + LLM mocked). Independent review (anchor-bias) fixed the cache-key completeness gap + subjective-honesty + parser-heuristic findings before commit.
 - Known deferred (Minor, by design): `normalizeUrl` preserves path case (case-sensitive paths exist) and doesn't sort query params — revisit for join integrity in Phase 4.
 
+**Phase 3 — Candidate pool & extractor hardening ✅** (`p3/phase-3-candidate-pool`)
+Makes P2's labels and P4's features trustworthy. Reads `query`/`page`; writes the candidate-pool table + agreement metrics.
+
+- `src/candidates.ts` — `buildCandidatePool()` via a SERP classic-search **port**: for each query, the ranked "could-have-been-cited" set = the **case-control loser pool** (cited→winner, in-pool-but-not-cited→loser; NOT "all uncited pages"). Normalized url keys, within-query best-rank dedupe, no cross-query dedupe, honest top-N cap, all-or-nothing rank policy.
+- `src/agreement.ts` — `computeAgreement()` / `evaluateExtractor()`: inter-rater/LLM agreement on the subjective features. Cohen's κ (categoricals) + within-tolerance (numerics). **Honesty:** every feature reported even when mediocre; negative κ disclosed as-is (never floored); attrition surfaced (`attempted`/`skipped`). Agreement is descriptive **measurement**, never a causal claim.
+- New artifacts in `types.ts` (`CandidatePoolEntry`, `AgreementReport`) are a **contract-extension proposal** beyond the 9 records — freeze with P2/P4 sign-off before they build against them.
+- Tests: `tests/candidates.test.ts`, `tests/agreement.test.ts` (SERP + LLM mocked). Independent review (anchor-bias) → verdict ship; fixed the agreement-range doc (κ ∈ [-1,1], not [0,1]), added attrition counts, made rank policy all-or-nothing.
+
 Run: `npm test --workspace sourcing`.

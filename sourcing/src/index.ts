@@ -11,3 +11,5 @@ export * from "./features";
 export * from "./content";
 export * from "./offpage";
 export * from "./queries";
+export * from "./candidates";
+export * from "./agreement";

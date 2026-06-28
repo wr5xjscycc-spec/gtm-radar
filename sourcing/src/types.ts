@@ -158,3 +158,71 @@ export interface Query {
   seed_source: SeedSource;
   target_engines: Engine[];
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 3 — P3-produced artifacts BEYOND the 9-record contract.
+//
+// CONTRACT.md does not (yet) specify these, but the P3 phase card sanctions them:
+//  - the CANDIDATE POOL P2 labels against (case-control losers), and
+//  - the subjective-feature AGREEMENT metrics that back the honesty story.
+// They are cross-lane interfaces (P2 reads the pool; P4/P1 surface agreement), so
+// treat these shapes as a contract-extension PROPOSAL — freeze with P2/P4 sign-off
+// (ORCHESTRATION §4) before those lanes build against them.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Provenance of a candidate page (classic-search source). Extensible. */
+export type CandidateSource = "serp_organic";
+
+/**
+ * One row of the candidate-pool table: a page that ranks in CLASSIC search for a
+ * query = the "could-have-been-cited" set. P2 labels these — cited → winner,
+ * in-pool-but-not-cited → loser. This case-control pool is what keeps the "loser"
+ * label from being an arbitrary uncited page (red-team / ORCHESTRATION §6).
+ */
+export interface CandidatePoolEntry {
+  /** FK to `query`. */
+  query_id: string;
+  /** Normalized page URL (join key to `page`). */
+  page_url: string;
+  /** 1-based classic-search rank. */
+  rank: number;
+  source: CandidateSource;
+}
+
+/** How agreement was measured for a given subjective feature. */
+export type AgreementMethod = "exact" | "cohens_kappa" | "within_tolerance";
+
+/** Measured agreement for ONE subjective feature (honest measurement-error disclosure). */
+export interface FeatureAgreement {
+  feature: keyof SubjectiveContentFeatures;
+  method: AgreementMethod;
+  /**
+   * Agreement score, RANGE DEPENDS ON `method`:
+   *  - "cohens_kappa"     → κ ∈ [-1, 1]  (negative = below-chance; reported as-is,
+   *                         NEVER floored — clamping a mediocre/negative κ would
+   *                         violate the "disclose the number" honesty rule).
+   *  - "within_tolerance" → rate ∈ [0, 1].
+   *  - "exact"            → raw agreement rate ∈ [0, 1] (κ fallback when one rater
+   *                         is constant, i.e. pe == 1).
+   * Consumers (P2/P4) MUST NOT validate this to [0,1] — see the κ branch.
+   */
+  agreement: number;
+  /** Number of items compared for this feature. */
+  n: number;
+}
+
+/**
+ * Extractor-hardening report: per-feature agreement + the versioned extractor that
+ * produced the predictions. Reported even when agreement is mediocre (the card is
+ * explicit: disclose the number, don't hide it).
+ */
+export interface AgreementReport {
+  extractor_version: string;
+  features: FeatureAgreement[];
+  /** Size of the labeled subset actually compared (successful extractions only). */
+  n: number;
+  /** Items fed to the extractor (present for the run-the-extractor path). */
+  attempted?: number;
+  /** Items excluded because extraction failed loud (attrition visibility, not inferred from a low `n`). */
+  skipped?: number;
+}
