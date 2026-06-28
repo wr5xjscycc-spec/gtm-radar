@@ -29,8 +29,9 @@ export function wilsonInterval(
   n: number,
   z = 1.96,
 ): { low: number; high: number } {
-  // No trials ⇒ no information. Return the full [0,1] rather than dividing by zero.
-  if (n <= 0) return { low: 0, high: 1 };
+  // No trials (or non-finite input) ⇒ no information. Return the full [0,1] rather
+  // than dividing by zero or letting a NaN escape downstream into the sampler.
+  if (!Number.isFinite(n) || !Number.isFinite(successes) || n <= 0) return { low: 0, high: 1 };
 
   // Defensive clamp: a count outside [0, n] is a caller bug, not a real observation. Snap it to
   // the nearest valid extreme so the interval stays well-defined instead of escaping [0,1].
