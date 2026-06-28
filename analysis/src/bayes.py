@@ -45,6 +45,33 @@ Decisions a reviewer will check:
 - Row certainty ``weight`` (from P_cited CI width) is intentionally **not** folded
   into the likelihood yet — an unweighted Bernoulli is the conservative, robust
   choice; a weighted/hierarchical extension is deferred (Phase 6 graduation).
+
+Closing the alpha loop — informative empirical-Bayes priors (Step D)
+--------------------------------------------------------------------
+By default every coefficient's prior is centered at **0** (shrink-to-zero). When a
+feature has accumulated *measured* causal lift from prior randomized experiments
+(the moat; pooled by :func:`src.moat.aggregate_interventions`), the caller passes it
+in via ``prior_means`` and we re-center that coefficient's prior at the measured lift
+instead of 0. Concretely we keep the exact regularized-horseshoe structure but add a
+per-feature prior-mean **location offset** ``mu``::
+
+    beta_j = mu_j + (horseshoe deviation)_j
+
+i.e. the regularized horseshoe is placed on the *deviation from the measured lift*
+rather than on the coefficient itself. This is a standard, defensible empirical-Bayes
+construction: features with a prior shrink toward their measured lift, features
+without one (``mu_j == 0``) keep the identical shrink-to-zero horseshoe — so the
+no-prior path is byte-for-byte unchanged and fully backward compatible. At cold-start
+EPV the global scale ``tau`` pins the deviation toward 0, so the posterior is pulled
+decisively toward the measured lift; as real signal accrues the heavy local tails let
+the data move it away again. The measured lift is genuinely informative (it is earned
+from Rung-2 ``lift_result`` experiments), so this sharpens hypotheses cycle over cycle
+instead of re-deriving the same shrink-to-zero fit every time.
+
+We do NOT alter the ``noise_flag`` semantics: it stays ``ci_low <= 0 <= ci_high``. A
+feature whose measured lift is strong enough to push its whole credible interval off
+zero *should* stop being flagged noise — that is exactly the loop tightening the
+hypothesis from proprietary measured data.
 """
 
 from __future__ import annotations
@@ -78,6 +105,19 @@ def _all_noise(feature_names: list[str]) -> list[Coefficient]:
     ]
 
 
+def _prior_version(prior_means: dict[str, float] | None) -> str:
+    """Reproducibility tag for the returned ``ModelFit``.
+
+    Empty (or absent) ``prior_means`` keeps the constant horseshoe version — the
+    current behavior. A non-empty prior set encodes how much accumulated measured
+    evidence fed this fit, so the metadata *varies as the moat compounds* and a
+    re-run can be tied back to exactly the body of measured lift it consumed.
+    """
+    if prior_means:
+        return f"empirical-reghs-v{len(prior_means)}"
+    return PRIOR_VERSION
+
+
 def _finite(value: float, fallback: float = 0.0) -> float:
     """Scrub NaN/inf so the ModelFit stays JSON-serializable (Convex can't parse NaN)."""
     return float(value) if np.isfinite(value) else fallback
@@ -104,7 +144,11 @@ def _tau0(n_effective: int, n_features: int) -> float:
     return (p0 / (d - p0)) * (_LOGISTIC_SIGMA / np.sqrt(n))
 
 
-def _model_fit(table: ModelingTable, coefficients: list[Coefficient]) -> ModelFit:
+def _model_fit(
+    table: ModelingTable,
+    coefficients: list[Coefficient],
+    prior_version: str = PRIOR_VERSION,
+) -> ModelFit:
     # ModelingTable carries no customer_id; the orchestrator that owns the FitRequest
     # populates it before persisting. top_hypotheses is filled by a separate module.
     return ModelFit(
@@ -113,7 +157,7 @@ def _model_fit(table: ModelingTable, coefficients: list[Coefficient]) -> ModelFi
         category=table.category,
         engine=table.engine,  # type: ignore[arg-type]
         coefficients=coefficients,
-        prior_version=PRIOR_VERSION,
+        prior_version=prior_version,
         top_hypotheses=[],
         n_companies=table.n_companies,
         n_rows=table.n_rows,
@@ -127,6 +171,7 @@ def fit_bayesian_logistic(
     tune: int = 500,
     chains: int = 2,
     seed: int = 0,
+    prior_means: dict[str, float] | None = None,
 ) -> ModelFit:
     """Fit the regularized-horseshoe Bayesian logistic generator for one table.
 
@@ -134,19 +179,26 @@ def fit_bayesian_logistic(
     numeric ``features`` across rows (both ``page__*`` and ``company__*``),
     z-score standardized with zero-variance columns dropped. Returns a ``ModelFit``
     whose coefficients carry a 90% credible interval and a ``noise_flag``.
+
+    ``prior_means`` (``feature -> measured-lift mean on the coefficient/log-odds
+    scale``) re-centers the prior of any listed feature at its empirical measured
+    lift instead of 0 (empirical-Bayes; see the module docstring). Features absent
+    from ``prior_means`` keep the identical shrink-to-zero horseshoe, so passing
+    ``None``/``{}`` is byte-for-byte the prior behavior.
     """
+    prior_version = _prior_version(prior_means)
     feature_union = _feature_union(table)
     n_rows = table.n_rows
 
     # Degenerate: too few rows to fit anything -> nothing claimable.
     if n_rows < 2:
-        return _model_fit(table, _all_noise(feature_union))
+        return _model_fit(table, _all_noise(feature_union), prior_version)
 
     y = np.array([1 if row.label == "winner" else 0 for row in table.rows], dtype=int)
 
     # Degenerate: a single outcome class can't identify any coefficient.
     if len(np.unique(y)) < 2:
-        return _model_fit(table, _all_noise(feature_union))
+        return _model_fit(table, _all_noise(feature_union), prior_version)
 
     x_raw = np.array(
         [[float(row.features.get(name, 0.0)) for name in feature_union] for row in table.rows],
@@ -166,10 +218,19 @@ def fit_bayesian_logistic(
 
     # Degenerate: nothing left to estimate after dropping constants.
     if x.shape[1] == 0:
-        return _model_fit(table, _all_noise(feature_union))
+        return _model_fit(table, _all_noise(feature_union), prior_version)
 
     d = x.shape[1]
     tau0 = _tau0(table.n_companies, d)
+
+    # Empirical-Bayes prior LOCATION offset, aligned to the kept (standardized)
+    # features. A feature carrying an accumulated measured causal lift is centered at
+    # that lift; every other feature keeps mu_j == 0 (the standard shrink-to-zero
+    # horseshoe). prior_means is interpreted on the same coefficient/log-odds scale
+    # as the fitted ``beta`` (the contract's documented convention).
+    priors = prior_means or {}
+    mu = np.array([float(priors.get(name, 0.0)) for name in kept_features], dtype=float)
+    has_prior = bool(np.any(mu != 0.0))
 
     with pm.Model():
         # Non-centered regularized horseshoe.
@@ -178,7 +239,15 @@ def fit_bayesian_logistic(
         tau = pm.HalfCauchy("tau", tau0)
         c2 = pm.InverseGamma("c2", _SLAB_DF / 2.0, (_SLAB_DF / 2.0) * _SLAB_SCALE**2)
         local_tilde_sq = c2 * local**2 / (c2 + tau**2 * local**2)
-        beta = pm.Deterministic("beta", z * tau * pt.sqrt(local_tilde_sq))
+        # The horseshoe shrinks the DEVIATION from the prior location mu (= 0 for
+        # features without measured lift). When has_prior is False mu is all-zeros and
+        # this is the identical expression as before — no numerical change at all.
+        if has_prior:
+            beta = pm.Deterministic(
+                "beta", pt.as_tensor_variable(mu) + z * tau * pt.sqrt(local_tilde_sq)
+            )
+        else:
+            beta = pm.Deterministic("beta", z * tau * pt.sqrt(local_tilde_sq))
         intercept = pm.Normal("intercept", 0.0, 10.0)  # wide, per spec
         pm.Bernoulli("y", logit_p=intercept + pt.dot(x, beta), observed=y)
 
@@ -214,4 +283,4 @@ def fit_bayesian_logistic(
             )
         )
 
-    return _model_fit(table, coefficients)
+    return _model_fit(table, coefficients, prior_version)

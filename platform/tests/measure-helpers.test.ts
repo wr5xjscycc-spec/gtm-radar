@@ -110,10 +110,16 @@ describe("buildPoolFromCompanies", () => {
     expect(pool.filter((p) => p.company_domain === "rival.io")).toHaveLength(1);
   });
 
-  it("ignores non-battlefield roles when folding in companies", () => {
+  it("folds in BOTH battlefield and competitor roles, but not the customer row", () => {
     const pool = buildPoolFromCompanies("acme.com", [], [
-      { domain: "other.com", role: "competitor" }, // not battlefield -> not added here
+      { domain: "rival.io", role: "competitor" }, // named/discovered competitor -> measured
+      { domain: "disco.com", role: "battlefield" }, // Fiber-discovered -> measured
+      { domain: "acme.com", role: "customer" }, // the customer itself -> not re-added
     ]);
-    expect(pool.map((p) => p.company_domain)).toEqual(["acme.com"]);
+    expect(pool.map((p) => p.company_domain).sort()).toEqual([
+      "acme.com",
+      "disco.com",
+      "rival.io",
+    ]);
   });
 });

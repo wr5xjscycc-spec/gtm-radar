@@ -69,6 +69,51 @@ export const getWorkspace = query({
   },
 });
 
+/**
+ * Persist the workspace's category/vertical once sourcing has derived it from the
+ * customer's site (the onboarding URL alone can't tell us the space). Stored so
+ * Fiber discovery and query generation share ONE source of truth instead of the
+ * empty default. Idempotent patch.
+ */
+export const setVertical = mutation({
+  args: { workspaceId: v.id("workspaces"), vertical: v.string() },
+  handler: async (ctx, { workspaceId, vertical }) => {
+    await requireWorkspace(ctx, workspaceId);
+    await ctx.db.patch(workspaceId, { vertical: vertical.trim() });
+  },
+});
+
+/** Persist the AI-generated comparison-page brief (owner: P3 generation step). */
+export const setAssetBrief = mutation({
+  args: {
+    workspaceId: v.id("workspaces"),
+    brief: v.object({
+      headline: v.string(),
+      subhead: v.string(),
+      points: v.array(v.string()),
+      recommendations: v.optional(
+        v.array(
+          v.object({
+            title: v.string(),
+            detail: v.string(),
+            kind: v.optional(
+              v.union(v.literal("measured"), v.literal("hypothesis")),
+            ),
+            evidence: v.optional(v.string()),
+          }),
+        ),
+      ),
+      competitor_domain: v.string(),
+      model_version: v.string(),
+      generated_at: v.number(),
+    }),
+  },
+  handler: async (ctx, { workspaceId, brief }) => {
+    await requireWorkspace(ctx, workspaceId);
+    await ctx.db.patch(workspaceId, { asset_brief: brief });
+  },
+});
+
 export const listWorkspaces = query({
   args: {},
   handler: async (ctx) => {

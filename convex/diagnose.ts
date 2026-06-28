@@ -110,7 +110,21 @@ export function pickFeatureToChange(
     }>;
     top_hypotheses?: string[];
   }>,
+  // COMPOUND: pooled measured lifts from the interventional dataset (this category).
+  // A feature with a DECISIVE positive MEASURED lift outranks a merely correlational
+  // hypothesis — we test what proprietary data shows actually works first. Empty
+  // until experiments complete, so the loop bootstraps from the model_fit.
+  provenLifts: ReadonlyArray<{
+    feature: string;
+    mean_lift: number;
+    ci_low: number;
+  }> = [],
 ): string | null {
+  const proven = provenLifts
+    .filter((p) => p.ci_low > 0) // decisive positive measured effect
+    .sort((a, b) => b.mean_lift - a.mean_lift);
+  if (proven.length > 0) return proven[0].feature;
+
   if (fits.length === 0) return null;
   const latest = fits[fits.length - 1];
   const coeffs = (latest.coefficients ?? [])
@@ -207,13 +221,27 @@ export const runFitForWorkspace = action({
       new Set(fitRows.flatMap((r) => Object.keys(r.features ?? {}))),
     );
 
+    // COMPOUND (empirical-Bayes prior): pull pooled measured lifts for this category
+    // and feed them as per-feature prior means, so the fit is SHARPER from proprietary
+    // measured data instead of identical every cycle. Empty until experiments
+    // complete → the Python side keeps the shrink-to-zero horseshoe (cold start).
+    const fitCategory = args.category ?? ws.vertical;
+    const proven = await ctx.runQuery(api.moat.provenLiftsByCategory, {
+      workspaceId: args.workspaceId,
+      category: fitCategory,
+      engine: eng,
+    });
+    const prior_means: Record<string, number> = {};
+    for (const p of proven) prior_means[p.feature] = p.mean_lift;
+
     const fit = await ctx.runAction(api.analysis.runFit, {
       workspaceId: args.workspaceId,
       customer_id: args.workspaceId,
-      category: args.category ?? ws.vertical,
+      category: fitCategory,
       engine: eng,
       rows: fitRows,
       ...(featureNames.length > 0 ? { features: featureNames } : {}),
+      ...(Object.keys(prior_means).length > 0 ? { prior_means } : {}),
     });
 
     // Chain stage 11: design an experiment off the freshly-written hypotheses,
@@ -284,12 +312,18 @@ export const designExperiment = action({
       return { skipped: "need >=2 own pages to form a pair", ownPages: ownUrls.length };
     }
 
-    // feature_changed: explicit arg → top hypothesis → safe default.
+    // feature_changed: explicit arg → proven measured lift → top hypothesis → default.
     const fits = await ctx.runQuery(api.board.modelFits, {
       workspaceId: args.workspaceId,
     });
+    const provenForPick = ws.vertical
+      ? await ctx.runQuery(api.moat.provenLiftsByCategory, {
+          workspaceId: args.workspaceId,
+          category: ws.vertical,
+        })
+      : [];
     const feature_changed =
-      args.feature ?? pickFeatureToChange(fits) ?? "comparison_table";
+      args.feature ?? pickFeatureToChange(fits, provenForPick) ?? "comparison_table";
 
     // Pair adjacent own pages into treatment/control matched pairs.
     const pairs: Array<{ treatment_page: string; control_page: string }> = [];

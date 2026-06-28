@@ -32,6 +32,36 @@ export default defineSchema({
     competitor_domains: v.array(v.string()), // normalized
     query_pack_id: v.optional(v.string()),
     owner: v.optional(v.string()), // auth subject; optional pre-auth
+    // AI-generated comparison-page brief (owner: P3 generation step). Written after
+    // the sweep once the top-cited competitor is known; grounded in the customer's
+    // understanding. Optional — the UI falls back to generic copy until it lands.
+    asset_brief: v.optional(
+      v.object({
+        headline: v.string(),
+        subhead: v.string(),
+        points: v.array(v.string()),
+        // Optional so briefs written before this field existed stay schema-valid;
+        // new briefs always include it.
+        recommendations: v.optional(
+          v.array(
+            v.object({
+              title: v.string(),
+              detail: v.string(),
+              // "measured" = backed by the interventional dataset; "hypothesis" =
+              // LLM-suggested to test. Optional so briefs written before this field
+              // stay valid (treated as hypotheses by the UI).
+              kind: v.optional(
+                v.union(v.literal("measured"), v.literal("hypothesis")),
+              ),
+              evidence: v.optional(v.string()),
+            }),
+          ),
+        ),
+        competitor_domain: v.string(),
+        model_version: v.string(),
+        generated_at: v.number(),
+      }),
+    ),
   }).index("by_owner", ["owner"]),
 
   // 2. company (owner: P3; key: normalized domain).

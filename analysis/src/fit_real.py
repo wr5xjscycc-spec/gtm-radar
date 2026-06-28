@@ -22,7 +22,7 @@ real (wide) credible intervals, not the dummy's deterministic jitter.
 
 from __future__ import annotations
 
-from .bayes import PRIOR_VERSION, fit_bayesian_logistic
+from .bayes import fit_bayesian_logistic
 from .contract import FitRequest, ModelFit
 from .hypotheses import select_top_hypotheses
 from .labeling import ci_weight
@@ -88,16 +88,23 @@ def real_model_fit(
     ``Callable[[FitRequest, str], ModelFit]`` signature the :class:`src.jobs.JobStore`
     expects. Bridges the request to a ``ModelingTable``, fits, selects up to three
     surviving hypotheses, and re-stamps the fit with the caller's ``fit_id`` /
-    ``customer_id`` (which the table does not carry) and the real ``prior_version``.
+    ``customer_id`` (which the table does not carry).
+
+    ``request.prior_means`` (accumulated measured causal lift; empty for a cold-start
+    request) is forwarded into the fit as an informative empirical-Bayes prior. The
+    fit itself stamps the ``prior_version``: ``"phase4-reghs-v0"`` when no priors were
+    used, or the evidence-counting ``"empirical-reghs-v{n}"`` when they were — never
+    the Phase-0 stub version — so we deliberately do NOT overwrite it here.
     """
     table = modeling_table_from_request(request)
-    fit = fit_bayesian_logistic(table, draws=draws, tune=tune, chains=chains)
+    fit = fit_bayesian_logistic(
+        table, draws=draws, tune=tune, chains=chains, prior_means=request.prior_means
+    )
     top = select_top_hypotheses(fit)
     return fit.model_copy(
         update={
             "id": fit_id,
             "customer_id": request.customer_id,
-            "prior_version": PRIOR_VERSION,  # "phase4-reghs-v0" — never the stub version
             "top_hypotheses": top,
         }
     )

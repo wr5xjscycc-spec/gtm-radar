@@ -29,8 +29,14 @@ import type { FiberClient } from "../sourcing/src/fiber";
 import type { Company } from "../sourcing/src/types";
 import { createFiberLive } from "../sourcing/src/fiber-live";
 import { enrichFirmographics } from "../sourcing/src/firmographics";
-import { extractUnderstanding, applyUnderstanding } from "../sourcing/src/understanding";
+import {
+  extractUnderstanding,
+  applyUnderstanding,
+  type UnderstandingResult,
+} from "../sourcing/src/understanding";
+import { extractCompetitors } from "../sourcing/src/competitors";
 import { createChatOpenAI } from "../sourcing/src/chat-openai";
+import { normalizeDomain } from "./lib/domain";
 
 /**
  * Empty Fiber stub for the thin slice: `find-similar-companies` returns nothing,
@@ -42,6 +48,21 @@ const EMPTY_FIBER: FiberClient = {
     return [];
   },
 };
+
+/** Mega-corp roots whose competing PRODUCT lives on a subdomain (Firebase →
+ *  firebase.google.com). Registrable-domain normalization collapses them to the
+ *  generic parent, which is useless as a labelled competitor, so we drop them. */
+const GENERIC_PARENT_DOMAINS = new Set<string>([
+  "google.com",
+  "amazon.com",
+  "microsoft.com",
+  "apple.com",
+  "facebook.com",
+  "meta.com",
+  "oracle.com",
+  "ibm.com",
+  "alibaba.com",
+]);
 
 /** Result of a battlefield build. Explicit so the handler's return type doesn't
  *  have to be inferred through the `api` cycle (buildBattlefield → measureWorkspace). */
@@ -79,10 +100,84 @@ export const buildBattlefield = action({
     // EMPTY_FIBER thin slice (customer + typed competitors only). Same seam, so the
     // gate is a one-line swap and tests/seed scripts stay key-free.
     const fiberKey = process.env.FIBER_API_KEY;
+    const openaiKey = process.env.OPENAI_API_KEY;
+    const chat = openaiKey ? createChatOpenAI({ apiKey: openaiKey }) : null;
+
+    // STEP A — read the customer's site ONCE and extract its understanding. Used both
+    // to persist the category (the wizard creates the workspace with an empty
+    // `vertical`, and measure.ts reads it so query generation is on-topic) and to
+    // identify real competitors in Step B. Best-effort: any failure just falls back.
+    let verticalHint = (workspace.vertical ?? "").trim();
+    let customerUnderstanding: UnderstandingResult | undefined;
+    if (fiberKey && chat) {
+      try {
+        const probe = createFiberLive({ apiKey: fiberKey });
+        const siteText = await probe.describe(workspace.own_domain);
+        if (siteText) {
+          customerUnderstanding = await extractUnderstanding(chat, {
+            domain: workspace.own_domain,
+            name: workspace.name,
+            siteText,
+          });
+          const cat = (customerUnderstanding.understanding.category ?? "").trim();
+          if (!verticalHint && cat) {
+            verticalHint = cat;
+            await ctx.runMutation(api.customers.setVertical, {
+              workspaceId: args.workspaceId,
+              vertical: cat,
+            });
+          }
+        }
+      } catch {
+        /* category derivation is best-effort */
+      }
+    }
+
+    // STEP B — identify the customer's REAL direct competitors from its description.
+    // Fiber's find-similar ranks by FIRMOGRAPHIC similarity (same size + industry
+    // tag), which returns unrelated companies (atmosfy.io / cyzone.cn for a database
+    // company). The model names the actual alternatives a buyer evaluates. We fall
+    // back to Fiber's firmographic discovery ONLY when this plus the typed competitors
+    // name nothing (obscure company, no input) — so the board is never empty.
+    let namedCompetitors: string[] = [];
+    if (chat && customerUnderstanding) {
+      try {
+        const u = customerUnderstanding.understanding;
+        const res = await extractCompetitors(chat, {
+          domain: workspace.own_domain,
+          name: workspace.name,
+          category: u.category,
+          description: [u.positioning, customerUnderstanding.whatYouAre]
+            .filter(Boolean)
+            .join(". "),
+        });
+        // Drop mega-corp roots: a product like Firebase / AWS Amplify lives on a
+        // subdomain (firebase.google.com), but registrable-domain normalization
+        // collapses it to "google.com" / "amazon.com" — too generic to display or
+        // measure cleanly. The model's product-specific picks (supabase.com,
+        // hasura.io) survive; only the ambiguous parent roots are dropped.
+        namedCompetitors = res.competitors
+          .map((c) => normalizeDomain(c.domain))
+          .filter(
+            (d) => d && d !== workspace.own_domain && !GENERIC_PARENT_DOMAINS.has(d),
+          );
+      } catch {
+        /* competitor identification is best-effort */
+      }
+    }
+
+    const competitorDomains = Array.from(
+      new Set([...workspace.competitor_domains, ...namedCompetitors]),
+    ).filter((d) => d && d !== workspace.own_domain);
+
+    // Keep a live Fiber client for firmographics enrichment regardless. Only let its
+    // firmographic find-similar BUILD the battlefield when we have no real competitor
+    // to anchor on; otherwise the battlefield is exactly the named/typed competitors.
     const live = fiberKey
-      ? createFiberLive({ apiKey: fiberKey, verticalHint: workspace.vertical })
+      ? createFiberLive({ apiKey: fiberKey, verticalHint })
       : null;
-    const fiber: FiberClient = live?.client ?? EMPTY_FIBER;
+    const fiber: FiberClient =
+      competitorDomains.length === 0 ? live?.client ?? EMPTY_FIBER : EMPTY_FIBER;
 
     // 2. CompanyWriter port -> the sanctioned `api.records.upsertCompany` mutation.
     //    Pass only the optional enrichment families that are actually present so we
@@ -114,7 +209,7 @@ export const buildBattlefield = action({
     const companies = await buildCompanyLayer(fiber, writer, {
       customerDomain: workspace.own_domain,
       customerName: workspace.name,
-      competitorDomains: workspace.competitor_domains,
+      competitorDomains,
     });
 
     // 4. ENRICH (live only): firmographics for every company (free from the sweep
@@ -124,22 +219,26 @@ export const buildBattlefield = action({
     //    failed enrichment never blanks the board, and coverage flags stay honest.
     let enriched = 0;
     if (live) {
-      const openaiKey = process.env.OPENAI_API_KEY;
-      const chat = openaiKey ? createChatOpenAI({ apiKey: openaiKey }) : null;
       const results = await Promise.allSettled(
         companies.map(async (company) => {
           let c = await enrichFirmographics(live.firmographics, company);
           if (chat && c.role === "customer") {
             try {
-              const siteText = await live.describe(c.domain);
-              if (siteText) {
-                const result = await extractUnderstanding(chat, {
-                  domain: c.domain,
-                  name: c.name,
-                  siteText,
-                });
-                c = applyUnderstanding(c, result);
+              // Reuse the understanding we already extracted to seed the vertical;
+              // only extract here if we didn't (e.g. the workspace had a preset
+              // vertical, so the pre-discovery derivation was skipped).
+              let result = customerUnderstanding;
+              if (!result) {
+                const siteText = await live.describe(c.domain);
+                if (siteText) {
+                  result = await extractUnderstanding(chat, {
+                    domain: c.domain,
+                    name: c.name,
+                    siteText,
+                  });
+                }
               }
+              if (result) c = applyUnderstanding(c, result);
             } catch {
               /* understanding is best-effort — never fail the company on it */
             }

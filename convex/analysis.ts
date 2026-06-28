@@ -52,6 +52,10 @@ export const runFit = action({
     category: v.string(),
     engine,
     prior_version: v.optional(v.string()),
+    // COMPOUND: per-feature empirical-Bayes prior means (measured lift from the
+    // interventional dataset). The Python fit centers those coefficients' priors on
+    // the measured value instead of zero, so hypotheses sharpen with evidence.
+    prior_means: v.optional(v.record(v.string(), v.number())),
     rows: v.array(
       v.object({
         page_url: v.string(),
@@ -82,6 +86,7 @@ export const runFit = action({
         ...(r.features !== undefined ? { features: r.features } : {}),
       })),
       ...(args.features !== undefined ? { features: args.features } : {}),
+      ...(args.prior_means !== undefined ? { prior_means: args.prior_means } : {}),
     };
 
     // 1) Create an analysis_jobs record.

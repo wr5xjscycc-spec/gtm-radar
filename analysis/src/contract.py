@@ -49,6 +49,13 @@ class FitRequest(BaseModel):
     rows: list[FitRow]
     # Optional explicit feature list; if omitted we take the union of keys across rows.
     features: Optional[list[str]] = None
+    # Accumulated MEASURED causal lift fed back in as an informative prior — the
+    # "closing the loop" input. Maps ``feature -> empirical measured-lift mean on the
+    # model's coefficient scale (log-odds)``, pooled from prior randomized experiments
+    # (see ``moat.aggregate_interventions``). Empty dict = no prior evidence = the
+    # current shrink-to-zero behavior, so existing callers are unaffected. The Convex
+    # action populates this over the wire; the Python fit only accepts and uses it.
+    prior_means: dict[str, float] = Field(default_factory=dict)
 
     @field_validator("rows")
     @classmethod

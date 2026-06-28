@@ -23,6 +23,15 @@ export const battlefield = query({
   },
 });
 
+/** The AI-generated comparison-page brief for this workspace (null until written). */
+export const assetBrief = query({
+  args: { workspaceId: v.id("workspaces") },
+  handler: async (ctx, { workspaceId }) => {
+    const ws = await requireWorkspace(ctx, workspaceId);
+    return ws.asset_brief ?? null;
+  },
+});
+
 /** Raw measurement rows for a workspace (descriptive truth). */
 export const measurements = query({
   args: { workspaceId: v.id("workspaces") },

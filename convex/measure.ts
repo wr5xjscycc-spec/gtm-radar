@@ -30,6 +30,8 @@ import { api } from "./_generated/api";
 import { v } from "convex/values";
 
 import { runOpenAIQuery } from "../measurement/src/engines/openai";
+import { createChatOpenAI } from "../sourcing/src/chat-openai";
+import { generateBuyerQueries } from "../sourcing/src/queryGen";
 import { buildLabeledRows } from "../measurement/src/pipeline";
 import { normalizeDomain } from "../measurement/src/normalize";
 import type { CandidatePage, SeedSource } from "../measurement/src/contract-records";
@@ -132,7 +134,17 @@ export function buildPoolFromCompanies(
   const pool = [...base];
   let added = 0;
   for (const c of companies) {
-    if (c.role !== "battlefield" || !c.domain || seen.has(c.domain)) continue;
+    // Measure BOTH Fiber-discovered battlefield rows AND named/typed competitor
+    // rows. Competitors identified from the customer's description are written to
+    // the companies table with role "competitor" (not into ws.competitor_domains),
+    // so a battlefield-only filter would leave them discovered-but-never-measured —
+    // the gut-punch then shows "TOP COMPETITOR · 0 out of —" with an empty board.
+    if (
+      (c.role !== "battlefield" && c.role !== "competitor") ||
+      !c.domain ||
+      seen.has(c.domain)
+    )
+      continue;
     seen.add(c.domain);
     pool.push({ company_domain: c.domain, url: c.domain, role: "candidate" });
     if (++added >= cap) break;
@@ -204,6 +216,8 @@ export async function runMeasurementSweep(
     windowTag: WindowTag;
     nQueries?: number;
     experimentId?: Id<"experiments">;
+    /** Pre-built seed queries (e.g. LLM-generated). Falls back to the templates. */
+    seeds?: Array<{ text: string; seed_source: SeedSource }>;
   },
 ): Promise<SweepSummary> {
   const apiKey =
@@ -211,7 +225,10 @@ export async function runMeasurementSweep(
       ? process.env.OPENAI_API_KEY
       : undefined) ?? "";
 
-  const seeds = buildSeedQueries(opts.vertical, opts.nQueries);
+  const seeds =
+    opts.seeds && opts.seeds.length > 0
+      ? opts.seeds
+      : buildSeedQueries(opts.vertical, opts.nQueries);
 
   // 1) Persist every seed query FIRST, so the query-review view fills regardless of
   //    whether a later engine call fails. Capture the real Convex queryIds.
@@ -322,12 +339,52 @@ export const measureWorkspace = action({
       workspaceId: args.workspaceId,
     });
     const pool = buildPoolFromCompanies(ws.own_domain, ws.competitor_domains, companies);
+
+    // Query generation must be about the founder's ACTUAL space. The wizard creates
+    // the workspace with an empty `vertical` (only the URL is known up front), so the
+    // old code fell back to the generic literal "software" — producing useless seeds
+    // like "best software tools 2026" / "top software software compared" that the
+    // customer is never cited for. Prefer the category our site analysis already
+    // extracted (e.g. "serverless state platform") so the seeds are on-topic.
+    const customer = companies.find((c) => c.role === "customer");
+    const u = customer?.understanding;
+    const analyzedCategory = u?.category?.trim();
+    const vertical = (ws.vertical?.trim() || analyzedCategory || "software").toLowerCase();
+
+    // Generate NATURAL buyer questions for the company's real category instead of the
+    // rigid B2B-SaaS templates ("best <category> tools for B2B teams"), which produce
+    // nonsense for non-SaaS companies (e.g. Apple → "best consumer electronics tools").
+    // Best-effort: on any failure the sweep falls back to the templates.
+    const nQueries = args.nQueries ?? DEFAULT_N_QUERIES;
+    let seeds: Array<{ text: string; seed_source: SeedSource }> | undefined;
+    const openaiKey = process.env.OPENAI_API_KEY;
+    if (openaiKey && (analyzedCategory || ws.vertical)) {
+      try {
+        const chat = createChatOpenAI({ apiKey: openaiKey });
+        const competitor = companies.find((c) => c.role !== "customer")?.domain;
+        const texts = await generateBuyerQueries(chat, {
+          ownName: ws.name || ws.own_domain,
+          category: analyzedCategory ?? ws.vertical,
+          icp: u?.icp,
+          positioning: u?.positioning,
+          competitorName: competitor,
+          n: nQueries,
+        });
+        if (texts.length > 0) {
+          seeds = texts.map((text) => ({ text, seed_source: "keyword" as const }));
+        }
+      } catch {
+        /* fall back to template seeds */
+      }
+    }
+
     const summary = await runMeasurementSweep(ctx, {
       workspaceId: args.workspaceId,
-      vertical: ws.vertical,
+      vertical,
       candidatePool: pool,
       windowTag: "baseline",
       nQueries: args.nQueries,
+      seeds,
     });
 
     // Close stages 7-9: the descriptive baseline now exists, so schedule the
@@ -335,6 +392,14 @@ export const measureWorkspace = action({
     // designer). Scheduled as its own action so the Python fit round-trip gets a
     // fresh execution budget and a single failed query can't block the fit.
     await ctx.scheduler.runAfter(0, api.diagnose.runFitForWorkspace, {
+      workspaceId: args.workspaceId,
+    });
+
+    // The sweep just revealed the top-cited competitor, so generate the
+    // company-specific comparison-page brief now (the wizard + asset page render it
+    // instead of static copy). Scheduled as its own action — best-effort, never
+    // blocks the measurement return.
+    await ctx.scheduler.runAfter(0, api.asset.generateBrief, {
       workspaceId: args.workspaceId,
     });
 
