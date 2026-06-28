@@ -85,6 +85,7 @@ async function main() {
   const cite = await c.query(api.board.citationBoard, { workspaceId: ws });
   const battlefield = await c.query(api.board.battlefield, { workspaceId: ws });
   const gut = await c.query(api.board.gutPunch, { workspaceId: ws });
+  const diag = await c.query(api.board.diagnosis, { workspaceId: ws });
 
   console.log("workspaceId:", ws);
   console.log("own_domain stored as:", summary.workspace.own_domain, "(input was https://www.Acme.com/)");
@@ -96,15 +97,20 @@ async function main() {
   console.log("GUT-PUNCH (top competitor):", JSON.stringify(gut.perEngine.openai.topCompetitor));
 
   // Assertions — fail loudly if the thin slice doesn't hold
+  console.log("DIAGNOSIS rung:", diag.rung, "(1=hypothesis, 2=causal) · hasLiftResult:", diag.hasLiftResult);
   const ok =
     summary.workspace.own_domain === "acme.com" &&
     !summary.workspace.competitor_domains.includes("acme.com") &&
     summary.counts.companies === 3 &&
     summary.counts.measurements === 2 &&
     cite.perEngine.openai.cited === 1 &&
-    cite.perEngine.openai.total === 2;
+    cite.perEngine.openai.total === 2 &&
+    // claim-ladder: a model_fit exists but no lift_result -> causal stays LOCKED at rung 1
+    diag.rung === 1 &&
+    diag.hasLiftResult === false &&
+    diag.liftResults.length === 0;
   if (!ok) throw new Error("THIN-SLICE ASSERTIONS FAILED — see output above");
-  console.log("\n✅ THIN SLICE E2E OK — normalized join + gut-punch (1/2) rendered from live backend");
+  console.log("\n✅ DAY-1 E2E OK — gut-punch (1/2) + diagnosis at rung 1 (causal locked, no lift_result) from live backend");
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
