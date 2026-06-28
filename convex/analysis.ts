@@ -88,6 +88,11 @@ export const runFit = action({
         throw new Error(`POST /fit returned ${res.status}: ${body}`);
       }
       const fitJob: { job_id: string; status: string } = await res.json();
+      // Guard the downstream poll path: never interpolate an unvalidated
+      // service-supplied id into a URL (path-traversal / SSRF hardening).
+      if (!/^[A-Za-z0-9_-]+$/.test(fitJob.job_id ?? "")) {
+        throw new Error(`service returned an invalid job_id: ${JSON.stringify(fitJob.job_id)}`);
+      }
       serviceJobId = fitJob.job_id;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -118,7 +123,7 @@ export const runFit = action({
     for (let i = 0; i < maxPolls; i++) {
       await new Promise((resolve) => setTimeout(resolve, pollDelayMs));
       try {
-        const pollRes = await fetch(`${baseUrl}/fit/${serviceJobId}`);
+        const pollRes = await fetch(`${baseUrl}/fit/${encodeURIComponent(serviceJobId)}`);
         if (!pollRes.ok) {
           const body = await pollRes.text();
           throw new Error(`GET /fit/${serviceJobId} returned ${pollRes.status}: ${body}`);

@@ -25,7 +25,7 @@ if (!apiKey) {
   console.error("OPENAI_API_KEY not set. Add it to gtm-radar/.env (gitignored) and retry.");
   process.exit(1);
 }
-const model = process.env.OPENAI_MODEL || "gpt-4o";
+const model = process.env.OPENAI_MODEL || "gpt-5";
 
 // A representative buyer query — the kind of question a B2B buyer asks an answer engine.
 const query =

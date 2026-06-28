@@ -13,7 +13,10 @@ import { normalizeDomain } from "../normalize";
 import type { Citation, EngineQueryResult } from "../types";
 
 const RESPONSES_ENDPOINT = "https://api.openai.com/v1/responses";
-const DEFAULT_MODEL = "gpt-4o";
+// 5th-gen default. gpt-5 balances quality vs latency for measurement-sweep volume;
+// gpt-5.5 also works with web_search but is far slower (~90s/query), and gpt-5-mini
+// is the cheaper tier. Callers override per-query via params.model.
+const DEFAULT_MODEL = "gpt-5";
 /** Cap the error-body snippet so a huge HTML error page can't blow up the thrown message. */
 const ERROR_SNIPPET_LIMIT = 500;
 

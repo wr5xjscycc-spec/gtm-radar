@@ -134,7 +134,7 @@ describe("runOpenAIQuery", () => {
     expect(headers["Content-Type"]).toBe("application/json");
 
     const parsedBody = JSON.parse(calledInit!.body as string);
-    expect(parsedBody.model).toBe("gpt-4o"); // default applied when no model passed
+    expect(parsedBody.model).toBe("gpt-5"); // default applied when no model passed
     expect(parsedBody.input).toBe("best AI SDR tools for B2B outbound sales 2026");
     expect(parsedBody.tools).toEqual([{ type: "web_search" }]);
   });

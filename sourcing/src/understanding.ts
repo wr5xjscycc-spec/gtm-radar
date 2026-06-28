@@ -24,7 +24,7 @@ export interface ChatModel {
 }
 
 /** Stable version tag stamped into `company.source_versions.understanding`. */
-export const UNDERSTANDING_MODEL_VERSION = "gpt-4o-mini/understanding@v1";
+export const UNDERSTANDING_MODEL_VERSION = "gpt-5-mini/understanding@v1";
 
 /** Inputs to the understanding pass: the scraped site plus identity hints. */
 export interface UnderstandingInput {
