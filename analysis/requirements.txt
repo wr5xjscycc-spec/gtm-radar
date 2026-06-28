@@ -10,7 +10,7 @@ uvicorn>=0.30
 httpx>=0.27
 # Phase 1 — pandas row assembly + scikit-learn baseline yardstick (not shipped).
 scikit-learn>=1.4
-# Phase 4 (Bayesian hypothesis generator) — uncomment when implemented:
-# pymc>=5.10
+# Phase 4 (Bayesian hypothesis generator) — the honest day-1 model.
+pymc>=5.10
 # Phase 5 (DiD) also uses:
 # linearmodels>=6.0
