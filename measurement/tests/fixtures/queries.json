@@ -1,0 +1,10 @@
+[
+  {
+    "id": "q-ai-sdr-2026",
+    "customer_id": "cust-demo",
+    "vertical": "b2b-sales-tech",
+    "text": "What are the best AI SDR (sales development) tools for B2B outbound sales in 2026?",
+    "seed_source": "paa",
+    "target_engines": ["openai"]
+  }
+]
