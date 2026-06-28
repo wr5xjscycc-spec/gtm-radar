@@ -95,8 +95,59 @@ function Board({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
 
       <DiagnosisPanel diagnosis={diagnosis} />
 
+      <ExperimentConsole workspaceId={workspaceId} />
+
       <EnrichmentReview pages={pages} queries={queries} companies={battlefield} />
     </section>
+  );
+}
+
+// P1·5: experiment console + compliance. Controls are NEVER shown (Hawthorne);
+// the loop is gated (publish before running); Rung-2 causal renders only when a
+// lift_result exists.
+function ExperimentConsole({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
+  const feed = useQuery(api.experiments.consoleFeed, { workspaceId }) ?? [];
+  const requestPublish = useMutation(api.experiments.requestPublish);
+  const recordPublish = useMutation(api.experiments.recordPublish);
+  if (feed.length === 0) return null;
+  return (
+    <div style={{ margin: "16px 0" }}>
+      <h2>Experiments</h2>
+      {feed.map((e: any) => (
+        <div key={e._id} style={{ border: "1px solid #eee", borderRadius: 8, padding: 12, marginBottom: 8 }}>
+          <div>
+            <strong>{e.n_pairs} pair(s)</strong> · status: <code>{e.status}</code>
+          </div>
+          <small>treatment pages: {e.treatments.join(", ")}</small>
+          {/* control_page intentionally absent — Hawthorne */}
+          <div style={{ marginTop: 6 }}>
+            {e.status === "designing" && (
+              <button onClick={() => requestPublish({ experimentId: e._id })}>
+                Ready to publish
+              </button>
+            )}
+            {e.status === "awaiting_publish" && (
+              <button onClick={() => recordPublish({ experimentId: e._id })}>
+                ✅ I published it (start measuring)
+              </button>
+            )}
+            {e.status === "awaiting_publish" && (
+              <small style={{ color: "#b80", marginLeft: 8 }}>awaiting publication — slot expires in 14 days</small>
+            )}
+          </div>
+          {e.lift ? (
+            <div style={{ border: "1px solid #0a0", borderRadius: 6, padding: 8, marginTop: 8 }}>
+              <strong>Causal (experiment)</strong> — treated pages saw{" "}
+              {(e.lift.estimate * 100).toFixed(0)}% vs matched controls (CI{" "}
+              {(e.lift.ci_low * 100).toFixed(0)}–{(e.lift.ci_high * 100).toFixed(0)}%, p=
+              {e.lift.p_value}) — {e.lift.verdict}
+            </div>
+          ) : (
+            <small style={{ color: "#888" }}> · no causal result yet (Rung-2 locked)</small>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }
 

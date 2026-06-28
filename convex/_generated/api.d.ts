@@ -9,8 +9,11 @@
  */
 
 import type * as board from "../board.js";
+import type * as crons from "../crons.js";
 import type * as customers from "../customers.js";
+import type * as experiments from "../experiments.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_compliance from "../lib/compliance.js";
 import type * as lib_domain from "../lib/domain.js";
 import type * as records from "../records.js";
 
@@ -22,8 +25,11 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   board: typeof board;
+  crons: typeof crons;
   customers: typeof customers;
+  experiments: typeof experiments;
   "lib/auth": typeof lib_auth;
+  "lib/compliance": typeof lib_compliance;
   "lib/domain": typeof lib_domain;
   records: typeof records;
 }>;

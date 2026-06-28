@@ -204,6 +204,7 @@ export default defineSchema({
       v.literal("expired"),
     ),
     publish_event_ts: v.optional(v.number()),
+    awaiting_since: v.optional(v.number()), // P1 ops: when the publish slot started (14-day expiry)
   })
     .index("by_workspace", ["workspaceId"])
     .index("by_status", ["status"]),
