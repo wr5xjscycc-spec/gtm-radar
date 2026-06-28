@@ -39,8 +39,10 @@ import type { Engine, WindowTag } from "../measurement/src/types";
 const DEFAULT_MODEL = "gpt-5-mini";
 /** A hung query would otherwise burn the whole action — bound every call. */
 const QUERY_TIMEOUT_MS = 90_000; // gpt-5-mini + web_search can take 30-90s; parallel, so wall-clock ~= slowest
-const DEFAULT_N_QUERIES = 6;
-const MAX_N_QUERIES = 8; // cost guard (see plan §7: cap queries at 8)
+const DEFAULT_N_QUERIES = 8;
+const MAX_N_QUERIES = 16; // cost guard (~$0.02/query; 16 ≈ $0.32/sweep). More queries = more distinct cited domains.
+/** "high" web_search depth surfaces more sources per query (more citations). */
+const SEARCH_CONTEXT_SIZE = "high" as const;
 
 /** OpenAI-only in v1 (cross-engine overlap is ~11%; never merge engines). */
 const OPENAI_ENGINES: Engine[] = ["openai"];
@@ -63,6 +65,14 @@ const SEED_TEMPLATES: ReadonlyArray<(vertical: string) => string> = [
   (v) => `${v} alternatives worth evaluating`,
   (v) => `enterprise ${v} buyers guide`,
   (v) => `${v} tools with the best reviews`,
+  (v) => `${v} software for startups`,
+  (v) => `affordable ${v} tools`,
+  (v) => `${v} platforms with the best integrations`,
+  (v) => `leading ${v} companies`,
+  (v) => `${v} tools for small business`,
+  (v) => `open source ${v} options`,
+  (v) => `${v} software comparison and pricing`,
+  (v) => `what is the best ${v} tool for B2B SaaS`,
 ];
 
 export function buildSeedQueries(
@@ -198,6 +208,7 @@ export async function runMeasurementSweep(
         apiKey,
         model: DEFAULT_MODEL,
         fetchImpl: fetchWithTimeout,
+        searchContextSize: SEARCH_CONTEXT_SIZE,
       });
 
       const rows = buildLabeledRows({

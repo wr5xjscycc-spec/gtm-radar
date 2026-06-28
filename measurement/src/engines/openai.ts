@@ -116,13 +116,19 @@ export async function runOpenAIQuery(params: {
   apiKey: string;
   model?: string;
   fetchImpl?: typeof fetch;
+  /** Depth of the web_search retrieval. "high" surfaces more sources (more citations)
+   *  at modestly higher latency; omit for the API default (medium). */
+  searchContextSize?: "low" | "medium" | "high";
 }): Promise<EngineQueryResult> {
   const doFetch = params.fetchImpl ?? fetch;
 
+  const webSearch = params.searchContextSize
+    ? { type: "web_search", search_context_size: params.searchContextSize }
+    : { type: "web_search" };
   const body = JSON.stringify({
     model: params.model ?? DEFAULT_MODEL,
     input: params.query,
-    tools: [{ type: "web_search" }],
+    tools: [webSearch],
   });
 
   const response = await doFetch(RESPONSES_ENDPOINT, {
