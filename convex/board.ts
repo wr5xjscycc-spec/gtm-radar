@@ -81,7 +81,20 @@ export const gutPunch = query({
   handler: async (ctx, { workspaceId }) => {
     const ws = await requireWorkspace(ctx, workspaceId);
     const own = normalizeDomain(ws.own_domain);
-    const competitors = new Set(ws.competitor_domains);
+    // Competitors = the typed set PLUS every Fiber-discovered company (battlefield /
+    // competitor rows). This is what makes the discovered battlefield VISIBLE in the
+    // gut-punch: a measured page ranks as a competitor iff it's a KNOWN company, so a
+    // discovered company can be the top competitor — while arbitrary cited pages
+    // (g2, review sites) still never rank (they're neither in the pool nor the
+    // companies table). Empty companies table => typed-only (unchanged behavior).
+    const companies = await ctx.db
+      .query("companies")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
+      .collect();
+    const competitors = new Set<string>(ws.competitor_domains);
+    for (const c of companies) {
+      if (c.role !== "customer") competitors.add(c.domain);
+    }
     const rows = await ctx.db
       .query("measurements")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
