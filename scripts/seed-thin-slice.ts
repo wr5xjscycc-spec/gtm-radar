@@ -84,6 +84,7 @@ async function main() {
   const summary = await c.query(api.board.summary, { workspaceId: ws });
   const cite = await c.query(api.board.citationBoard, { workspaceId: ws });
   const battlefield = await c.query(api.board.battlefield, { workspaceId: ws });
+  const gut = await c.query(api.board.gutPunch, { workspaceId: ws });
 
   console.log("workspaceId:", ws);
   console.log("own_domain stored as:", summary.workspace.own_domain, "(input was https://www.Acme.com/)");
@@ -91,6 +92,8 @@ async function main() {
   console.log("counts:", JSON.stringify(summary.counts));
   console.log("battlefield domains:", JSON.stringify(battlefield.map((b: any) => `${b.domain}:${b.role}`)));
   console.log("openai citations:", JSON.stringify(cite.perEngine.openai));
+  console.log("GUT-PUNCH (you):", JSON.stringify(gut.perEngine.openai.you));
+  console.log("GUT-PUNCH (top competitor):", JSON.stringify(gut.perEngine.openai.topCompetitor));
 
   // Assertions — fail loudly if the thin slice doesn't hold
   const ok =
