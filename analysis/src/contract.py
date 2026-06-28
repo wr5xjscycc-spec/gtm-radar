@@ -139,3 +139,74 @@ class FitJob(BaseModel):
     status: JobStatus
     result: Optional[ModelFit] = None
     error: Optional[str] = None
+
+
+# --- Phase 5 records (docs/CONTRACT.md #7/#8/#9) -----------------------------
+# Causal layer. A lift_result is the ONLY record allowed to carry causal language
+# (claim_rung == 2); it is earned solely from the randomized DiD path, never from
+# model_fit coefficients.
+
+ExperimentStatus = Literal["designing", "awaiting_publish", "running", "complete", "expired"]
+Verdict = Literal["worked", "no_effect", "inconclusive"]
+
+
+class Window(BaseModel):
+    """A measurement window (ISO8601 date strings)."""
+
+    start: str
+    end: str
+
+
+class ExperimentPair(BaseModel):
+    """One matched treatment/control page pair. The control is invisible to the
+    customer; ``match_covars`` records what the pair was matched on."""
+
+    treatment_page: str
+    control_page: str
+    match_covars: dict[str, float | str] = Field(default_factory=dict)
+
+
+class Experiment(BaseModel):
+    """``experiment`` record (#7). Randomized matched-pair ship/hold design."""
+
+    id: str
+    customer_id: str
+    pairs: list[ExperimentPair]
+    baseline_window: Window
+    post_window: Window
+    status: ExperimentStatus = "designing"
+    publish_event_ts: Optional[str] = None
+
+
+class LiftResult(BaseModel):
+    """``lift_result`` record (#8). The causal claim — estimate + CI + verdict.
+
+    ``claim_rung`` is 2 (causal); this is the only record that may speak causally,
+    and only because it comes from the randomized difference-in-differences path.
+    ``inconclusive`` is the honest verdict at small N — never fabricate significance.
+    """
+
+    id: str
+    experiment_id: str
+    estimate: float
+    ci_low: float
+    ci_high: float
+    p_value: Optional[float] = None
+    verdict: Verdict
+    claim_rung: int = 2
+    computed_at: str
+
+
+class Intervention(BaseModel):
+    """``intervention`` record (#9) — the moat store. One per completed experiment:
+    feature_changed × category × engine → measured_lift with its CI."""
+
+    id: str
+    feature_changed: str
+    category: str
+    engine: Engine
+    measured_lift: float
+    ci_low: float
+    ci_high: float
+    experiment_id: str
+    recorded_at: str
