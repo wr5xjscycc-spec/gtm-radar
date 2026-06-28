@@ -1,0 +1,13 @@
+{
+  "_comment": "Recorded SHAPE of a Fiber `find-similar-companies` response. Replayed in unit/integration tests so CI never calls Fiber live (docs/TESTING.md rule 1-2). Seed customer = linear.app; results intentionally include messy keys (URL, www, uppercase, trailing slash, the seed echoed back, and a dup) so mapping/normalization/dedup are exercised.",
+  "seed": "linear.app",
+  "companies": [
+    { "domain": "https://www.Asana.com/", "name": "Asana", "category": "project management" },
+    { "domain": "Monday.com", "name": "monday.com", "category": "work management" },
+    { "domain": "https://clickup.com/features?ref=x", "name": "ClickUp", "category": "productivity" },
+    { "domain": "JIRA.atlassian.com", "name": "Jira", "category": "issue tracking" },
+    { "domain": "shortcut.com", "name": "Shortcut", "category": "issue tracking" },
+    { "domain": "www.linear.app", "name": "Linear", "category": "issue tracking" },
+    { "domain": "asana.com", "name": "Asana (dup)", "category": "project management" }
+  ]
+}
