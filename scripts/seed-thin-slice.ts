@@ -52,7 +52,7 @@ async function main() {
   const q = await c.mutation(api.records.insertQuery, {
     workspaceId: ws, customer_id: ws, vertical: "gtm-analytics",
     text: "best GTM analytics tool for PLG SaaS", seed_source: "paa",
-    target_engines: ["openai", "perplexity", "gemini"],
+    target_engines: ["openai"], // v1: OpenAI-only (others dormant until keyed)
   });
 
   // 5) Measurements (P2 shape) — the gut-punch: Acme 0/1, Competitor 1/1

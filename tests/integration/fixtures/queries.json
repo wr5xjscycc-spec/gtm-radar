@@ -6,6 +6,6 @@
     "vertical": "gtm-analytics",
     "text": "best GTM analytics tool for PLG SaaS",
     "seed_source": "paa",
-    "target_engines": ["openai", "perplexity", "gemini"]
+    "target_engines": ["openai"]
   }
 ]

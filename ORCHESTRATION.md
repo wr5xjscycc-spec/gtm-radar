@@ -53,7 +53,7 @@ Each lane can be driven by an AI agent. To start an agent on a lane:
 
 These design constraints come from a 3-round adversarial review (`docs/internal/redteam-and-patches.md`, kept out of the public repo). Every lane must respect them:
 
-- **Measure the real, grounded engines** (OpenAI Responses API + `web_search`, etc.) — *never* plain chat-completions (no citations). Per-engine, never "one recipe."
+- **Measure the real, grounded engines** (OpenAI Responses API + `web_search`, etc.) — *never* plain chat-completions (no citations). Per-engine, never "one recipe." **v1 scope: OpenAI is the only required engine — Perplexity/Gemini adapters are built but dormant until their keys are set. Never relabel an OpenAI model as another vendor (a faked cross-engine measurement breaks the honesty premise); show only the engines actually measured.**
 - **Labels are rates, not coin flips** — P(cited) over K repeats with a CI.
 - **A "loser" is case-control** (retrieved/considered but not cited), never an arbitrary uncited page.
 - **Correlation ≠ causation** — the model is a *hypothesis generator*; causation is earned only by the randomized experiment. The claim-ladder is enforced in the UI.

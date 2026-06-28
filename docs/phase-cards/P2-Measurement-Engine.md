@@ -1,8 +1,14 @@
 # P2 — Measurement Engine · Detailed Build Brief
 
-**You own what we measure.** The answer-engine layer: adapters for all 3 engines, K-repeats, adaptive sampling, position weighting, citation parsing/normalization, case-control labeling, version stamping, model-drift detection, cost/budget guards, and per-engine reliability. Your output — `measurement` rows with **P(cited) + CI** — is the descriptive-truth layer the entire product stands on. If your signal is noisy or mis-specified, every downstream claim is poisoned.
+**You own what we measure.** The answer-engine layer: adapters for the answer engines (**OpenAI required in v1**; Perplexity/Gemini optional, dormant until keyed), K-repeats, adaptive sampling, position weighting, citation parsing/normalization, case-control labeling, version stamping, model-drift detection, cost/budget guards, and per-engine reliability. Your output — `measurement` rows with **P(cited) + CI** — is the descriptive-truth layer the entire product stands on. If your signal is noisy or mis-specified, every downstream claim is poisoned.
 
 > Read `GTM-Radar-Architecture.md` (§4.2, §8, §11) and `GTM-Radar-redteam-and-patches.md` (Theme A, Theme B) before starting. The red-team's deepest measurement holes are *your* responsibility to neutralize.
+
+> ### ⚠️ v1 SCOPE AMENDMENT — OpenAI-only engine
+> v1 measures exactly **one** answer engine: **OpenAI (Responses API + `web_search`)** — the only engine we have credits for. **`OPENAI_API_KEY` is the only required engine key.** The Perplexity (Sonar) and Gemini (grounded) adapters are **built and tested but dormant** — they activate the day `PERPLEXITY_API_KEY` / `GEMINI_API_KEY` are set.
+> - **Never substitute an OpenAI model for another vendor.** A row labeled `engine:"gemini"`/`"perplexity"` MUST come from that vendor's grounded API, or it is a *false measurement* — the single thing this product cannot do (its whole credibility is "we don't overclaim").
+> - Concretely: `query.target_engines` defaults to `["openai"]`; the dispatch harness runs only engines whose keys are present; the board renders the engines actually measured, labeled per-engine.
+> - The "engines disagree (~11% overlap)" cross-engine story returns **automatically** once more engines are keyed — no rework, the adapters are already there.
 
 ---
 
@@ -17,7 +23,7 @@
 **The non-negotiable measurement facts (from the red-team):**
 1. **Plain chat-completions return NO citations.** You MUST use the **OpenAI Responses API with the `web_search` tool** (gives `url_citation` annotations). A base-model call measures training data, not the live answer engine — that invalidates the whole product. Same spirit for the others: use the *grounded* path.
 2. **Answers are non-deterministic.** A single query run once is a coin flip. The outcome must be **P(cited) estimated over K repeats with a CI**, not a single binary. (This is why labels are a rate, not a draw.)
-3. **Engines disagree (~11% citation overlap).** Keep everything **per-engine**; never merge into one number silently.
+3. **Engines disagree (~11% citation overlap).** Keep everything **per-engine**; never merge into one number silently. *(v1 runs OpenAI-only, so the board shows a single honestly-labeled engine; the cross-engine comparison returns when more engines are keyed — it is never faked.)*
 4. **A "loser" is not any uncited page** — it's a page that was *retrieved/considered* (or ranks in classic search) but not cited. Arbitrary uncited pages bias the model (selection bias). You implement this case-control labeling.
 5. **Models drift silently.** Stamp every row with `engine + model_version + ts` so a mid-sweep change is detectable.
 6. **API-only in v1.** No scraping engine UIs (ToS risk). AI Overviews is deferred (no API).
@@ -33,7 +39,7 @@ No card is **Done** until its work ships with **passing automated tests in CI** 
 | Phase | P2 required tests / setup |
 |---|---|
 | 0 | lane scaffold + **vitest** harness green in CI; OpenAI adapter test with **mocked HTTP** returning a fixture containing `url_citation` annotations (assert citations parsed) |
-| 1 | adapter contract tests for all 3 engines against **recorded fixtures**; assert each engine's citation path is parsed into the common shape |
+| 1 | adapter contract tests against **recorded fixtures** — **OpenAI required**; Perplexity/Gemini parse-tested vs fixtures but dormant until keyed; assert each citation path maps into the common shape |
 | 2 | dispatch-harness + citation-parser unit tests; **case-control labeling tests** (a "loser" can come ONLY from the candidate pool, never an arbitrary uncited page) |
 | 3 | K-repeats → **P(cited)+CI math tests**; **adaptive-sampling stopping-rule tests** (Wilson CI extends only ambiguous pages); position-weighting tests; version-stamp tests; one **recorded-fixture integration sweep** |
 | 4 | label-flip-rate measurement test (quantify non-determinism on a fixture) |
@@ -72,7 +78,7 @@ No card is **Done** until its work ships with **passing automated tests in CI** 
 **Depends on:** P2·0.
 
 **Detailed tasks:**
-1. Provision keys for **OpenAI, Perplexity (Sonar/Sonar Pro), Gemini (grounded)**; record each one's **rate limits** and **per-call cost** (OpenAI web_search $10/1k + 8k tokens, watch the sub-search multiplier; Perplexity $3/$15 per 1M + $6–14/1k requests; Gemini small free tier then ~$0.005–0.019/call).
+1. Provision the **OpenAI** key (required); record its **rate limits** and **per-call cost** (web_search $10/1k + 8k tokens, watch the ~2–3× sub-search multiplier). *(Perplexity (Sonar) $3/$15 per 1M + $6–14/1k requests and Gemini (grounded) ~$0.005–0.019/call are **optional** — provision only if you have credits; v1 runs OpenAI-only. Their adapters are already built and parse-tested.)*
 2. Confirm the **citation path per engine**: OpenAI `url_citation`; Perplexity native citations; Gemini grounding metadata.
 3. Freeze the normalized **measurement-row contract** + the common adapter interface every engine maps into (`{appeared, cited, position, sources[]}`).
 
