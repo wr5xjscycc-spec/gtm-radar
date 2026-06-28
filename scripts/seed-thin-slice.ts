@@ -111,6 +111,26 @@ async function main() {
     diag.liftResults.length === 0;
   if (!ok) throw new Error("THIN-SLICE ASSERTIONS FAILED — see output above");
   console.log("\n✅ DAY-1 E2E OK — gut-punch (1/2) + diagnosis at rung 1 (causal locked, no lift_result) from live backend");
+
+  // ---- CLOSED LOOP: experiment -> publish-gate -> causal lift -> Rung 2 ----
+  const exp = await c.mutation(api.records.upsertExperiment, {
+    workspaceId: ws, customer_id: ws,
+    pairs: [{ treatment_page: "https://acme.com/pricing", control_page: "https://acme.com/about" }],
+    status: "designing",
+  });
+  await c.mutation(api.experiments.requestPublish, { experimentId: exp });
+  await c.mutation(api.experiments.recordPublish, { experimentId: exp }); // publish event -> running
+  await c.mutation(api.records.insertLiftResult, {
+    workspaceId: ws, experiment_id: exp, estimate: 0.18, ci_low: 0.04, ci_high: 0.32,
+    p_value: 0.012, verdict: "worked", claim_rung: 2, computed_at: now,
+  });
+  const diag2 = await c.query(api.board.diagnosis, { workspaceId: ws });
+  const feed = await c.query(api.experiments.consoleFeed, { workspaceId: ws });
+  const row = feed.find((e: any) => e._id === exp);
+  console.log("AFTER EXPERIMENT — diagnosis rung:", diag2.rung, "· status:", row?.status, "· lift:", row?.lift?.verdict);
+  const loopOk = diag2.rung === 2 && row?.status === "running" && row?.lift?.verdict === "worked";
+  if (!loopOk) throw new Error("CLOSED-LOOP ASSERTIONS FAILED — see output above");
+  console.log("✅ CLOSED LOOP OK — publish-gated experiment -> lift_result -> Rung-2 causal unlocked, live");
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
