@@ -111,6 +111,9 @@ function stripWww(host: string): string {
 function registrableDomain(host: string): string {
   if (!host) return "";
   const labels = host.split(".");
+  // IPv4-like all-numeric hosts aren't registrable domains; return unchanged so
+  // "192.168.1.1" isn't truncated to "1.1". Explicit [0-9] keeps JS/Python in sync.
+  if (labels.every((l) => /^[0-9]+$/.test(l))) return host;
   if (labels.length <= 2) return host; // already eTLD+1 (or bare/localhost)
   const lastTwo = labels.slice(-2).join(".");
   const take = MULTI_LABEL_SUFFIXES.has(lastTwo) ? 3 : 2;

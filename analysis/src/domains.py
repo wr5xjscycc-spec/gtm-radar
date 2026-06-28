@@ -87,6 +87,10 @@ def _registrable_domain(host: str) -> str:
     if not host:
         return ""
     labels = host.split(".")
+    # IPv4-like all-numeric hosts aren't registrable domains; return unchanged so
+    # "192.168.1.1" isn't truncated to "1.1". Explicit [0-9] keeps JS/Python in sync.
+    if all(re.fullmatch(r"[0-9]+", lbl) for lbl in labels):
+        return host
     if len(labels) <= 2:
         return host
     last_two = ".".join(labels[-2:])

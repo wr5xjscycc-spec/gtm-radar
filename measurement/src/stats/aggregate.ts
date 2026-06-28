@@ -73,9 +73,10 @@ const KEY_SEP = String.fromCharCode(0);
  *   average over cited runs, NOT over all K, so the signal stays orthogonal to `p_cited`
  *   (folding frequency in twice would double-count it). A run flagged `cited` but missing a
  *   valid `position` (upstream inconsistency) is skipped defensively rather than producing NaN.
- * - `model_version` = carried from the rows. Runs of one group share a model_version by
- *   construction; we take the last-seen value (last-writer) so a re-measure with a bumped stamp
- *   surfaces the newer one rather than the stale first.
+ * - `model_version` = carried from the rows. The group is keyed on (query_id, page_url, engine),
+ *   not on model_version, so a group may contain rows with mixed model_versions (e.g. a
+ *   re-measure with a newer stamp). We take the last-seen value (last-writer) so a re-measure
+ *   with a bumped stamp surfaces the newer one rather than the stale first.
  *
  * Empty input -> `[]`.
  */

@@ -46,6 +46,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** A slot awaiting publication expires after `days` (default 14) — frees credits. */
 export function slotExpired(awaitingSince: number, now: number, days = 14): boolean {
+  if (typeof days !== "number" || !Number.isFinite(days) || days < 0) return false;
   return now - awaitingSince >= days * DAY_MS;
 }
 

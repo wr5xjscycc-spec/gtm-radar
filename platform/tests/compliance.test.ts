@@ -29,6 +29,11 @@ describe("14-day slot expiry", () => {
     expect(slotExpired(t0, t0 + 13 * 86400_000)).toBe(false);
     expect(slotExpired(t0, t0 + 14 * 86400_000)).toBe(true);
   });
+  it("negative or non-finite days never expire", () => {
+    expect(slotExpired(t0, t0 + 99 * 86400_000, -1)).toBe(false);
+    expect(slotExpired(t0, t0 + 99 * 86400_000, Infinity)).toBe(false);
+    expect(slotExpired(t0, t0 + 99 * 86400_000, NaN as any)).toBe(false);
+  });
 });
 
 describe("cadence guard — monthly baseline, never weekly multi-engine", () => {
