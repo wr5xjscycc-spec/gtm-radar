@@ -4,22 +4,34 @@ Read this at the start of a new session before touching any code.
 
 ## Where we are
 
-**Repo:** `C:\Users\raj_k\yc\gtm-radar` · **Working branch:** `p2/phase-6-cost-guards`
+**Repo:** `C:\Users\raj_k\yc\gtm-radar` · **Working branch:** `p2/phase-5-experiment-remeasure`
 
-Branches built so far (all local except P2·0):
+Branches built so far (P2·0 + all below now pushed to origin):
 
 | Branch | Remote | Phase |
 |---|---|---|
 | `p2/phase-0-openai-citation` | ✅ pushed | P2·0 — OpenAI adapter + citation parser + row builder |
-| `p2/phase-2-dispatch-labeling` | ❌ local only | P2·1 cost constants + P2·2 dispatch / labeling / pipeline |
-| `p2/phase-3-statistics` | ❌ local only | P2·3 — Wilson CI, per-engine aggregation, adaptive-K + one-key 3-engine backing |
-| `p2/phase-4-label-quality` | ❌ local only | P2·4 — flip-rate QA, label table, pool-composition |
-| `p2/phase-6-cost-guards` | ❌ local only | **P2·6 — retry/backoff, drift detection, budget guard, resumable sweep (CURRENT)** |
+| `p2/phase-2-dispatch-labeling` | ✅ pushed | P2·1 cost constants + P2·2 dispatch / labeling / pipeline |
+| `p2/phase-3-statistics` | ✅ pushed | P2·3 — Wilson CI, per-engine aggregation, adaptive-K + one-key 3-engine backing |
+| `p2/phase-4-label-quality` | ✅ pushed | P2·4 — flip-rate QA, label table, pool-composition |
+| `p2/phase-6-cost-guards` | ✅ pushed | P2·6 — retry/backoff, drift detection, budget guard, resumable sweep |
+| `p2/phase-5-experiment-remeasure` | ✅ pushed | **P2·5 — window tagging + identical-arm re-measurement (CURRENT)** |
 | `p1/phase-0-thin-slice` | ❌ local only | Convex schema + seed (deprioritized — see below) |
 
-Stack order: `p2/phase-6-cost-guards` → `p2/phase-4-label-quality` → `p2/phase-3-statistics` → `p2/phase-2-dispatch-labeling` → `p2/phase-0-openai-citation`. `p1/phase-0-thin-slice` branches off P2·0 separately. (P2·5 — experiment re-measurement — is SKIPPED for now: it depends on P4's `experiment` records, which don't exist yet.)
+Stack order: `p2/phase-5-experiment-remeasure` → `p2/phase-6-cost-guards` → `p2/phase-4-label-quality` → `p2/phase-3-statistics` → `p2/phase-2-dispatch-labeling` → `p2/phase-0-openai-citation`. `p1/phase-0-thin-slice` branches off P2·0 separately.
 
-`main` is the original scaffold. **CI has never run** (stack is now 6 branches deep — pushing + CI is the highest-leverage next move). **184 measurement tests pass locally on Node 24** (typecheck clean).
+`main` is the original scaffold. **CI has STILL never actually run** — branches are pushed but no PR is open, and CI only triggers on push-to-`main` or `pull_request` (deliberately not triggered yet, per user). **202 measurement tests pass locally on Node 24** (typecheck clean); other lanes verified CI-ready (platform 1, sourcing 1, python smoke 1 — all green locally; CI uses Node 20 / Python 3.12).
+
+## What was built (P2·5) — `p2/phase-5-experiment-remeasure`
+
+Spec: `docs/superpowers/specs/2026-06-28-p2-5-experiment-remeasure-design.md`. Built against an `experiment`-record **fixture** (CONTRACT §7; P4 not yet built — drops onto real data unchanged). 18 new tests:
+
+| File | What |
+|---|---|
+| `experiment-records.ts` | `ExperimentRecord` projection (CONTRACT §7) + `classifyArm(url, exp)` → `treatment\|control\|null` (exact-match, treatment precedence). |
+| `experiment.ts` | `tagExperimentRows(rows, window, expId)` (pure, non-mutating: stamps `window_tag` baseline/post + `experiment_id`) + `reMeasureExperimentWindow(...)` — **one shared `measureAdaptive` pass per query** so treatment & control ride the SAME engines/K/pool. The identical-arm protocol is structural (the #1 DiD confound, neutralized). Partitions tagged rows by arm; query-tagged failures. |
+
+Re-tag-after-measurement keeps the core untouched. Ready for P4's DiD: it consumes the `baseline`/`post`-tagged, `experiment_id`-stamped rows. (P2·5 was originally flagged as blocked on P4 — built against the contract fixture per the contract's own prescription for cross-lane deps.)
 
 ## What was built (P2·6) — `p2/phase-6-cost-guards`
 
