@@ -14,7 +14,9 @@
     "appeared": true,
     "cited": true,
     "position": 1,
-    "source_urls": ["https://acme.example/compare"],
+    "source_urls": [
+      "https://acme.example/compare"
+    ],
     "ts": "2026-06-21T10:00:00Z"
   },
   {
@@ -25,14 +27,17 @@
     "model_version": "sonar-2024",
     "window_tag": "baseline",
     "P_cited": 0.64,
-    "ci_low": 0.50,
+    "ci_low": 0.5,
     "ci_high": 0.77,
     "position_weight": 0.74,
     "run_idx": 0,
     "appeared": true,
     "cited": true,
     "position": 2,
-    "source_urls": ["https://acme.example/compare", "https://globex.example/product"],
+    "source_urls": [
+      "https://acme.example/compare",
+      "https://globex.example/product"
+    ],
     "ts": "2026-06-21T10:01:00Z"
   },
   {
@@ -86,7 +91,9 @@
     "appeared": true,
     "cited": true,
     "position": 1,
-    "source_urls": ["https://globex.example/product"],
+    "source_urls": [
+      "https://globex.example/product"
+    ],
     "ts": "2026-06-21T10:04:00Z"
   },
   {
@@ -98,13 +105,16 @@
     "window_tag": "baseline",
     "P_cited": 0.69,
     "ci_low": 0.56,
-    "ci_high": 0.80,
+    "ci_high": 0.8,
     "position_weight": 0.81,
     "run_idx": 0,
     "appeared": true,
     "cited": true,
     "position": 1,
-    "source_urls": ["https://globex.example/product", "https://acme.example/compare"],
+    "source_urls": [
+      "https://globex.example/product",
+      "https://acme.example/compare"
+    ],
     "ts": "2026-06-21T10:05:00Z"
   },
   {
@@ -152,13 +162,15 @@
     "window_tag": "baseline",
     "P_cited": 0.57,
     "ci_low": 0.43,
-    "ci_high": 0.70,
+    "ci_high": 0.7,
     "position_weight": 0.62,
     "run_idx": 0,
     "appeared": true,
     "cited": true,
     "position": 3,
-    "source_urls": ["https://initech.example/features"],
+    "source_urls": [
+      "https://initech.example/features"
+    ],
     "ts": "2026-06-21T10:08:00Z"
   },
   {
@@ -176,7 +188,9 @@
     "appeared": true,
     "cited": true,
     "position": 3,
-    "source_urls": ["https://initech.example/features"],
+    "source_urls": [
+      "https://initech.example/features"
+    ],
     "ts": "2026-06-21T10:09:00Z"
   },
   {
@@ -214,5 +228,81 @@
     "position": null,
     "source_urls": [],
     "ts": "2026-06-21T10:11:00Z"
+  },
+  {
+    "id": "msr_101",
+    "query_id": "qry_seed_001",
+    "page_url": "https://globex.example/blog",
+    "engine": "openai",
+    "model_version": "gpt-4o-2024",
+    "window_tag": "baseline",
+    "P_cited": 0.1,
+    "ci_low": 0.03,
+    "ci_high": 0.19,
+    "position_weight": 0.08,
+    "run_idx": 0,
+    "appeared": true,
+    "cited": false,
+    "position": null,
+    "source_urls": [],
+    "ts": "2026-06-21T11:00:00Z"
+  },
+  {
+    "id": "msr_102",
+    "query_id": "qry_seed_001",
+    "page_url": "https://globex.example/blog",
+    "engine": "perplexity",
+    "model_version": "gpt-4o-2024",
+    "window_tag": "baseline",
+    "P_cited": 0.13,
+    "ci_low": 0.05,
+    "ci_high": 0.23,
+    "position_weight": 0.1,
+    "run_idx": 0,
+    "appeared": true,
+    "cited": false,
+    "position": null,
+    "source_urls": [],
+    "ts": "2026-06-21T11:00:00Z"
+  },
+  {
+    "id": "msr_103",
+    "query_id": "qry_seed_002",
+    "page_url": "https://acme.example/integrations",
+    "engine": "openai",
+    "model_version": "gpt-4o-2024",
+    "window_tag": "baseline",
+    "P_cited": 0.6,
+    "ci_low": 0.47,
+    "ci_high": 0.72,
+    "position_weight": 0.71,
+    "run_idx": 0,
+    "appeared": true,
+    "cited": true,
+    "position": 2,
+    "source_urls": [
+      "https://acme.example/integrations"
+    ],
+    "ts": "2026-06-21T11:00:00Z"
+  },
+  {
+    "id": "msr_104",
+    "query_id": "qry_seed_002",
+    "page_url": "https://acme.example/integrations",
+    "engine": "perplexity",
+    "model_version": "gpt-4o-2024",
+    "window_tag": "baseline",
+    "P_cited": 0.58,
+    "ci_low": 0.45,
+    "ci_high": 0.7,
+    "position_weight": 0.68,
+    "run_idx": 0,
+    "appeared": true,
+    "cited": true,
+    "position": 2,
+    "source_urls": [
+      "https://acme.example/integrations"
+    ],
+    "ts": "2026-06-21T11:00:00Z"
   }
 ]

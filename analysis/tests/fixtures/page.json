@@ -124,5 +124,47 @@
     "extractor_version": "ext-v1",
     "scraped_at": "2026-06-20T08:20:00Z",
     "cache_key": "initech-docs-2026w25"
+  },
+  {
+    "company_domain": "globex.example",
+    "url": "https://globex.example/blog",
+    "role": "candidate",
+    "content_features": {
+      "schema_markup": 0,
+      "comparison_table": 0,
+      "word_count": 580,
+      "heading_structure": 4,
+      "freshness_days": 380,
+      "query_term_coverage": 0.25,
+      "direct_answer_first": 0,
+      "stats_density": 0.005,
+      "citation_density": 0.004,
+      "quote_density": 0.002,
+      "listicle_vs_prose": 0.15
+    },
+    "extractor_version": "ext-v1",
+    "scraped_at": "2026-06-20T09:10:00Z",
+    "cache_key": "globex-blog-2026w25"
+  },
+  {
+    "company_domain": "acme.example",
+    "url": "https://acme.example/integrations",
+    "role": "customer",
+    "content_features": {
+      "schema_markup": 1,
+      "comparison_table": 1,
+      "word_count": 1620,
+      "heading_structure": 12,
+      "freshness_days": 20,
+      "query_term_coverage": 0.78,
+      "direct_answer_first": 1,
+      "stats_density": 0.04,
+      "citation_density": 0.028,
+      "quote_density": 0.011,
+      "listicle_vs_prose": 0.6
+    },
+    "extractor_version": "ext-v1",
+    "scraped_at": "2026-06-20T09:20:00Z",
+    "cache_key": "acme-integrations-2026w25"
   }
 ]
