@@ -4,7 +4,7 @@ Read this at the start of a new session before touching any code.
 
 ## Where we are
 
-**Repo:** `C:\Users\raj_k\yc\gtm-radar` · **Working branch:** `p2/phase-3-statistics`
+**Repo:** `C:\Users\raj_k\yc\gtm-radar` · **Working branch:** `p2/phase-4-label-quality`
 
 Branches built so far (all local except P2·0):
 
@@ -12,14 +12,27 @@ Branches built so far (all local except P2·0):
 |---|---|---|
 | `p2/phase-0-openai-citation` | ✅ pushed | P2·0 — OpenAI adapter + citation parser + row builder |
 | `p2/phase-2-dispatch-labeling` | ❌ local only | P2·1 cost constants + P2·2 dispatch / labeling / pipeline |
-| `p2/phase-3-statistics` | ❌ local only | **P2·3 — Wilson CI, per-engine aggregation, adaptive-K + one-key 3-engine backing (CURRENT)** |
+| `p2/phase-3-statistics` | ❌ local only | P2·3 — Wilson CI, per-engine aggregation, adaptive-K + one-key 3-engine backing |
+| `p2/phase-4-label-quality` | ❌ local only | **P2·4 — flip-rate QA, label table, pool-composition (CURRENT)** |
 | `p1/phase-0-thin-slice` | ❌ local only | Convex schema + seed (deprioritized — see below) |
 
-Stack order: `p2/phase-3-statistics` → `p2/phase-2-dispatch-labeling` → `p2/phase-0-openai-citation`. `p1/phase-0-thin-slice` branches off P2·0 separately. (Note: the old HANDOFF lived only on the p1 branch; this updated copy is on `p2/phase-3-statistics`.)
+Stack order: `p2/phase-4-label-quality` → `p2/phase-3-statistics` → `p2/phase-2-dispatch-labeling` → `p2/phase-0-openai-citation`. `p1/phase-0-thin-slice` branches off P2·0 separately.
 
-`main` is the original scaffold. **CI has never run.** **106 measurement tests pass locally on Node 24** (typecheck clean).
+`main` is the original scaffold. **CI has never run.** **144 measurement tests pass locally on Node 24** (typecheck clean).
 
-## What was built this session (P2·3) — `p2/phase-3-statistics`
+## What was built (P2·4) — `p2/phase-4-label-quality`
+
+Spec: `docs/superpowers/specs/2026-06-28-p2-4-label-quality-design.md`. Three pure analyses over P2·3 outputs (38 new tests), for P4 + honest noise reporting:
+
+| File | What |
+|---|---|
+| `quality/flip-rate.ts` | `computeFlipRates(rows)` → per-engine instability. Integrates **3 lenses** per (query,page,engine): `minority_fraction` (primary, order-free), `transition_rate` (run_idx-ordered, informational), binary `entropy` (bits). Reports `flip_fraction` + means + worst-first `unstable[]`. k<2 groups surfaced + excluded from means. |
+| `quality/label-table.ts` | `buildLabelTable(aggregates, pool)` joins on `page_url` → rows keyed on normalized `company_domain` + `role` for P4. Rate+CI primary, winner/loser `label` secondary (≥0.5→winner). Join misses → `unmatched` (surfaced, never dropped). |
+| `quality/pool-composition.ts` | `assessPoolComposition(pool)` → per-domain share, `dominated` + `offenders` (strict `>` threshold, default 0.5). Guards "loser pool dominated by one company". |
+
+Per-engine never merged; normalized domain is the join key; all NaN-guarded. **Optional live capstone not yet run** — feed real K≥4 run-level rows into `computeFlipRates` for a demo flip-rate number (the P2·3 live run already showed a genuine flip: openai/apollo.io cited 2/3).
+
+## What was built (P2·3) — `p2/phase-3-statistics`
 
 Spec: `docs/superpowers/specs/2026-06-27-p2-3-statistics-design.md` (authoritative contract).
 
