@@ -9,6 +9,7 @@ import {
   coverageSummary,
   featureVectorView,
 } from "./enrichmentReview";
+import { headline, measurementProgress } from "./gutPunch";
 
 /**
  * Phase-0 live board (owner: P1) — minimal but real. Proves the DoD: write any
@@ -60,9 +61,10 @@ export function App() {
 function Board({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
   const summary = useQuery(api.board.summary, { workspaceId });
   const battlefield = useQuery(api.board.battlefield, { workspaceId }) ?? [];
-  const citations = useQuery(api.board.citationBoard, { workspaceId });
   const pages = useQuery(api.board.pages, { workspaceId }) ?? [];
   const queries = useQuery(api.board.queries, { workspaceId }) ?? [];
+  const gut = useQuery(api.board.gutPunch, { workspaceId });
+  const measurements = useQuery(api.board.measurements, { workspaceId }) ?? [];
 
   const customer = battlefield.find((c) => c.role === "customer");
   const bf = battlefieldProgress(battlefield);
@@ -87,18 +89,35 @@ function Board({ workspaceId }: { workspaceId: Id<"workspaces"> }) {
 
       <pre>{JSON.stringify(summary?.counts, null, 2)}</pre>
 
-      <h3>Citation board (per engine)</h3>
-      {citations &&
-        Object.entries(citations.perEngine).map(([engine, e]) => (
-          <p key={engine}>
-            <strong>{engine}</strong>: cited {e.cited}/{e.total}
-            {e.sources.length > 0 && ` — sources: ${e.sources.join(", ")}`}
-          </p>
-        ))}
-      <small>{citations?.note}</small>
+      <GutPunchBoard gut={gut} measurements={measurements} />
 
       <EnrichmentReview pages={pages} queries={queries} companies={battlefield} />
     </section>
+  );
+}
+
+// P1·3: the gut-punch — "you 0/12 · competitor 9/12 · cited from these sources",
+// per engine, live. The demo's emotional core. Shows a measurement (not a model).
+function GutPunchBoard({ gut, measurements }: { gut: any; measurements: any[] }) {
+  const prog = measurementProgress(measurements);
+  if (!gut) return <p>measuring…</p>;
+  return (
+    <div style={{ margin: "16px 0" }}>
+      <h2 style={{ marginBottom: 4 }}>Are you cited?</h2>
+      <small style={{ color: "#888" }}>
+        {prog.done} measurements in · {prog.pct}% {prog.pct < 100 ? "(sweeping…)" : "✓"}
+      </small>
+      {Object.entries(gut.perEngine).map(([engine, e]: [string, any]) => (
+        <div key={engine} style={{ border: "1px solid #eee", borderRadius: 8, padding: 14, marginTop: 10 }}>
+          <div style={{ fontWeight: 600 }}>{engine} (web_search)</div>
+          <div style={{ fontSize: 22, margin: "6px 0" }}>{headline(e.you, e.topCompetitor)}</div>
+          {e.citedSources.length > 0 && (
+            <small>cited from: {e.citedSources.join(", ")}</small>
+          )}
+        </div>
+      ))}
+      <small style={{ color: "#888" }}>{gut.note}</small>
+    </div>
   );
 }
 

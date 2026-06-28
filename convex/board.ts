@@ -9,6 +9,7 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { requireWorkspace } from "./lib/auth";
+import { normalizeDomain } from "./lib/domain";
 
 /** The battlefield (companies) filling in for a workspace. */
 export const battlefield = query({
@@ -64,6 +65,72 @@ export const citationBoard = query({
       perEngine,
       // Aggregate is explicitly labeled as such — see ORCHESTRATION.md §6.
       note: "Per-engine; combined view is an aggregate of independent engines.",
+    };
+  },
+});
+
+/**
+ * The gut-punch (P1·3): per engine, YOU vs competitors. Classifies each
+ * measurement's page by normalized domain against the workspace's own/competitor
+ * domains, counts cited/total, finds the top competitor, and surfaces the domains
+ * the engine actually cited ("cited from these sources"). Per-engine — never a
+ * single blended number (v1 has one engine; the structure stays per-engine).
+ */
+export const gutPunch = query({
+  args: { workspaceId: v.id("workspaces") },
+  handler: async (ctx, { workspaceId }) => {
+    const ws = await requireWorkspace(ctx, workspaceId);
+    const own = normalizeDomain(ws.own_domain);
+    const competitors = new Set(ws.competitor_domains);
+    const rows = await ctx.db
+      .query("measurements")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
+      .collect();
+
+    type Side = { cited: number; total: number };
+    const engines: Record<
+      string,
+      {
+        you: Side;
+        competitors: Record<string, Side>;
+        citedSources: string[];
+      }
+    > = {};
+
+    for (const r of rows) {
+      const e = (engines[r.engine] ??= {
+        you: { cited: 0, total: 0 },
+        competitors: {},
+        citedSources: [],
+      });
+      const dom = normalizeDomain(r.page_url);
+      const bump = (s: Side) => {
+        s.total += 1;
+        if (r.cited) s.cited += 1;
+      };
+      if (dom === own) bump(e.you);
+      else if (competitors.has(dom)) bump((e.competitors[dom] ??= { cited: 0, total: 0 }));
+      for (const s of r.source_urls) {
+        const sd = normalizeDomain(s);
+        if (sd && !e.citedSources.includes(sd)) e.citedSources.push(sd);
+      }
+    }
+
+    // Per engine, pick the top competitor by cited count.
+    const perEngine = Object.fromEntries(
+      Object.entries(engines).map(([engine, e]) => {
+        const topCompetitor =
+          Object.entries(e.competitors)
+            .map(([domain, s]) => ({ domain, ...s }))
+            .sort((a, b) => b.cited - a.cited)[0] ?? null;
+        return [engine, { you: e.you, competitors: e.competitors, topCompetitor, citedSources: e.citedSources }];
+      }),
+    );
+
+    return {
+      own_domain: own,
+      perEngine,
+      note: "Per-engine; v1 measures OpenAI only. A combined number would be an aggregate of independent engines.",
     };
   },
 });
