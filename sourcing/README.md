@@ -26,4 +26,15 @@ The complete company layer: who's in the category, what the customer is, and the
 - `src/firmographics.ts` — `mapFirmographics()` / `enrichFirmographics()` via a Fiber firmographics **port**. The context family stays **small** (only the 5 contract fields; extras dropped — effective-N discipline). Coverage honesty: `firmographics_missing` flips to false **only** when Fiber returns usable data.
 - Tests: `tests/battlefield.test.ts`, `tests/understanding.test.ts`, `tests/firmographics.test.ts` (LLM + Fiber mocked). Reviewed by an independent agent (anchor-bias rule); two coverage-honesty findings fixed before commit.
 
+**Phase 2 — Content + off-page enrichment, queries & features ✅ (heavy phase)** (`p3/phase-2-enrichment`)
+Everything the model consumes: both feature families + the grounded query set. Writes `page` + `content_features`, `company.offpage`, `query`.
+
+- `src/parsers.ts` — **deterministic** content-feature parsers (dependency-free, no DOM): schema/JSON-LD (incl. parameterized media types), comparison-table heuristic, word count, heading structure, freshness, query-term coverage (single tokens match on **word boundaries** so "ai" ≠ "email").
+- `src/features.ts` — **subjective** features (direct-answer-first, stats/citation/quote density, listicle-vs-prose) via the gpt-4o-mini `ChatModel` port. Fails loud on bad output — one bad field drops the whole subjective vector (never a hollow partial).
+- `src/content.ts` — Orange Slice **port** → `page` records. Deterministic family always present; subjective merged when a model is supplied. `extractor_version` encodes the subjective state (`none` / `+subj` / `+subj-err`) and `cache_key` folds in the query-term set — so the Phase-5 category cache can't serve a mismatched feature vector.
+- `src/offpage.ts` — **off-page = first-class** (the dominant citation drivers): three vendor ports (Fiber/SERP/Reddit) → `company.offpage`. Each of the 8 fields is single-sourced (no double-sourcing); one vendor failing degrades gracefully; coverage honesty mirrors firmographics.
+- `src/queries.ts` — grounded query gen: real seeds (PAA/keyword/Reddit/analytics) → LLM-**expand**, every query `seed_source`-tagged. Real seeds win over `llm_expand` on dedupe; a **ratio guard** caps `llm_expand` so it can't dominate (never fabricates real seeds). Deterministic ids.
+- Tests: `tests/parsers.test.ts`, `tests/features.test.ts`, `tests/content.test.ts`, `tests/offpage.test.ts`, `tests/queries.test.ts` (all vendors + LLM mocked). Independent review (anchor-bias) fixed the cache-key completeness gap + subjective-honesty + parser-heuristic findings before commit.
+- Known deferred (Minor, by design): `normalizeUrl` preserves path case (case-sensitive paths exist) and doesn't sort query params — revisit for join integrity in Phase 4.
+
 Run: `npm test --workspace sourcing`.
