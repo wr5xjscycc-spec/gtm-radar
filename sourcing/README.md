@@ -61,4 +61,15 @@ Cuts per-customer cost by reusing competitor scrapes/features across customers i
 - Tests: `tests/cache.test.ts`, `tests/invalidation.test.ts`, `tests/caching.integration.test.ts`. Independent review (anchor-bias) caught a **Critical** — the URL reuse path dropped the query-terms dimension and could serve customer B customer A's `query_term_coverage`. Fixed before commit (query-term-scoped reuse key + a dedicated cross-query-pack test).
 - Deferred (Minor): implausible far-future timestamps treated as fresh; lenient ISO parse; `expectedExtractorVersion` must be the effective (`+subj`) version or the cache silently no-ops (documented at `cacheContext`).
 
+**Phase 6 — Vertical pack finalization & coverage QA ✅ (lane complete)** (`p3/phase-6-vertical-pack`)
+Makes the launch vertical real and honest — the vertical-first wedge.
+
+- `src/vertical-pack.ts` — `buildVerticalPack()`: curates the grounded query set down to **one** vertical (the anti-horizontal gate — cross-vertical queries are excluded **and** surfaced as issues, never silently absorbed), dedupes, attaches the vertical's CMS targets, and runs transparent validation gates (single-vertical, min size, healthy real-seed ratio, ≥1 CMS target). An invalid pack is still **returned** with its `issues` populated. Vertical slugs are matched case-insensitively so a casing variant can't misfire a false contamination signal.
+- `src/coverage-qa.ts` — `sweepVerticalCoverage()`: runs the Phase-4 coverage sweep over the vertical, collects every low-coverage entity into `surfaced_low_coverage` for P1's UI, and reconciles final company flags. `passed` is a **transparency** assertion (nothing dropped), **not** a completeness gate — a low-coverage vertical still passes as long as its gaps are visible.
+- Tests: `tests/vertical-pack.test.ts`, `tests/coverage-qa.test.ts`. Independent review (anchor-bias) → verdict ship; hardened the vertical-slug match (case-insensitive) and silenced a `0/0` ratio issue, with boundary tests added.
+
 Run: `npm test --workspace sourcing`.
+
+---
+
+**Lane status: all 7 phases (0–6) complete — 244 sourcing tests green.** Every phase was built by parallel agents on disjoint files, independently reviewed (anchor-bias rule), with findings fixed before commit.

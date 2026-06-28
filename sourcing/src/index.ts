@@ -18,3 +18,5 @@ export * from "./coverage";
 export * from "./cache";
 export * from "./invalidation";
 export * from "./caching";
+export * from "./vertical-pack";
+export * from "./coverage-qa";

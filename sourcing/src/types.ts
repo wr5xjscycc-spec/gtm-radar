@@ -335,3 +335,66 @@ export interface CacheValidityContext {
 
 /** Predicate deciding if a cached `page` is still valid (fresh + current extractor). */
 export type CacheValidator = (page: Page, ctx: CacheValidityContext) => boolean;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 6 — launch vertical pack & coverage QA (P3-produced; P4/P1-facing).
+//
+// The wedge is VERTICAL-FIRST: one curated, validated query pack + the CMS targets
+// for that single vertical beat shallow coverage everywhere (red-team positioning
+// trap — resist going horizontal). And coverage must be honest: the QA sweep
+// SURFACES low-coverage for P1's UI, it never drops rows to look complete.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type CmsKind = "webflow" | "wordpress" | "contentful" | "sanity" | "hubspot" | "other";
+
+/** A CMS publish target for the launch vertical, handed to P4 for one-click publish. */
+export interface CmsTarget {
+  vertical: string;
+  cms: CmsKind;
+  /** The collection / path / template the vertical's content publishes into. */
+  destination: string;
+  notes?: string;
+}
+
+/** Real-vs-llm_expand breakdown of a query set (grounding transparency). */
+export interface SeedSourceRatio {
+  total: number;
+  /** Non-llm_expand (paa/keyword/reddit/analytics) — the grounded queries. */
+  real: number;
+  llm_expand: number;
+  /** real / total. */
+  realRatio: number;
+}
+
+/**
+ * The finalized, validated launch vertical pack — the production wedge. Built by
+ * curating the grounded query set down to ONE vertical and attaching that
+ * vertical's CMS targets. `validated` + `issues` make the gates transparent.
+ */
+export interface VerticalPack {
+  vertical: string;
+  version: string;
+  queries: Query[];
+  cms_targets: CmsTarget[];
+  seed_source_ratio: SeedSourceRatio;
+  /** Passed every gate: single-vertical, deduped, healthy real-seed ratio, min size. */
+  validated: boolean;
+  /** Validation issues (empty when validated) — surfaced, never silently swallowed. */
+  issues: string[];
+}
+
+/**
+ * Coverage-QA result for the launch vertical. Wraps the Phase-4 CoverageReport and
+ * the reconciled company flags; low-coverage entities are SURFACED for P1, never
+ * dropped. `passed` means the sweep ran and every entity is accounted for (a
+ * transparency assertion, NOT a gate that excludes low-coverage rows).
+ */
+export interface VerticalCoverageQA {
+  vertical: string;
+  report: CoverageReport;
+  /** Low-coverage entities surfaced for P1's coverage UI (companies + pages). */
+  surfaced_low_coverage: CoverageAssessment[];
+  /** Reconciled company coverage flags (corrected toward actual data). */
+  reconciled_flags: Array<{ domain: string; coverage_flags: CoverageFlags }>;
+  passed: boolean;
+}
