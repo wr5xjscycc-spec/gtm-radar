@@ -191,6 +191,8 @@ export const upsertExperiment = mutation({
     ),
     baseline_window: v.optional(v.string()),
     post_window: v.optional(v.string()),
+    feature_changed: v.optional(v.string()),
+    category: v.optional(v.string()),
     status: v.union(
       v.literal("designing"),
       v.literal("awaiting_publish"),

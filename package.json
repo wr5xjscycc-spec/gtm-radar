@@ -12,10 +12,12 @@
   "scripts": {
     "test": "npm test --workspaces --if-present",
     "test:py": "pytest analysis",
-    "enrich:smoke": "tsx scripts/enrich-pages.ts"
+    "enrich": "tsx scripts/enrich-pages.ts",
+    "enrich:smoke": "tsx scripts/enrich-pages.ts --print"
   },
   "dependencies": {
-    "convex": "^1.16.0"
+    "convex": "^1.16.0",
+    "orangeslice": "^2.6.0"
   },
   "devDependencies": {
     "typescript": "^5.5.0",

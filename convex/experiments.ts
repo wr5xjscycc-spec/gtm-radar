@@ -20,6 +20,13 @@ import { api, internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import { runMeasurementSweep, pagesToCandidatePool, type SweepSummary } from "./measure";
 
+const engineValidator = v.union(
+  v.literal("openai"),
+  v.literal("perplexity"),
+  v.literal("gemini"),
+);
+type EngineName = "openai" | "perplexity" | "gemini";
+
 /** Customer clicks "ready to publish" — move design → awaiting_publish, start the 14-day clock. */
 export const requestPublish = mutation({
   args: { experimentId: v.id("experiments") },
@@ -53,9 +60,21 @@ export const recordPublish = mutation({
     }
     const ts = Date.now();
     await ctx.db.patch(experimentId, { status: "running", publish_event_ts: ts });
-    return ts; // P2: trigger post-window re-measurement on this event
+    // P2 event-driven loop: the publish event fires the post-window re-measurement,
+    // which in turn finalizes the causal estimate (remeasure -> finalizeExperiment).
+    // In production POST_WINDOW_DELAY_MS is the post_window duration (days) so the
+    // treatment has time to propagate into AI answers; for the demo it's immediate.
+    await ctx.scheduler.runAfter(POST_WINDOW_DELAY_MS, api.experiments.remeasure, {
+      experimentId,
+      thenFinalize: true,
+    });
+    return ts;
   },
 });
+
+/** Demo: re-measure immediately on publish. Production: set to the post_window
+ *  length so the shipped treatment has time to land in AI answers before we measure. */
+const POST_WINDOW_DELAY_MS = 0;
 
 export const completeExperiment = mutation({
   args: { experimentId: v.id("experiments") },
@@ -139,8 +158,14 @@ export const getExperiment = internalQuery({
  * differences against the baseline window to estimate causal lift.
  */
 export const remeasure = action({
-  args: { experimentId: v.id("experiments") },
-  handler: async (ctx, { experimentId }): Promise<SweepSummary> => {
+  args: {
+    experimentId: v.id("experiments"),
+    // When true, tail-schedule finalizeExperiment once the post-window rows are
+    // written — closing the causal loop (DiD -> lift_result -> intervention). The
+    // standalone / monthly-baseline callers leave this off.
+    thenFinalize: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { experimentId, thenFinalize }): Promise<SweepSummary> => {
     const data = await ctx.runQuery(internal.experiments.getExperiment, {
       experimentId,
     });
@@ -155,13 +180,163 @@ export const remeasure = action({
     }
     const pool = pagesToCandidatePool(urls);
 
-    return await runMeasurementSweep(ctx, {
+    const summary = await runMeasurementSweep(ctx, {
       workspaceId: experiment.workspaceId,
       vertical: workspace.vertical,
       candidatePool: pool,
       windowTag: "post",
       experimentId,
     });
+
+    // Post-window rows are now committed; schedule the causal estimate as its own
+    // action so it gets a fresh execution budget for the Python DiD round-trip.
+    if (thenFinalize) {
+      await ctx.scheduler.runAfter(0, api.experiments.finalizeExperiment, {
+        experimentId,
+      });
+    }
+
+    return summary;
+  },
+});
+
+/**
+ * Gather the DiD panel for an experiment: every measurement row on the
+ * experiment's pages (treatment + control) in the baseline and post windows.
+ *
+ * INTERNAL + keyed on PAGE URL, not experiment_id, on purpose: the baseline rows
+ * were written by the workspace baseline sweep BEFORE this experiment existed, so
+ * they carry no experiment_id. Filtering by experiment_id would silently drop the
+ * entire pre-period and make every DiD degenerate. We scope by workspace, then keep
+ * rows whose page is in the experiment and whose window is baseline/post.
+ */
+export const measurementsForExperiment = internalQuery({
+  args: { experimentId: v.id("experiments") },
+  handler: async (ctx, { experimentId }) => {
+    const exp = await ctx.db.get(experimentId);
+    if (!exp) return [];
+    const pages = new Set<string>();
+    for (const p of exp.pairs) {
+      pages.add(p.treatment_page);
+      pages.add(p.control_page);
+    }
+    const rows = await ctx.db
+      .query("measurements")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", exp.workspaceId))
+      .collect();
+    return rows.filter(
+      (r) =>
+        pages.has(r.page_url) &&
+        (r.window_tag === "baseline" || r.window_tag === "post"),
+    );
+  },
+});
+
+/** Most-recent lift_result for an experiment (read back after runLift writes it). */
+export const latestLiftForExperiment = internalQuery({
+  args: { experimentId: v.id("experiments") },
+  handler: async (ctx, { experimentId }) => {
+    const lifts = await ctx.db
+      .query("lift_results")
+      .withIndex("by_experiment", (q) => q.eq("experiment_id", experimentId))
+      .collect();
+    if (lifts.length === 0) return null;
+    return lifts.reduce((a, b) => (b.computed_at > a.computed_at ? b : a));
+  },
+});
+
+/**
+ * Close the causal loop (the moat write). Gathers the experiment's baseline+post
+ * panel, runs the Python DiD round-trip (runLift -> lift_result), reads the verdict
+ * back, and — when decisive (worked / no_effect) — records the
+ * feature_changed -> measured_lift fact as an `intervention` (the compounding
+ * dataset). Always transitions the experiment to complete. Idempotency is the
+ * caller's concern (scheduled once per publish event).
+ */
+export const finalizeExperiment = action({
+  args: {
+    experimentId: v.id("experiments"),
+    engine: v.optional(engineValidator),
+  },
+  handler: async (
+    ctx,
+    { experimentId, engine },
+  ): Promise<{
+    verdict: string;
+    recordedMoat: boolean;
+    estimate: number | null;
+  }> => {
+    const eng: EngineName = engine ?? "openai";
+    const data = await ctx.runQuery(internal.experiments.getExperiment, {
+      experimentId,
+    });
+    if (!data) throw new Error("experiment not found");
+    const { experiment, workspace } = data;
+
+    const measurements = await ctx.runQuery(
+      internal.experiments.measurementsForExperiment,
+      { experimentId },
+    );
+
+    // Python DiD round-trip — writes the lift_result (claim_rung=2) itself.
+    const lift: { jobId: string; liftId: string | null; verdict: string } =
+      await ctx.runAction(api.analysis.runLift, {
+        workspaceId: experiment.workspaceId,
+        experiment_id: experimentId,
+        experiment: {
+          id: experimentId.toString(),
+          customer_id: experiment.customer_id.toString(),
+          pairs: experiment.pairs.map((p) => ({
+            treatment_page: p.treatment_page,
+            control_page: p.control_page,
+          })),
+          baseline_window: experiment.baseline_window ?? "baseline",
+          post_window: experiment.post_window ?? "post",
+          status: experiment.status,
+          ...(experiment.publish_event_ts !== undefined
+            ? { publish_event_ts: new Date(experiment.publish_event_ts).toISOString() }
+            : {}),
+        },
+        measurements,
+        engine: eng,
+      });
+
+    // Read the persisted lift_result back for the estimate + CI (runLift returns
+    // only the verdict + ids).
+    const lr = await ctx.runQuery(
+      internal.experiments.latestLiftForExperiment,
+      { experimentId },
+    );
+
+    // Moat write: record the feature -> measured lift fact, but only on a decisive
+    // verdict. An `inconclusive` run taught us nothing causal, so it earns no
+    // intervention row (honesty: the moat holds only facts we can stand behind).
+    let recordedMoat = false;
+    if (lr && (lr.verdict === "worked" || lr.verdict === "no_effect")) {
+      await ctx.runMutation(api.records.insertIntervention, {
+        workspaceId: experiment.workspaceId,
+        feature_changed: experiment.feature_changed ?? "unspecified",
+        category: experiment.category ?? workspace.vertical,
+        engine: eng,
+        measured_lift: lr.estimate,
+        ci_low: lr.ci_low,
+        ci_high: lr.ci_high,
+        experiment_id: experimentId,
+        recorded_at: Date.now(),
+      });
+      recordedMoat = true;
+    }
+
+    // Close out the experiment (running -> complete).
+    if (experiment.status === "running") {
+      await ctx.runMutation(api.experiments.completeExperiment, { experimentId });
+    }
+
+    return {
+      verdict: lift.verdict,
+      recordedMoat,
+      estimate: lr ? lr.estimate : null,
+    };
   },
 });
 

@@ -22,6 +22,29 @@ const engine = v.union(
   v.literal("gemini"),
 );
 
+/**
+ * pingAnalysis — smallest possible reachability probe (no DB writes). Confirms the
+ * deployed Convex runtime can reach the Python analysis service through whatever
+ * ANALYSIS_SERVICE_URL points at (localhost in dev, cloudflared tunnel in demo).
+ * Isolates the network link before the full /fit and /estimate-lift round-trips.
+ */
+export const pingAnalysis = action({
+  args: {},
+  handler: async () => {
+    const baseUrl = process.env.ANALYSIS_SERVICE_URL || "http://localhost:8000";
+    const started = Date.now();
+    const res = await fetch(`${baseUrl}/health`);
+    const body = await res.text();
+    return {
+      baseUrl,
+      ok: res.ok,
+      status: res.status,
+      body,
+      latencyMs: Date.now() - started,
+    };
+  },
+});
+
 export const runFit = action({
   args: {
     workspaceId: v.id("workspaces"),

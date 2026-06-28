@@ -322,12 +322,22 @@ export const measureWorkspace = action({
       workspaceId: args.workspaceId,
     });
     const pool = buildPoolFromCompanies(ws.own_domain, ws.competitor_domains, companies);
-    return await runMeasurementSweep(ctx, {
+    const summary = await runMeasurementSweep(ctx, {
       workspaceId: args.workspaceId,
       vertical: ws.vertical,
       candidatePool: pool,
       windowTag: "baseline",
       nQueries: args.nQueries,
     });
+
+    // Close stages 7-9: the descriptive baseline now exists, so schedule the
+    // aggregation + Bayesian fit (which in turn tail-schedules the experiment
+    // designer). Scheduled as its own action so the Python fit round-trip gets a
+    // fresh execution budget and a single failed query can't block the fit.
+    await ctx.scheduler.runAfter(0, api.diagnose.runFitForWorkspace, {
+      workspaceId: args.workspaceId,
+    });
+
+    return summary;
   },
 });

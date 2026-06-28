@@ -13,6 +13,8 @@ import type * as analysisJobs from "../analysisJobs.js";
 import type * as board from "../board.js";
 import type * as crons from "../crons.js";
 import type * as customers from "../customers.js";
+import type * as devSeed from "../devSeed.js";
+import type * as diagnose from "../diagnose.js";
 import type * as experiments from "../experiments.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_compliance from "../lib/compliance.js";
@@ -33,6 +35,8 @@ declare const fullApi: ApiFromModules<{
   board: typeof board;
   crons: typeof crons;
   customers: typeof customers;
+  devSeed: typeof devSeed;
+  diagnose: typeof diagnose;
   experiments: typeof experiments;
   "lib/auth": typeof lib_auth;
   "lib/compliance": typeof lib_compliance;
